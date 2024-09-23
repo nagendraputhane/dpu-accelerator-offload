@@ -88,12 +88,13 @@ function ep_common_if_configure()
 	local vxlan_remote_ip=
 	local vxlan_local_ip=
 	local vxlan_vni=
+	local num_alias=
 	local vlan_id=
 	local mtu=
 
 	if ! opts=$(getopt \
-		-l "ip:,pcie-addr:,down,vxlan-remote-ip:,vxlan-local-ip:,vxlan-vni:,vlan-id:,mtu:" \
-		-- configure_sdp_interface $@); then
+		-l "ip:,pcie-addr:,down,vxlan-remote-ip:,vxlan-local-ip:,vxlan-vni:,vlan-id:,mtu:,\
+			alias:" -- configure_sdp_interface $@); then
 		echo "Failed to parse arguments"
 		exit 1
 	fi
@@ -107,6 +108,7 @@ function ep_common_if_configure()
 			--vxlan-remote-ip) shift; vxlan_remote_ip=$1;;
 			--vxlan-local-ip) shift; vxlan_local_ip=$1;;
 			--vlan-id) shift; vlan_id=$1;;
+			--alias) shift; num_alias=$1;;
 			--down) down=1;;
 			--mtu) shift; mtu=$1;;
 			*) echo "Invalid argument $1"; exit 1;;
@@ -120,10 +122,28 @@ function ep_common_if_configure()
 		exit
 	fi
 
-	ep_common_cleanup_interfaces $iface_name
+	if [[ -z $num_alias ]]; then
+		ep_common_cleanup_interfaces $iface_name
+	fi
+
 
 	if [[ -z $down ]]; then
-		if [[ -n $vlan_id ]]; then
+		if [[ -n $num_alias ]]; then
+			IFS='.' read -r -a ip_parts <<< "$ip_addr"
+			for ((i=0; i<$num_alias; i++)); do
+				ip="${ip_parts[0]}.${ip_parts[1]}.${ip_parts[2]}.${ip_parts[3]}"
+				if [[ -n $vlan_id ]]; then
+					vlan_id=$((vlan_id + 1))
+					ip link add link $iface_name name \
+						$iface_name.v$vlan_id type vlan id $vlan_id
+					ip link set dev $iface_name.v$vlan_id up
+					ip addr add $ip/24 dev $iface_name.v$vlan_id
+				else
+					ifconfig $iface_name:$i $ip/24
+				fi
+				((ip_parts[3]++))
+			done
+		elif [[ -n $vlan_id ]]; then
 			nmcli dev set $iface_name managed no &> /dev/null || true
 			ifconfig $iface_name up
 			ifconfig $iface_name 0
@@ -181,6 +201,31 @@ function ep_common_ping()
 	fi
 }
 
+function ep_common_multiple_pings()
+{
+	local host_ip=$1
+	local remote_ip=$2
+	local num_ifs=$3
+	local remote_if
+
+	IFS='.' read -r -a hip <<< "$host_ip"
+	IFS='.' read -r -a rip <<< "$remote_ip"
+
+	for ((i=0; i<$num_ifs; i++)); do
+		if [[ $(ep_common_ping $host_ip $remote_ip) != "SUCCESS" ]]; then
+			echo "FAILURE"
+			exit 1
+		fi
+
+		((hip[3]++))
+		((rip[3]++))
+		host_ip="${hip[0]}.${hip[1]}.${hip[2]}.${hip[3]}"
+		remote_ip="${rip[0]}.${rip[1]}.${rip[2]}.${rip[3]}"
+	done
+
+	echo "SUCCESS"
+}
+
 ep_common_cleanup_interfaces()
 {
 	local prefix=$1
@@ -192,10 +237,53 @@ ep_common_cleanup_interfaces()
 	done
 }
 
+ep_host_clean_sdp_host_ifcs()
+{
+	local sdp_vfs="$@"
+
+	for vf in $sdp_vfs; do
+		iface=$(ep_common_if_name_get $vf)
+		ep_common_cleanup_interfaces $iface
+	done
+}
+
+ep_common_cleanup_alias_ifcs()
+{
+	local pci_addr=$1
+	local num_alias=$2
+	local ip=$3
+	local test_type=$4
+	local vlan_id=$5
+	local iface=$(ep_common_if_name_get $pci_addr)
+
+	IFS='.' read -r -a ip_parts <<< "$ip"
+
+	if [[ $test_type == "vlan" ]]; then
+		ip link del $iface.v$vlan_id
+		((vlan_id++))
+	fi
+
+	for ((i=0; i<$num_alias; i++)); do
+	  if [[ $test_type == "plane" ]]; then
+		  ip addr del $ip/24 dev $iface:$i
+	  elif [[ $test_type == "vlan" ]]; then
+		  ip link del $iface.v$vlan_id
+		  ((vlan_id++))
+	  fi
+	  ((ip_parts[3]++))
+	  ip="${ip_parts[0]}.${ip_parts[1]}.${ip_parts[2]}.${ip_parts[3]}"
+	done
+
+	ep_common_cleanup_interfaces $iface
+}
+
 function ep_common_set_numvfs()
 {
 	local dev=$1
 	local numvfs=$2
+	local maxvfs=$(cat /sys/bus/pci/devices/$dev/sriov_totalvfs)
+
+	numvfs=$((numvfs >  maxvfs ? maxvfs : numvfs))
 
 	echo 0 > /sys/bus/pci/devices/$dev/sriov_numvfs
 	sleep 1

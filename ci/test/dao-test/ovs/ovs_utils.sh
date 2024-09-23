@@ -205,7 +205,10 @@ function ovs_interface_setup()
 	echo "List of bridges"
 	ovs-vsctl list-br
 	if [[ -n $vlan_id ]]; then
-		ovs-vsctl set port e0_vf_rep0 tag=$vlan_id
+		for ((i=0; i<$num_sdp_ifcs_per_eth; i++)); do
+			ovs-vsctl set port e0_vf_rep$i tag=$vlan_id
+			vlan_id=$((vlan_id + 1))
+		done
 	fi
 	ovs-vsctl show
 }
@@ -315,6 +318,7 @@ function ovs_offload_launch()
 	local portconf=""
 	local maxpktlen=0
 	local tmp
+	local first_ifc=true
 
 	if ! opts=$(getopt \
 		-l "sdp-eth-vf-pair:,esw-vf-ifc:,max-pkt-len:" \
@@ -323,16 +327,23 @@ function ovs_offload_launch()
 			exit 1
 	fi
 
+	max_cores=$num_cores
+
 	eval set -- "$opts"
 	while [[ $# -gt 1 ]]; do
 		case $1 in
 			--sdp-eth-vf-pair) shift;
 				# One additional core required for control thread
-				if [[ $num_cores -le 2 ]]; then
-					echo "Error: Number of cores: $num_cores not sufficient"
-					exit 1
+				if [[ $num_cores -le 4 ]]; then
+					echo "Max cores reached, start reassiging cores"
+					num_cores=$max_cores
 				fi
 				sdp_vf=$(echo $1 | awk -F ',' '{print $1}');
+				if [ "$first_ifc" = true ]; then
+					sdp_vf+=,max_pools=1024
+				fi
+				first_ifc=flase
+
 				eth_vf=$(echo $1 | awk -F ',' '{print $2}');
 				allowlist="$allowlist -a $sdp_vf -a $eth_vf";
 				portmap="${portmap}(${1}),";
@@ -354,12 +365,16 @@ function ovs_offload_launch()
 	portmap=${portmap::-1}
 	portconf=${portconf::-1}
 
-	# 1 extra core for control thread
-	num_cores=$((num_cores - 1))
-	coremask=$((coremask | 1 << num_cores))
+	#Max supported coremask
+	coremask=$(((1 << max_cores) - 1 ))
+	coremask=$((coremask & ~0x03))
 	# Convert the coremask to hex
 	coremask=$(printf "%x" $coremask)
 	coremask="0x$coremask"
+
+	num_ports=$(((1 << $num_ports) - 1))
+	num_ports=$(printf "%x" $num_ports)
+	num_ports="0x$num_ports"
 
 	find_executable "dao-ovs-offload" dao_offload "$OVS_UTILS_SCRIPT_PATH/../../../../app"
 
@@ -379,7 +394,7 @@ function ovs_offload_launch()
 		--vfio-vf-token="$VFIO_TOKEN" \
 		--file-prefix=ep \
 		-- \
-		-p 0xff \
+		-p $num_ports \
 		--portmap="$portmap" \
 		--max-pkt-len=$maxpktlen \
 		--config="$portconf" &> $EP_DEVICE_OVS_PATH/var/log/dao-ovs-offload.log &

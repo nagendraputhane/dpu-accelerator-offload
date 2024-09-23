@@ -342,6 +342,55 @@ function ep_host_shutdown_guest()
 	sleep 10;
 }
 
+function ep_host_sdp_vf_setup()
+{
+	local sdp_pf=$1
+	local num_vf=$2
+	local sdp_vfs
+
+	set +e # Module may be already loaded
+	if [[ -n ${EP_HOST_MODULE_DIR:-} ]]; then
+		insmod $EP_HOST_MODULE_DIR/octeon_ep_vf.ko
+	else
+		insmod $EP_DIR/ep_files/octeon_ep_vf.ko
+	fi
+	set -e
+	sleep 2
+
+	max_vfs=$(cat /sys/bus/pci/devices/$sdp_pf/sriov_totalvfs)
+	num_vf=$((num_vf >  max_vfs ? max_vfs : num_vf))
+
+	echo 0 > /sys/bus/pci/devices/$sdp_pf/sriov_numvfs
+	sleep 3
+	echo $num_vf > /sys/bus/pci/devices/$sdp_pf/sriov_numvfs
+	sleep 10
+
+	echo $(ep_common_pcie_addr_get "0xB903" all)
+}
+
+function ep_host_sdp_vf_cleanup()
+{
+	local sdp_pf=$1
+
+	echo 0 > /sys/bus/pci/devices/$sdp_pf/sriov_numvfs
+	rmmod octeon_ep_vf
+}
+
+function ep_host_sdp_vfs_ip_cnf()
+{
+	local arg1=("$@")
+	local ip="${!#}"
+	local sdp_vfs=${arg1[@]:0:${#arg1[@]}-1}
+
+	IFS='.' read -r -a ip_parts <<< "$ip"
+	for vf in $sdp_vfs; do
+		vf_ip="${ip_parts[0]}.${ip_parts[1]}.${ip_parts[2]}.${ip_parts[3]}"
+		ep_common_if_configure --pcie-addr $vf --ip $vf_ip
+		((ip_parts[3]++))
+	done
+}
+
+
 # If this script is directly invoked from the shell execute the
 # op specified
 if [[ ${BASH_SOURCE[0]} == ${0} ]]; then
