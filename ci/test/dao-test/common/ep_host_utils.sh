@@ -297,6 +297,40 @@ function ep_host_stop_guest_traffic()
 	echo "./ep_guest_utils.sh testpmd_stop $pfx" >> $in
 }
 
+function ep_host_netdev_config()
+{
+	local pfx=$1
+	local in=guest.in.$pfx
+	local out=guest.out.$pfx
+	local args=${@:2}
+
+	echo "Configuring guest netdev"
+	echo "./ep_guest_utils.sh netdev_config $pfx $args" >> $in
+}
+
+function ep_host_netdev_ping_test()
+{
+	local pfx=$1
+	local in=guest.in.$pfx
+	local out=guest.out.$pfx
+	local args=${@:2}
+	local ping_test_fail_res="$EP_GUEST_SHARE_DIR/netdev.ping_fail.out.$pfx"
+	local ping_test_pass_res="$EP_GUEST_SHARE_DIR/netdev.ping_pass.out.$pfx"
+	local res
+
+	echo "./ep_guest_utils.sh start_ping_test $pfx $args" >> $in
+	# Wait ping command to complete
+	sleep 60
+	if [[ -f $ping_test_fail_res ]]; then
+		echo "Ping test failed"
+		echo "$(cat $ping_test_fail_res)"
+		return 1
+	elif [[ -f $ping_test_pass_res ]]; then
+		echo "$(cat $ping_test_pass_res)"
+		return 0
+	fi
+}
+
 function ep_host_shutdown_guest()
 {
 	local pfx=$1

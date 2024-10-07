@@ -11,7 +11,8 @@ tests = [
     ['virtio_l2fwd_host_net_1c', 'virtio_l2fwd_1c.sh', ''],
     ['virtio_l2fwd_csum', 'virtio_l2fwd_csum.sh', ''],
     ['virtio_l2fwd_mactest', 'virtio_l2fwd_1c.sh', ''],
-    ['virtio_l2fwd_reset', 'virtio_l2fwd_1c.sh', '']
+    ['virtio_l2fwd_reset', 'virtio_l2fwd_1c.sh', ''],
+    ['virtio_l2fwd_guest_net_1c', 'virtio_l2fwd_1c.sh', ''],
 ]
 
 test_dir = meson.current_build_dir()

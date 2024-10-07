@@ -39,6 +39,56 @@ function ep_guest_setup()
 	echo 1 > /sys/module/vfio/parameters/enable_unsafe_noiommu_mode
 }
 
+function ep_guest_start_ping_test()
+{
+	local pfx=$1
+	local src_addr=$2
+	local dst_addr=$3
+	local count=$4
+	local ping_out
+	local pkt_sizes=(64 1000 1500)
+	local pkt_size
+
+        for pkt_size in "${pkt_sizes[@]}"
+        do
+                ping_out=$(ping -c $count -s $pkt_size -i 0.2 \
+                                -I $src_addr $dst_addr || true)
+                if [[ -n $(echo $ping_out | grep ", 0% packet loss,") ]]; then
+                        echo "$pkt_size packet size ping test SUCCESS" \
+				>> /root/hostshare/netdev.ping_pass.out.$pfx
+                else
+                        echo "$pkt_size packet size ping FAILED" \
+				 >> /root/hostshare/netdev.ping_fail.out.$pfx
+                        echo "stopping test execution" \
+				>> /root/hostshare/netdev.ping_fail.out.$pfx
+                        break
+                fi
+        done
+}
+
+function ep_guest_netdev_config()
+{
+        local net_bdf
+        local ip_addr=$2
+        local net_name
+        local k=1
+
+        net_bdf=$(lspci -Dd ::0200 | awk '{print $1}')
+        for dev in $net_bdf; do
+                virtio_dir=$(echo /sys/bus/pci/devices/$dev/virtio*)
+                if [[ -d $virtio_dir ]]; then
+                        if [[ -d $virtio_dir/net ]]; then
+                                net_name=$(basename $(readlink -f $virtio_dir/net/*))
+                                ip link set dev $net_name up
+                                ip addr add $ip_addr dev $net_name
+                                k=0
+                                break
+                        fi
+                fi
+        done
+        return $k
+}
+
 function ep_guest_testpmd_launch()
 {
 	local pfx=$1

@@ -290,6 +290,84 @@ function virtio_l2fwd_host_net_1c_run()
 	return $k
 }
 
+function virtio_l2fwd_guest_net_1c_run()
+{
+	local l2fwd_pfx=${DAO_TEST}
+	local guest_net_pfx=${DAO_TEST}_guest_net
+	local l2fwd_out=virtio_l2fwd.${l2fwd_pfx}.out
+	local npa_pf=$(ep_device_get_unused_npa_pf)
+	local ep_device_dtap_addr=20.20.20.2
+	local ep_guest_ip_addr=20.20.20.1
+	local app_args
+	local cidr=24
+	local ping_out
+	local count=60
+	local k=0
+
+	if [ -z "${1:-}" ]; then
+		ff_enable=""
+	else
+		ff_enable=$1
+	fi
+
+	l2fwd_register_sig_handler ${DAO_TEST} $guest_net_pfx $l2fwd_out
+
+	ep_common_bind_driver pci $npa_pf vfio-pci
+
+	# Launch virtio l2fwd without cgx loopback
+	app_args="-p 0x1 -v 0x1 -P $ff_enable"
+	if ! l2fwd_app_launch_with_tap_dev $npa_pf $l2fwd_pfx $l2fwd_out "4-7" "$app_args"; then
+		echo "Failed to launch virtio l2fwd"
+
+		# Quit l2fwd app
+		l2fwd_app_quit $l2fwd_pfx $l2fwd_out
+
+		# Unbind NPA device
+		ep_common_unbind_driver pci $npa_pf vfio-pci
+
+		return 1
+	fi
+
+	echo "Configuring TAP interface on EP device"
+	#By default, Linux interfaces are named dtapX
+	ep_device_configure_tap_iface dtap0 $ep_device_dtap_addr/$cidr
+
+	ep_host_op vdpa_setup $(ep_device_get_part)
+	ep_host_op_bg 300 launch_guest $guest_net_pfx
+	local k=$?
+	if [[ "$k" != "0" ]]; then
+		echo "Failed to launch Guest"
+
+		# Quit l2fwd app
+		l2fwd_app_quit $l2fwd_pfx $l2fwd_out
+
+		# Unbind NPA device
+		ep_common_unbind_driver pci $npa_pf vfio-pci
+
+		return 1
+	fi
+
+	#configure guest netdev
+	ep_host_op netdev_config $guest_net_pfx $ep_guest_ip_addr/$cidr
+
+	echo "Verifying ping"
+	ep_host_op netdev_ping_test $guest_net_pfx $ep_guest_ip_addr $ep_device_dtap_addr $count
+	local k=$?
+
+	ep_host_op shutdown_guest $guest_net_pfx
+
+	echo "virtio_vdpa_cleanup"
+	ep_host_op virtio_vdpa_cleanup
+
+	# Quit l2fwd app
+	l2fwd_app_quit $l2fwd_pfx $l2fwd_out
+
+	#Unbind NPA device
+	ep_common_unbind_driver pci $npa_pf vfio-pci
+
+	return $k
+}
+
 function virtio_l2fwd_host_net_1c()
 {
         local k
@@ -309,6 +387,27 @@ function virtio_l2fwd_host_net_1c()
         fi
 
         echo ${DAO_TEST}" Test PASSED"
+}
+
+function virtio_l2fwd_guest_net_1c()
+{
+        local k
+
+        virtio_l2fwd_guest_net_1c_run
+        k=$?
+        if [[ "$k" != "0" ]]; then
+                echo ${DAO_TEST}" Guest net FF Test FAILED"
+                return $k
+        fi
+
+        virtio_l2fwd_guest_net_1c_run -f
+        k=$?
+        if [[ "$k" != "0" ]]; then
+                echo ${DAO_TEST}" Guest net NO_FF Test FAILED "
+                return $k
+        fi
+
+        echo ${DAO_TEST}" Guest net Test PASSED"
 }
 
 function virtio_l2fwd_mactest()
