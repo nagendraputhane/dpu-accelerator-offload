@@ -86,20 +86,22 @@ dump_item_string(const struct rte_flow_item *item)
 	case RTE_FLOW_ITEM_TYPE_ANY:
 		dao_info("	type %s", "ANY");
 		break;
-	case RTE_FLOW_ITEM_TYPE_PORT_ID:
+	case RTE_FLOW_ITEM_TYPE_PORT_ID: {
 		struct rte_flow_item_port_id *port_id = (struct rte_flow_item_port_id *)item->spec;
 		struct rte_flow_item_port_id *port_id_mask =
 			(struct rte_flow_item_port_id *)item->mask;
 		dao_info("	type %s spec id %d mask id %d", "PORT_ID", port_id->id,
 			 port_id_mask->id);
 		break;
-	case RTE_FLOW_ITEM_TYPE_RAW:
+	}
+	case RTE_FLOW_ITEM_TYPE_RAW: {
 		struct rte_flow_item_raw *raw = (struct rte_flow_item_raw *)item->spec;
 		struct rte_flow_item_raw *raw_mask = (struct rte_flow_item_raw *)item->mask;
 
 		dao_info("	type %s spec %p mask %p", "RAW", raw->pattern, raw_mask->pattern);
 		break;
-	case RTE_FLOW_ITEM_TYPE_ETH:
+	}
+	case RTE_FLOW_ITEM_TYPE_ETH: {
 		struct rte_flow_item_eth *eth = (struct rte_flow_item_eth *)item->spec;
 		struct rte_flow_item_eth *eth_mask = (struct rte_flow_item_eth *)item->mask;
 
@@ -121,7 +123,8 @@ dump_item_string(const struct rte_flow_item *item)
 			eth_mask->src.addr_bytes[4], eth_mask->src.addr_bytes[5], eth_mask->type,
 			eth_mask->has_vlan);
 		break;
-	case RTE_FLOW_ITEM_TYPE_VLAN:
+	}
+	case RTE_FLOW_ITEM_TYPE_VLAN: {
 		struct rte_flow_item_vlan *vlan = (struct rte_flow_item_vlan *)item->spec;
 		struct rte_flow_item_vlan *vlan_mask = (struct rte_flow_item_vlan *)item->mask;
 
@@ -129,7 +132,8 @@ dump_item_string(const struct rte_flow_item *item)
 		dao_info("	spec: tci %x inner_type %x", vlan->tci, vlan->inner_type);
 		dao_info("	mask: tci %x inner_type %x", vlan_mask->tci, vlan_mask->inner_type);
 		break;
-	case RTE_FLOW_ITEM_TYPE_IPV4:
+	}
+	case RTE_FLOW_ITEM_TYPE_IPV4: {
 		struct rte_flow_item_ipv4 *ipv4 = (struct rte_flow_item_ipv4 *)item->spec;
 		struct rte_flow_item_ipv4 *ipv4_mask = (struct rte_flow_item_ipv4 *)item->mask;
 
@@ -152,7 +156,8 @@ dump_item_string(const struct rte_flow_item *item)
 			 ipv4_mask->hdr.fragment_offset, ipv4_mask->hdr.time_to_live,
 			 ipv4_mask->hdr.next_proto_id, ipv4_mask->hdr.hdr_checksum);
 		break;
-	case RTE_FLOW_ITEM_TYPE_IPV6:
+	}
+	case RTE_FLOW_ITEM_TYPE_IPV6: {
 		struct rte_flow_item_ipv6 *ipv6 = (struct rte_flow_item_ipv6 *)item->spec;
 		struct rte_flow_item_ipv6 *ipv6_mask = (struct rte_flow_item_ipv6 *)item->mask;
 
@@ -167,7 +172,8 @@ dump_item_string(const struct rte_flow_item *item)
 			 ipv6_mask->hdr.hop_limits, ipv6_mask->hdr.src_addr,
 			 ipv6_mask->hdr.dst_addr);
 		break;
-	case RTE_FLOW_ITEM_TYPE_ICMP:
+	}
+	case RTE_FLOW_ITEM_TYPE_ICMP: {
 		struct rte_flow_item_icmp *icmp = (struct rte_flow_item_icmp *)item->spec;
 		struct rte_flow_item_icmp *icmp_mask = (struct rte_flow_item_icmp *)item->mask;
 
@@ -177,7 +183,8 @@ dump_item_string(const struct rte_flow_item *item)
 		dao_info("	mask: hdr.icmp_type %x hdr.icmp_code %x", icmp_mask->hdr.icmp_type,
 			 icmp_mask->hdr.icmp_code);
 		break;
-	case RTE_FLOW_ITEM_TYPE_UDP:
+	}
+	case RTE_FLOW_ITEM_TYPE_UDP: {
 		struct rte_flow_item_udp *udp = (struct rte_flow_item_udp *)item->spec;
 		struct rte_flow_item_udp *udp_mask = (struct rte_flow_item_udp *)item->mask;
 
@@ -187,7 +194,8 @@ dump_item_string(const struct rte_flow_item *item)
 		dao_info("	mask: hdr.src_port %x hdr.dst_port %x", udp_mask->hdr.src_port,
 			 udp_mask->hdr.dst_port);
 		break;
-	case RTE_FLOW_ITEM_TYPE_TCP:
+	}
+	case RTE_FLOW_ITEM_TYPE_TCP: {
 		struct rte_flow_item_tcp *tcp = (struct rte_flow_item_tcp *)item->spec;
 		struct rte_flow_item_tcp *tcp_mask = (struct rte_flow_item_tcp *)item->mask;
 
@@ -200,7 +208,8 @@ dump_item_string(const struct rte_flow_item *item)
 		dao_info("	mask: hdr.src_port %x hdr.dst_port %x", tcp_mask->hdr.src_port,
 			 tcp_mask->hdr.dst_port);
 		break;
-	case RTE_FLOW_ITEM_TYPE_SCTP:
+	}
+	case RTE_FLOW_ITEM_TYPE_SCTP: {
 		struct rte_flow_item_sctp *sctp = (struct rte_flow_item_sctp *)item->spec;
 		struct rte_flow_item_sctp *sctp_mask = (struct rte_flow_item_sctp *)item->mask;
 
@@ -210,7 +219,8 @@ dump_item_string(const struct rte_flow_item *item)
 		dao_info("	mask: hdr.src_port %x hdr.dst_port %x", sctp_mask->hdr.src_port,
 			 sctp_mask->hdr.dst_port);
 		break;
-	case RTE_FLOW_ITEM_TYPE_VXLAN:
+	}
+	case RTE_FLOW_ITEM_TYPE_VXLAN: {
 		struct rte_flow_item_vxlan *vxlan = (struct rte_flow_item_vxlan *)item->spec;
 		struct rte_flow_item_vxlan *vxlan_mask = (struct rte_flow_item_vxlan *)item->mask;
 
@@ -220,7 +230,8 @@ dump_item_string(const struct rte_flow_item *item)
 		dao_info("	mask: flags %x vni[0] %x vni[1] %x vni[2] %x", vxlan_mask->flags,
 			 vxlan_mask->vni[0], vxlan_mask->vni[1], vxlan_mask->vni[2]);
 		break;
-	case RTE_FLOW_ITEM_TYPE_PORT_REPRESENTOR:
+	}
+	case RTE_FLOW_ITEM_TYPE_PORT_REPRESENTOR: {
 		struct rte_flow_item_ethdev *port_representor =
 			(struct rte_flow_item_ethdev *)item->spec;
 		struct rte_flow_item_ethdev *port_representor_mask =
@@ -228,7 +239,8 @@ dump_item_string(const struct rte_flow_item *item)
 		dao_info("	type %s spec id %d mask id %d", "PORT_REPRESENTOR",
 			 port_representor->port_id, port_representor_mask->port_id);
 		break;
-	case RTE_FLOW_ITEM_TYPE_REPRESENTED_PORT:
+	}
+	case RTE_FLOW_ITEM_TYPE_REPRESENTED_PORT: {
 		struct rte_flow_item_ethdev *represented_port =
 			(struct rte_flow_item_ethdev *)item->spec;
 		struct rte_flow_item_ethdev *represented_port_mask =
@@ -236,6 +248,7 @@ dump_item_string(const struct rte_flow_item *item)
 		dao_info("	type %s spec id %d mask id %d", "REPRESENTED_PORT",
 			 represented_port->port_id, represented_port_mask->port_id);
 		break;
+	}
 	case RTE_FLOW_ITEM_TYPE_E_TAG:
 		dao_info("	type %s", "E_TAG");
 		break;
@@ -290,12 +303,13 @@ dump_item_string(const struct rte_flow_item *item)
 	case RTE_FLOW_ITEM_TYPE_ICMP6_ND_OPT_TLA_ETH:
 		dao_info("	type %s", "ICMP6_ND_OPT_TLA_ETH");
 		break;
-	case RTE_FLOW_ITEM_TYPE_MARK:
+	case RTE_FLOW_ITEM_TYPE_MARK: {
 		struct rte_flow_item_mark *mark = (struct rte_flow_item_mark *)item->spec;
 		struct rte_flow_item_mark *mark_mask = (struct rte_flow_item_mark *)item->mask;
 
 		dao_info("	type %s spec id %d mask id %d", "MARK", mark->id, mark_mask->id);
 		break;
+	}
 	case RTE_FLOW_ITEM_TYPE_META:
 		dao_info("	type %s", "META");
 		break;
@@ -347,7 +361,7 @@ dump_item_string(const struct rte_flow_item *item)
 	case RTE_FLOW_ITEM_TYPE_INTEGRITY:
 		dao_info("	type %s", "INTEGRITY");
 		break;
-	case RTE_FLOW_ITEM_TYPE_CONNTRACK:
+	case RTE_FLOW_ITEM_TYPE_CONNTRACK: {
 		struct rte_flow_item_conntrack *conntrack =
 			(struct rte_flow_item_conntrack *)item->spec;
 		struct rte_flow_item_conntrack *conntrack_mask =
@@ -356,6 +370,7 @@ dump_item_string(const struct rte_flow_item *item)
 		dao_info("	spec: flags %x ", conntrack->flags);
 		dao_info("	mask: flags %x", conntrack_mask->flags);
 		break;
+	}
 	case RTE_FLOW_ITEM_TYPE_FLEX:
 		dao_info("	type %s", "FLEX");
 		break;
@@ -389,7 +404,7 @@ dump_item_string(const struct rte_flow_item *item)
 	case RTE_FLOW_ITEM_TYPE_AGGR_AFFINITY:
 		dao_info("	type %s", "AGGR_AFFINITY");
 		break;
-	case RTE_FLOW_ITEM_TYPE_TX_QUEUE:
+	case RTE_FLOW_ITEM_TYPE_TX_QUEUE: {
 		struct rte_flow_item_tx_queue *tx_queue =
 			(struct rte_flow_item_tx_queue *)item->spec;
 		struct rte_flow_item_tx_queue *tx_queue_mask =
@@ -397,16 +412,18 @@ dump_item_string(const struct rte_flow_item *item)
 		dao_info("	type %s spec index %d mask index %d", "TX_QUEUE",
 			 tx_queue->tx_queue, tx_queue_mask->tx_queue);
 		break;
+	}
 	case RTE_FLOW_ITEM_TYPE_IB_BTH:
 		dao_info("	type %s", "IB_BTH");
 		break;
-	case RTE_FLOW_ITEM_TYPE_PTYPE:
+	case RTE_FLOW_ITEM_TYPE_PTYPE: {
 		struct rte_flow_item_ptype *ptype = (struct rte_flow_item_ptype *)item->spec;
 		struct rte_flow_item_ptype *ptype_mask = (struct rte_flow_item_ptype *)item->mask;
 
 		dao_info("	type %s spec %x mask %x", "PTYPE", ptype->packet_type,
 			 ptype_mask->packet_type);
 		break;
+	}
 	default:
 		dao_info("	type %s", "UNKNOWN");
 		break;
@@ -426,28 +443,31 @@ dump_action_string(enum rte_flow_action_type type, const void *conf)
 	case RTE_FLOW_ACTION_TYPE_PASSTHRU:
 		dao_info("	type %s", "PASSTHRU");
 		break;
-	case RTE_FLOW_ACTION_TYPE_JUMP:
+	case RTE_FLOW_ACTION_TYPE_JUMP: {
 		struct rte_flow_action_jump *jump = (struct rte_flow_action_jump *)conf;
 
 		dao_info("	type %s GROUP %d", "JUMP", jump->group);
 		break;
-	case RTE_FLOW_ACTION_TYPE_MARK:
+	}
+	case RTE_FLOW_ACTION_TYPE_MARK: {
 		struct rte_flow_action_mark *mark = (struct rte_flow_action_mark *)conf;
 
 		dao_info("	type %s MARK id %d", "MARK", mark->id);
 		break;
+	}
 	case RTE_FLOW_ACTION_TYPE_FLAG:
 		dao_info("	type %s", "FLAG");
 		break;
-	case RTE_FLOW_ACTION_TYPE_QUEUE:
+	case RTE_FLOW_ACTION_TYPE_QUEUE: {
 		struct rte_flow_action_queue *queue = (struct rte_flow_action_queue *)conf;
 
 		dao_info("	type %s QUEUE index %d", "QUEUE", queue->index);
 		break;
+	}
 	case RTE_FLOW_ACTION_TYPE_DROP:
 		dao_info("	type %s", "DROP");
 		break;
-	case RTE_FLOW_ACTION_TYPE_COUNT:
+	case RTE_FLOW_ACTION_TYPE_COUNT: {
 		struct rte_flow_action_count *count = (struct rte_flow_action_count *)conf;
 
 		if (conf)
@@ -455,63 +475,72 @@ dump_action_string(enum rte_flow_action_type type, const void *conf)
 		else
 			dao_info("	type %s conf %p", "COUNT", conf);
 		break;
-	case RTE_FLOW_ACTION_TYPE_RSS:
+	}
+	case RTE_FLOW_ACTION_TYPE_RSS: {
 		struct rte_flow_action_rss *rss = (struct rte_flow_action_rss *)conf;
 
 		dao_info("	type %s level %d types %lx key_len %d queue_num %d key %p queue %p",
 			 "RSS", rss->level, rss->types, rss->key_len, rss->queue_num, rss->key,
 			 rss->queue);
 		break;
+	}
 	case RTE_FLOW_ACTION_TYPE_PF:
 		dao_info("	type %s", "PF");
 		break;
 	case RTE_FLOW_ACTION_TYPE_VF:
 		dao_info("	type %s", "VF");
 		break;
-	case RTE_FLOW_ACTION_TYPE_PORT_ID:
+	case RTE_FLOW_ACTION_TYPE_PORT_ID: {
 		struct rte_flow_action_port_id *port_id = (struct rte_flow_action_port_id *)conf;
 
 		dao_info("	type %s PORT_ID id %d", "PORT_ID", port_id->id);
 		break;
-	case RTE_FLOW_ACTION_TYPE_METER:
+	}
+	case RTE_FLOW_ACTION_TYPE_METER: {
 		struct rte_flow_action_meter *meter = (struct rte_flow_action_meter *)conf;
 
 		dao_info("	type %s METER id %d", "METER", meter->mtr_id);
 		break;
-	case RTE_FLOW_ACTION_TYPE_SECURITY:
+	}
+	case RTE_FLOW_ACTION_TYPE_SECURITY: {
 		struct rte_flow_action_security *security = (struct rte_flow_action_security *)conf;
 
 		dao_info("	type %s SECURITY %p", "SECURITY", security->security_session);
 		break;
+	}
 	case RTE_FLOW_ACTION_TYPE_OF_DEC_NW_TTL:
 		dao_info("	type %s", "OF_DEC_NW_TTL");
 		break;
 	case RTE_FLOW_ACTION_TYPE_OF_POP_VLAN:
 		dao_info("	type %s", "OF_POP_VLAN");
 		break;
-	case RTE_FLOW_ACTION_TYPE_OF_PUSH_VLAN:
+	case RTE_FLOW_ACTION_TYPE_OF_PUSH_VLAN: {
 		struct rte_flow_action_of_push_vlan *of_push_vlan =
 			(struct rte_flow_action_of_push_vlan *)conf;
 		dao_info("	type %s VLAN proto %d", "OF_PUSH_VLAN", of_push_vlan->ethertype);
 		break;
-	case RTE_FLOW_ACTION_TYPE_OF_SET_VLAN_VID:
+	}
+	case RTE_FLOW_ACTION_TYPE_OF_SET_VLAN_VID: {
 		struct rte_flow_action_of_set_vlan_vid *of_set_vlan_vid =
 			(struct rte_flow_action_of_set_vlan_vid *)conf;
 		dao_info("	type %s VLAN id %d", "OF_SET_VLAN_VID", of_set_vlan_vid->vlan_vid);
 		break;
-	case RTE_FLOW_ACTION_TYPE_OF_SET_VLAN_PCP:
+	}
+	case RTE_FLOW_ACTION_TYPE_OF_SET_VLAN_PCP: {
 		struct rte_flow_action_of_set_vlan_pcp *of_set_vlan_pcp =
 			(struct rte_flow_action_of_set_vlan_pcp *)conf;
 		dao_info("	type %s VLAN pcp %d", "OF_SET_VLAN_PCP", of_set_vlan_pcp->vlan_pcp);
 		break;
+	}
 	case RTE_FLOW_ACTION_TYPE_OF_POP_MPLS:
 		dao_info("	type %s", "OF_POP_MPLS");
 		break;
-	case RTE_FLOW_ACTION_TYPE_OF_PUSH_MPLS:
+	case RTE_FLOW_ACTION_TYPE_OF_PUSH_MPLS: {
 		struct rte_flow_action_of_push_mpls *of_push_mpls =
 			(struct rte_flow_action_of_push_mpls *)conf;
 		dao_info("	type %s MPLS proto %d", "OF_PUSH_MPLS", of_push_mpls->ethertype);
 		break;
+	}
 	case RTE_FLOW_ACTION_TYPE_VXLAN_ENCAP:
 		dao_info("	type %s", "VXLAN_ENCAP");
 
@@ -531,57 +560,66 @@ dump_action_string(enum rte_flow_action_type type, const void *conf)
 	case RTE_FLOW_ACTION_TYPE_RAW_DECAP:
 		dao_info("	type %s", "RAW_DECAP");
 		break;
-	case RTE_FLOW_ACTION_TYPE_SET_IPV4_SRC:
+	case RTE_FLOW_ACTION_TYPE_SET_IPV4_SRC: {
 		struct rte_flow_action_set_ipv4 *set_ipv4_src =
 			(struct rte_flow_action_set_ipv4 *)conf;
 		dao_info("	type %s IPV4 src %x", "SET_IPV4_SRC", set_ipv4_src->ipv4_addr);
 		break;
-	case RTE_FLOW_ACTION_TYPE_SET_IPV4_DST:
+	}
+	case RTE_FLOW_ACTION_TYPE_SET_IPV4_DST: {
 		struct rte_flow_action_set_ipv4 *set_ipv4_dst =
 			(struct rte_flow_action_set_ipv4 *)conf;
 		dao_info("	type %s IPV4 dst %x", "SET_IPV4_DST", set_ipv4_dst->ipv4_addr);
 		break;
-	case RTE_FLOW_ACTION_TYPE_SET_IPV6_SRC:
+	}
+	case RTE_FLOW_ACTION_TYPE_SET_IPV6_SRC: {
 		struct rte_flow_action_set_ipv6 *set_ipv6_src =
 			(struct rte_flow_action_set_ipv6 *)conf;
 		dao_info("	type %s IPV6 src %p", "SET_IPV6_SRC", set_ipv6_src->ipv6_addr);
 		break;
-	case RTE_FLOW_ACTION_TYPE_SET_IPV6_DST:
+	}
+	case RTE_FLOW_ACTION_TYPE_SET_IPV6_DST: {
 		struct rte_flow_action_set_ipv6 *set_ipv6_dst =
 			(struct rte_flow_action_set_ipv6 *)conf;
 		dao_info("	type %s IPV6 dst %p", "SET_IPV6_DST", set_ipv6_dst->ipv6_addr);
 		break;
-	case RTE_FLOW_ACTION_TYPE_SET_TP_SRC:
+	}
+	case RTE_FLOW_ACTION_TYPE_SET_TP_SRC: {
 		struct rte_flow_action_set_tp *set_tp_src = (struct rte_flow_action_set_tp *)conf;
 
 		dao_info("	type %s TP src %d", "SET_TP_SRC", set_tp_src->port);
 		break;
-	case RTE_FLOW_ACTION_TYPE_SET_TP_DST:
+	}
+	case RTE_FLOW_ACTION_TYPE_SET_TP_DST: {
 		struct rte_flow_action_set_tp *set_tp_dst = (struct rte_flow_action_set_tp *)conf;
 
 		dao_info("	type %s TP dst %d", "SET_TP_DST", set_tp_dst->port);
 		break;
+	}
 	case RTE_FLOW_ACTION_TYPE_MAC_SWAP:
 		dao_info("	type %s", "MAC_SWAP");
 		break;
 	case RTE_FLOW_ACTION_TYPE_DEC_TTL:
 		dao_info("	type %s", "DEC_TTL");
 		break;
-	case RTE_FLOW_ACTION_TYPE_SET_TTL:
+	case RTE_FLOW_ACTION_TYPE_SET_TTL: {
 		struct rte_flow_action_set_ttl *set_ttl = (struct rte_flow_action_set_ttl *)conf;
 
 		dao_info("	type %s TTL %d", "SET_TTL", set_ttl->ttl_value);
 		break;
-	case RTE_FLOW_ACTION_TYPE_SET_MAC_SRC:
+	}
+	case RTE_FLOW_ACTION_TYPE_SET_MAC_SRC: {
 		struct rte_flow_action_set_mac *set_mac_src =
 			(struct rte_flow_action_set_mac *)conf;
 		dao_info("	type %s MAC src %p", "SET_MAC_SRC", set_mac_src->mac_addr);
 		break;
-	case RTE_FLOW_ACTION_TYPE_SET_MAC_DST:
+	}
+	case RTE_FLOW_ACTION_TYPE_SET_MAC_DST: {
 		struct rte_flow_action_set_mac *set_mac_dst =
 			(struct rte_flow_action_set_mac *)conf;
 		dao_info("	type %s MAC dst %p", "SET_MAC_DST", set_mac_dst->mac_addr);
 		break;
+	}
 	case RTE_FLOW_ACTION_TYPE_INC_TCP_SEQ:
 		dao_info("	type %s", "INC_TCP_SEQ");
 		break;
@@ -600,26 +638,30 @@ dump_action_string(enum rte_flow_action_type type, const void *conf)
 	case RTE_FLOW_ACTION_TYPE_SET_META:
 		dao_info("	type %s", "SET_META");
 		break;
-	case RTE_FLOW_ACTION_TYPE_SET_IPV4_DSCP:
+	case RTE_FLOW_ACTION_TYPE_SET_IPV4_DSCP: {
 		struct rte_flow_action_set_dscp *set_ipv4_dscp =
 			(struct rte_flow_action_set_dscp *)conf;
 		dao_info("	type %s IPV4 DSCP %d", "SET_IPV4_DSCP", set_ipv4_dscp->dscp);
 		break;
-	case RTE_FLOW_ACTION_TYPE_SET_IPV6_DSCP:
+	}
+	case RTE_FLOW_ACTION_TYPE_SET_IPV6_DSCP: {
 		struct rte_flow_action_set_dscp *set_ipv6_dscp =
 			(struct rte_flow_action_set_dscp *)conf;
 		dao_info("	type %s IPV6 DSCP %d", "SET_IPV6_DSCP", set_ipv6_dscp->dscp);
 		break;
-	case RTE_FLOW_ACTION_TYPE_AGE:
+	}
+	case RTE_FLOW_ACTION_TYPE_AGE: {
 		struct rte_flow_action_age *age = (struct rte_flow_action_age *)conf;
 
 		dao_info("	type %s AGE %d", "AGE", age->timeout);
 		break;
-	case RTE_FLOW_ACTION_TYPE_SAMPLE:
+	}
+	case RTE_FLOW_ACTION_TYPE_SAMPLE: {
 		struct rte_flow_action_sample *sample = (struct rte_flow_action_sample *)conf;
 
 		dao_info("	type %s SAMPLE %d", "SAMPLE", sample->ratio);
 		break;
+	}
 	case RTE_FLOW_ACTION_TYPE_SHARED:
 		dao_info("	type %s", "SHARED");
 		break;
@@ -629,7 +671,7 @@ dump_action_string(enum rte_flow_action_type type, const void *conf)
 	case RTE_FLOW_ACTION_TYPE_INDIRECT:
 		dao_info("	type %s", "INDIRECT");
 		break;
-	case RTE_FLOW_ACTION_TYPE_CONNTRACK:
+	case RTE_FLOW_ACTION_TYPE_CONNTRACK: {
 		struct rte_flow_action_conntrack *conntrack =
 			(struct rte_flow_action_conntrack *)conf;
 		dao_info("	type %s peer_port %d is_original_dir %d enable %d "
@@ -645,23 +687,27 @@ dump_action_string(enum rte_flow_action_type type, const void *conf)
 			 conntrack->last_index, conntrack->last_seq, conntrack->last_ack,
 			 conntrack->last_end);
 		break;
-	case RTE_FLOW_ACTION_TYPE_METER_COLOR:
+	}
+	case RTE_FLOW_ACTION_TYPE_METER_COLOR: {
 		struct rte_flow_action_meter_color *meter_color =
 			(struct rte_flow_action_meter_color *)conf;
 		dao_info("	type %s color %d", "METER_COLOR", meter_color->color);
 		break;
-	case RTE_FLOW_ACTION_TYPE_PORT_REPRESENTOR:
+	}
+	case RTE_FLOW_ACTION_TYPE_PORT_REPRESENTOR: {
 		struct rte_flow_action_ethdev *port_representor =
 			(struct rte_flow_action_ethdev *)conf;
 		dao_info("	type %s PORT_REPRESENTOR id %d", "PORT_REPRESENTOR",
 			 port_representor->port_id);
 		break;
-	case RTE_FLOW_ACTION_TYPE_REPRESENTED_PORT:
+	}
+	case RTE_FLOW_ACTION_TYPE_REPRESENTED_PORT: {
 		struct rte_flow_action_ethdev *represented_port =
 			(struct rte_flow_action_ethdev *)conf;
 		dao_info("	type %s REPRESENTED_PORT id %d", "REPRESENTED_PORT",
 			 represented_port->port_id);
 		break;
+	}
 	case RTE_FLOW_ACTION_TYPE_METER_MARK:
 		dao_info("	type %s", "METER_MARK");
 		break;
