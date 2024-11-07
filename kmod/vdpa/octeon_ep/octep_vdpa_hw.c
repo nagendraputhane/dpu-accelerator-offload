@@ -2,6 +2,7 @@
  * Copyright (c) 2023 Marvell.
  */
 #include <linux/iopoll.h>
+#include <linux/build_bug.h>
 
 #include "octep_vdpa.h"
 
@@ -140,7 +141,7 @@ static int octep_process_mbox(struct octep_hw *oct_hw, u16 id, u16 qid, void *bu
 	val = octep_read_sig(mbox);
 	if ((val & 0xFFFF) != MBOX_RSP_SIG) {
 		dev_warn(&pdev->dev, "Invalid Signature from mbox : %d response\n", id);
-		return ret;
+		return -EINVAL;
 	}
 
 	val = octep_read_sts(mbox);
@@ -426,6 +427,8 @@ static int octep_pci_signature_verify(struct octep_hw *oct_hw)
 static void octep_vndr_data_process(struct octep_hw *oct_hw,
 				    struct octep_pci_vndr_data *vndr_data)
 {
+	BUILD_BUG_ON(sizeof(struct octep_pci_vndr_data) % 4 != 0);
+
 	switch (vndr_data->id) {
 	case OCTEP_PCI_VNDR_CFG_TYPE_VIRTIO_ID:
 		oct_hw->dev_id = (u8)vndr_data->data;
@@ -440,6 +443,7 @@ static void octep_vndr_data_process(struct octep_hw *oct_hw,
 #define VIRTIO_PCI_CAP_VENDOR_CFG	9
 int octep_hw_caps_read(struct octep_hw *oct_hw, struct pci_dev *pdev)
 {
+	struct octep_pci_vndr_data vndr_data;
 	struct octep_mbox __iomem *mbox;
 	struct device *dev = &pdev->dev;
 	struct virtio_pci_cap cap;
@@ -489,8 +493,6 @@ int octep_hw_caps_read(struct octep_hw *oct_hw, struct pci_dev *pdev)
 			oct_hw->isr = octep_get_cap_addr(oct_hw, &cap);
 			break;
 		case VIRTIO_PCI_CAP_VENDOR_CFG:
-			struct octep_pci_vndr_data vndr_data;
-
 			octep_pci_caps_read(oct_hw, &vndr_data, sizeof(vndr_data), pos);
 			if (vndr_data.vendor_id != PCI_VENDOR_ID_CAVIUM) {
 				dev_err(dev, "Invalid vendor data\n");
@@ -508,11 +510,11 @@ int octep_hw_caps_read(struct octep_hw *oct_hw, struct pci_dev *pdev)
 		dev_err(dev, "Incomplete PCI capabilities");
 		return -EIO;
 	}
-	dev_info(dev, "common cfg mapped at: 0x%016llx\n", (u64)(uintptr_t)oct_hw->common_cfg);
-	dev_info(dev, "device cfg mapped at: 0x%016llx\n", (u64)(uintptr_t)oct_hw->dev_cfg);
-	dev_info(dev, "isr cfg mapped at: 0x%016llx\n", (u64)(uintptr_t)oct_hw->isr);
-	dev_info(dev, "notify base: 0x%016llx, notify off multiplier: %u\n",
-		 (u64)(uintptr_t)oct_hw->notify_base, oct_hw->notify_off_multiplier);
+	dev_info(dev, "common cfg mapped at: %p\n", oct_hw->common_cfg);
+	dev_info(dev, "device cfg mapped at: %p\n", oct_hw->dev_cfg);
+	dev_info(dev, "isr cfg mapped at: %p\n", oct_hw->isr);
+	dev_info(dev, "notify base: %p, notify off multiplier: %u\n",
+		 oct_hw->notify_base, oct_hw->notify_off_multiplier);
 
 	oct_hw->config_size = octep_get_config_size(oct_hw);
 	oct_hw->features = octep_hw_get_dev_features(oct_hw);
@@ -542,7 +544,7 @@ int octep_hw_caps_read(struct octep_hw *oct_hw, struct pci_dev *pdev)
 	}
 	mbox = octep_get_mbox(oct_hw);
 	octep_mbox_init(mbox);
-	dev_info(dev, "mbox mapped at: 0x%016llx\n", (u64)(uintptr_t)mbox);
+	dev_info(dev, "mbox mapped at: %p\n", mbox);
 
 	return 0;
 }

@@ -49,7 +49,7 @@ enum octep_vdpa_dev_status {
 struct octep_vring_info {
 	struct vdpa_callback cb;
 	void __iomem *notify_addr;
-	u32 __iomem *cb_notify_addr;
+	void __iomem *cb_notify_addr;
 	phys_addr_t notify_pa;
 };
 

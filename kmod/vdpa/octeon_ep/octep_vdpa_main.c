@@ -46,57 +46,42 @@ static struct octep_hw *vdpa_to_octep_hw(struct vdpa_device *vdpa_dev)
 	return oct_vdpa->oct_hw;
 }
 
-static irqreturn_t octep_vdpa_crypto_intr_handler(int irq, void *data)
+static irqreturn_t octep_vdpa_intr_handler(int irq, void *data)
 {
 	struct octep_hw *oct_hw = data;
 	int i;
 
+	/* Each device has multiple interrupts (nb_irqs) shared among rings
+	 * (nr_vring). Device interrupts are mapped to the rings in a
+	 * round-robin fashion.
+	 *
+	 * For example, if nb_irqs = 8 and nr_vring = 64:
+	 * 0 -> 0, 8, 16, 24, 32, 40, 48, 56;
+	 * 1 -> 1, 9, 17, 25, 33, 41, 49, 57;
+	 * ...
+	 * 7 -> 7, 15, 23, 31, 39, 47, 55, 63;
+	 */
+
 	for (i = irq - oct_hw->irqs[0]; i < oct_hw->nr_vring; i += oct_hw->nb_irqs) {
-		if (oct_hw->vqs[i].cb.callback && ioread32(oct_hw->vqs[i].cb_notify_addr)) {
-			/* Acknowledge the per queue notification to the device */
-			iowrite32(0, oct_hw->vqs[i].cb_notify_addr);
-			oct_hw->vqs[i].cb.callback(oct_hw->vqs[i].cb.private);
+		if (ioread8(oct_hw->vqs[i].cb_notify_addr)) {
+			/* Acknowledge the per ring notification to the device */
+			iowrite8(0, oct_hw->vqs[i].cb_notify_addr);
+
+			if (likely(oct_hw->vqs[i].cb.callback))
+				oct_hw->vqs[i].cb.callback(oct_hw->vqs[i].cb.private);
+			break;
 		}
 	}
 
-	return IRQ_HANDLED;
-}
-
-static irqreturn_t octep_vdpa_net_intr_handler(int irq, void *data)
-{
-	struct octep_hw *oct_hw = data;
-	int i, queue_start, queue_stride;
-
-	if (unlikely(oct_hw->config_cb.callback && ioread8(oct_hw->isr))) {
+	/* Check for config interrupt. Config uses the first interrupt */
+	if (unlikely(irq == oct_hw->irqs[0] && ioread8(oct_hw->isr))) {
 		iowrite8(0, oct_hw->isr);
-		oct_hw->config_cb.callback(oct_hw->config_cb.private);
-	}
 
-	/* Rx queues are at even indices */
-	queue_start = (irq - oct_hw->irqs[0]) * 2;
-	queue_stride = oct_hw->nb_irqs * 2;
-
-	for (i = queue_start; i < oct_hw->nr_vring; i += queue_stride) {
-		if (oct_hw->vqs[i].cb.callback && ioread32(oct_hw->vqs[i].cb_notify_addr)) {
-			/* Acknowledge the per queue notification to the device */
-			iowrite32(0, oct_hw->vqs[i].cb_notify_addr);
-			oct_hw->vqs[i].cb.callback(oct_hw->vqs[i].cb.private);
-		}
+		if (oct_hw->config_cb.callback)
+			oct_hw->config_cb.callback(oct_hw->config_cb.private);
 	}
 
 	return IRQ_HANDLED;
-}
-
-static irqreturn_t (*octep_vdpa_get_irq_handler(u32 dev_id))(int, void *)
-{
-	switch (dev_id) {
-	case VIRTIO_ID_NET:
-		return octep_vdpa_net_intr_handler;
-	case VIRTIO_ID_CRYPTO:
-		return octep_vdpa_crypto_intr_handler;
-	default:
-		return NULL;
-	}
 }
 
 static void octep_free_irqs(struct octep_hw *oct_hw)
@@ -104,22 +89,29 @@ static void octep_free_irqs(struct octep_hw *oct_hw)
 	struct pci_dev *pdev = oct_hw->pdev;
 	int irq;
 
+	if (!oct_hw->irqs)
+		return;
+
 	for (irq = 0; irq < oct_hw->nb_irqs; irq++) {
-		if (oct_hw->irqs[irq] < 0)
-			continue;
+		if (!oct_hw->irqs[irq])
+			break;
 
 		devm_free_irq(&pdev->dev, oct_hw->irqs[irq], oct_hw);
 	}
 
 	pci_free_irq_vectors(pdev);
-	kfree(oct_hw->irqs);
+	devm_kfree(&pdev->dev, oct_hw->irqs);
+	oct_hw->irqs = NULL;
 }
 
 static int octep_request_irqs(struct octep_hw *oct_hw)
 {
-	irqreturn_t (*irq_handler)(int, void *);
 	struct pci_dev *pdev = oct_hw->pdev;
 	int ret, irq, idx;
+
+	oct_hw->irqs = devm_kcalloc(&pdev->dev, oct_hw->nb_irqs, sizeof(int), GFP_KERNEL);
+	if (!oct_hw->irqs)
+		return -ENOMEM;
 
 	ret = pci_alloc_irq_vectors(pdev, 1, oct_hw->nb_irqs, PCI_IRQ_MSIX);
 	if (ret < 0) {
@@ -127,35 +119,21 @@ static int octep_request_irqs(struct octep_hw *oct_hw)
 		return ret;
 	}
 
-	oct_hw->irqs = kcalloc(oct_hw->nb_irqs, sizeof(int), GFP_KERNEL);
-	if (!oct_hw->irqs) {
-		ret = -ENOMEM;
-		goto free_irq_vec;
-	}
-
-	memset(oct_hw->irqs, -1, sizeof(oct_hw->irqs));
-	irq_handler = octep_vdpa_get_irq_handler(oct_hw->dev_id);
-	if (!irq_handler) {
-		dev_err(&pdev->dev, "Invalid device id %d\n", oct_hw->dev_id);
-		ret = -EINVAL;
-		goto free_irq_vec;
-	}
-
 	for (idx = 0; idx < oct_hw->nb_irqs; idx++) {
 		irq = pci_irq_vector(pdev, idx);
-		ret = devm_request_irq(&pdev->dev, irq, irq_handler, 0,
+		ret = devm_request_irq(&pdev->dev, irq, octep_vdpa_intr_handler, 0,
 				       dev_name(&pdev->dev), oct_hw);
 		if (ret) {
 			dev_err(&pdev->dev, "Failed to register interrupt handler\n");
-			goto free_irq_vec;
+			goto free_irqs;
 		}
 		oct_hw->irqs[idx] = irq;
 	}
 
 	return 0;
 
-free_irq_vec:
-	pci_free_irq_vectors(pdev);
+free_irqs:
+	octep_free_irqs(oct_hw);
 	return ret;
 }
 
