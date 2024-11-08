@@ -13,6 +13,7 @@ IGNORE_FILES=(
 	"ci/checkpatch/spelling.txt"
 	"ci/checkpatch/checkpatch.conf"
 	"ci/checkpatch/checkpatch.pl"
+	"ci/build/env/deps/dpdk.env"
 	".clang-format"
 	"TODO.txt"
 	"DPDK_VERSION"
