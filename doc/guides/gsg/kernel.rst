@@ -14,6 +14,7 @@ Linux kernel sources can be downloaded from
 .. code-block:: console
 
  git clone https://github.com/MarvellEmbeddedProcessors/linux-marvell.git
+ cd linux-marvell
  git checkout linux-6.1.x-release
 
 Setting up the environment
@@ -148,7 +149,96 @@ Kernel boot parameters
 Some important kernel boot parameters that need to be defined before booting the
 kernel
 
+ ``vfio-pci.enable_sriov=1`` to enable sriov support in userspace applications
+
+ ``rvu_af.kpu_profile=ovs_kpu_cnxk`` load profile to configure flow classifier HW for
+ extracting/parsingdifferent headers including tunnels. Required for OVS use cases only.
+
+ ``vfio_platform.reset_required=0`` required only for virtio use case
+
 .. code::
 
- vfio-pci.enable_sriov=1
- rvu_af.kpu_profile=ovs_kpu_cnxk
+ Eg. booting rootfs from mmc card
+  setenv bootargs "console=ttyAMA0,115200n8 earlycon=pl011,0x87e028000000 maxcpus=24 rootwait rw \
+	  coherent_pool=16M root=/dev/mmcblk0p2 vfio-pci.enable_sriov=1 rvu_af.kpu_profile=ovs_kpu_cnxk"
+
+ Eg. booting rootfs from nfs
+  setenv bootargs "console=ttyAMA0,115200n8 earlycon=pl011,0x87e028000000 maxcpus=24 rootwait rw \
+	  coherent_pool=16M root=/dev/nfs nfsroot=<path_to_rootfs_hosted_on_nfs_server> \
+	  vfio-pci.enable_sriov=1 rvu_af.kpu_profile=ovs_kpu_cnxk  vfio_platform.reset_required=0"
+
+Booting Kernel Image
+====================
+
+* Boot the target platform and stop at u-boot prompt.
+
+* Setting up board environment and TFTP server:
+
+.. code-block:: console
+
+  # Set ethernet adaptor, some common adaptors are ax88179_eth or r8152_eth or e1000#0 or rvu_pf#4
+  # set ethact <ethernet adaptor>
+  Eg.
+  crb106-pcie> set ethact e1000#0
+
+  # Obtain dynamic IP using dhcp for the board or assign static IP
+  # setenv ipaddr <board IP>
+  Eg
+  crb106-pcie> dhcp
+  or
+  crb106-pcie> setenv ipaddr 10.28.35.116
+
+  # Set TFTP server IP
+  # setenv serverip <TFTP server IP>
+  Eg.
+  crb106-pcie> setenv serverip 10.28.35.121
+
+  # Verify the tftp server is reachable from the board.
+  # ping $serverip
+  Eg.
+  crb106-pcie> ping 10.28.35.121
+  Waiting for RPM1 LMAC0 link status... 10G_R [10G]
+  Using rvu_pf#1 device
+  host 10.28.35.121 is alive
+
+* Load kernel image to DDR from the tftp server
+
+.. code-block:: console
+
+  # tftpboot $loadaddr <Path to firmware image in TFTP server>
+
+  Eg.
+  crb106-pcie> tftpboot $loadaddr Image_dao
+  Waiting for RPM1 LMAC0 link status... 10G_R [10G]
+  Using rvu_pf#1 device
+  TFTP from server 10.28.34.13; our IP address is 10.28.35.115
+  Filename 'Image_dao'.
+  Load address: 0x20080000
+  Loading: ##################################################  40.6 MiB
+           8.5 MiB/s
+  done
+  Bytes transferred = 42615296 (28a4200 hex)
+
+* Booting the kernel
+
+.. code-block:: console
+
+  # booti $loadaddr - $fdtcontroladdr
+
+  Eg.
+  crb106-pcie>  booti $loadaddr - $fdtcontroladdr
+  Moving Image from 0x20080000 to 0x20200000, end=22bf0000
+  ## Flattened Device Tree blob at 9f3909b20
+     Booting using the fdt blob at 0x9f3909b20
+  Working FDT set to 9f3909b20
+     Loading Device Tree to 00000009f28e1000, end 00000009f2901264 ... OK
+  Working FDT set to 9f28e1000
+
+  Skip Switch micro-init option is set
+
+  Starting kernel ...
+
+  [    0.000000] Booting Linux on physical CPU 0x0000000000 [0x410fd490]
+  ...
+  <snip>
+  ...
