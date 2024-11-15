@@ -349,33 +349,26 @@ fetch_deq_desc_prep(struct virtio_net_queue *q, struct dao_dma_vchan_state *dev2
 	uint16_t next_off, off;
 	int i, j = 0;
 	int nb_desc;
+	int desc_count = 0;
+	uint16_t sd_desc_val = 0;
 
 	pend_sd_desc = q->pend_sd_desc;
 	sd_desc_off = q->sd_desc_off;
 
-	/* Check if pending DMA's for shadow op are done */
-	/* TODO Does this detect dma completion in all corner cases */
-	if (pend_sd_desc &&dao_dma_op_status(dev2mem, q->pend_sd_desc_idx)) {
-		/* Validate descriptor */
-		VIRTIO_NET_DESC_CHECK(q, sd_desc_off, pend_sd_desc, true, false);
-
-		sd_desc_off = desc_off_add(sd_desc_off, pend_sd_desc, q_sz);
-		__atomic_store_n(&q->sd_desc_off, sd_desc_off, __ATOMIC_RELEASE);
-		pend_sd_desc = 0;
-		q->pend_sd_desc = 0;
-	}
-
 	/* Include the wrap bit to check if there are descriptors */
 	notify_data = __atomic_load_n(q->notify_addr, __ATOMIC_RELAXED);
 	next_off = (notify_data >> 16) & 0xFFFF;
-	if (unlikely(pend_sd_desc || next_off == sd_desc_off))
+	if (unlikely(next_off == sd_desc_off))
 		return 0;
 
 	/* Limit the fetch to end of the queue */
-	nb_desc = desc_off_diff(next_off, sd_desc_off, q_sz);
+	nb_desc = desc_off_diff(next_off, sd_desc_off, q_sz) - pend_sd_desc;
+	if (unlikely(!nb_desc))
+		return 0;
 
 	/* Allocate required mbufs */
-	off = DESC_OFF(sd_desc_off);
+	off = desc_off_add(sd_desc_off, pend_sd_desc, q_sz);
+	off = DESC_OFF(off);
 	mbuf_arr = q->mbuf_arr;
 
 	if (flags & VIRTIO_NET_DESC_MANAGE_EXTBUF)
@@ -391,7 +384,6 @@ fetch_deq_desc_prep(struct virtio_net_queue *q, struct dao_dma_vchan_state *dev2
 	i = 0;
 	do {
 		i = (off + nb_desc) > q_sz ? (q_sz - off) : nb_desc;
-
 		src[j].addr = (rte_iova_t)DESC_PTR_OFF(desc_base, off, 0);
 		dst[j].addr = (rte_iova_t)DESC_PTR_OFF(sd_desc_base, off, 0);
 		src[j].length = i << 4;
@@ -400,13 +392,16 @@ fetch_deq_desc_prep(struct virtio_net_queue *q, struct dao_dma_vchan_state *dev2
 		/* Mark descriptor as invalid */
 		VIRTIO_NET_DESC_CHECK(q, off, i, false, false);
 
+		desc_count += i;
 		off = (off + i) & (q_sz - 1);
 		nb_desc -= i;
-		q->pend_sd_desc += i;
 		j++;
 	} while (nb_desc);
 
-	q->pend_sd_desc_idx = dev2mem->tail;
+	sd_desc_val = desc_off_add(q->sd_desc_off, desc_count + q->pend_sd_desc, q->q_sz);
+	q->pend_sd_desc += desc_count;
+	dao_dma_update_cmpl_meta(dev2mem, &q->sd_desc_off, sd_desc_val, &q->pend_sd_desc,
+				 desc_count, dev2mem->tail);
 	return j;
 }
 
@@ -422,38 +417,30 @@ fetch_enq_desc_prep(struct virtio_net_queue *q, struct dao_dma_vchan_state *dev2
 	uint16_t next_off, off;
 	int i, j = 0;
 	int nb_desc;
+	int sd_desc_val = 0;
+	int desc_count = 0;
 
 	pend_sd_desc = q->pend_sd_desc;
 	sd_desc_off = q->sd_desc_off;
 
-	/* Check if pending DMA's for shadow op are done */
-	/* TODO Does this detect dma completion in all corner cases */
-	if (pend_sd_desc &&dao_dma_op_status(dev2mem, q->pend_sd_desc_idx)) {
-		/* Validate descriptor */
-		VIRTIO_NET_DESC_CHECK(q, sd_desc_off, pend_sd_desc, true, false);
-
-		sd_desc_off = desc_off_add(sd_desc_off, pend_sd_desc, q_sz);
-		__atomic_store_n(&q->sd_desc_off, sd_desc_off, __ATOMIC_RELEASE);
-		pend_sd_desc = 0;
-		q->pend_sd_desc = 0;
-	}
-
 	/* Include the wrap bit to check if there are descriptors */
 	notify_data = __atomic_load_n(q->notify_addr, __ATOMIC_RELAXED);
 	next_off = (notify_data >> 16) & 0xFFFF;
-	if (unlikely(pend_sd_desc || next_off == sd_desc_off))
+	if (unlikely(next_off == sd_desc_off))
 		return 0;
 
 	/* Limit the fetch to end of the queue */
-	nb_desc = desc_off_diff(next_off, sd_desc_off, q_sz);
+	nb_desc = desc_off_diff(next_off, sd_desc_off, q_sz) - q->pend_sd_desc;
+	if (unlikely(!nb_desc))
+		return 0;
 
 	/* Assume nothing else is pending now */
 	/* Start DMA of descriptors */
 	i = 0;
-	off = DESC_OFF(sd_desc_off);
+	off = desc_off_add(sd_desc_off, pend_sd_desc, q_sz);
+	off = DESC_OFF(off);
 	do {
 		i = (off + nb_desc) > q_sz ? (q_sz - off) : nb_desc;
-
 		src[j].addr = (rte_iova_t)DESC_PTR_OFF(desc_base, off, 0);
 		dst[j].addr = (rte_iova_t)DESC_PTR_OFF(sd_desc_base, off, 0);
 		src[j].length = i << 4;
@@ -462,13 +449,17 @@ fetch_enq_desc_prep(struct virtio_net_queue *q, struct dao_dma_vchan_state *dev2
 		/* Mark descriptor as invalid */
 		VIRTIO_NET_DESC_CHECK(q, off, i, false, false);
 
+		desc_count += i;
 		off = (off + i) & (q_sz - 1);
 		nb_desc -= i;
-		q->pend_sd_desc += i;
 		j++;
 	} while (nb_desc);
 
 	q->pend_sd_desc_idx = dev2mem->tail;
+	sd_desc_val = desc_off_add(q->sd_desc_off, desc_count + q->pend_sd_desc, q->q_sz);
+	q->pend_sd_desc += desc_count;
+	dao_dma_update_cmpl_meta(dev2mem, &q->sd_desc_off, sd_desc_val, &q->pend_sd_desc,
+				 desc_count, dev2mem->tail);
 	return j;
 }
 

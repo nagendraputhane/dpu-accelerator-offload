@@ -288,7 +288,6 @@ fetch_host_data(struct virtio_net_queue *q, struct dao_dma_vchan_state *dev2mem,
 	uintptr_t desc_base = (uintptr_t)q->sd_desc_base;
 	struct rte_mbuf *mbuf0, *mbuf1, *mbuf2, *mbuf3;
 	const uint16_t vhdr_sz = q->virtio_hdr_sz;
-	uint16_t pend_sd_mbuf = q->pend_sd_mbuf;
 	uint64x2_t len01, len23, buf01, buf23;
 	uint64x2_t desc0, desc1, desc2, desc3;
 	uint16_t sd_desc_off, sd_mbuf_off;
@@ -307,27 +306,24 @@ fetch_host_data(struct virtio_net_queue *q, struct dao_dma_vchan_state *dev2mem,
 	uint32x4_t xlen, ylen;
 	uint16_t used = 0;
 	int last_idx = 0;
-	uint16_t off;
+	uint16_t off, mbuf_off;
 
 	sd_mbuf_off = q->sd_mbuf_off;
-	/* Check if pending DMA's for rx data are done */
-	if (pend_sd_mbuf && dao_dma_op_status(dev2mem, q->pend_sd_mbuf_idx)) {
-		sd_mbuf_off = desc_off_add(q->sd_mbuf_off, pend_sd_mbuf, q_sz);
-		pend_sd_mbuf = 0;
-		q->sd_mbuf_off = sd_mbuf_off;
-		q->pend_sd_mbuf = 0;
-	}
 
 	sd_desc_off = __atomic_load_n(&q->sd_desc_off, __ATOMIC_ACQUIRE);
 	/* Return if already something is pending DMA or there are no descriptors to process */
-	if (unlikely(pend_sd_mbuf || sd_desc_off == sd_mbuf_off))
+	if (unlikely(sd_desc_off == sd_mbuf_off))
 		return sd_mbuf_off;
 
 	/* Start DMAs of mbuf's assuming other pending mbuf's are done */
-	nb_mbufs = desc_off_diff(sd_desc_off, sd_mbuf_off, q_sz);
-	nb_mbufs = RTE_MIN(nb_mbufs, hint);
+	nb_mbufs = desc_off_diff(sd_desc_off, sd_mbuf_off, q_sz) - q->pend_sd_mbuf;
+	if (!nb_mbufs)
+		return sd_mbuf_off;
 
-	off = DESC_OFF(sd_mbuf_off);
+	nb_mbufs = RTE_MIN(nb_mbufs, hint);
+	off = desc_off_add(sd_mbuf_off, q->pend_sd_mbuf, q_sz);
+	off = DESC_OFF(off);
+
 	rte_prefetch0(DESC_PTR_OFF(desc_base, off, 0));
 	mbuf_arr = q->mbuf_arr;
 
@@ -559,9 +555,10 @@ fetch_host_data(struct virtio_net_queue *q, struct dao_dma_vchan_state *dev2mem,
 
 exit:
 	if (likely(used)) {
-		/* If we are here, it means there are no pending mbufs */
-		q->pend_sd_mbuf = used;
-		q->pend_sd_mbuf_idx = last_idx;
+		mbuf_off = desc_off_add(q->sd_mbuf_off, used + q->pend_sd_mbuf, q->q_sz);
+		q->pend_sd_mbuf += used;
+		dao_dma_update_cmpl_meta(dev2mem, &q->sd_mbuf_off, mbuf_off, &q->pend_sd_mbuf, used,
+					 last_idx);
 	}
 
 	return sd_mbuf_off;
@@ -583,7 +580,7 @@ virtio_net_deq(struct virtio_net_queue *q, struct rte_mbuf **mbufs, uint16_t nb_
 
 	rte_prefetch0(&q->last_off);
 	/* Update completed DMA ops */
-	dao_dma_check_compl(dev2mem);
+	dao_dma_check_meta_compl(dev2mem, 0 /* No ATOMIC update */);
 
 	/* Check shadow mbuf status and issue new DMA's for mbuf's */
 	sd_mbuf_off = fetch_host_data(q, dev2mem, 128, flags);

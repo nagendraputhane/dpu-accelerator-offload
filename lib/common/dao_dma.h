@@ -30,6 +30,23 @@
 /** DMA Max VCHAN per lcore */
 #define DAO_DMA_MAX_VCHAN_PER_LCORE 128
 
+/** DMA inflight event meta data */
+#define DAO_DMA_MAX_INFLIGHT_MDATA 4096
+
+/** DMA inflight event completion meta data */
+struct dao_dma_cmpl_mdata {
+	/** Pending counter address */
+	uint16_t *pend_ptr[DAO_DMA_MAX_POINTER];
+	/** Pending value */
+	uint16_t pend_val[DAO_DMA_MAX_POINTER];
+	/** Completion val to write */
+	uint16_t val[DAO_DMA_MAX_POINTER];
+	/** Completion address to write */
+	uint16_t *ptr[DAO_DMA_MAX_POINTER];
+	/** Count */
+	uint16_t cnt;
+};
+
 /** DMA per vchan state */
 struct dao_dma_vchan_state {
 	/** Tail index */
@@ -66,6 +83,8 @@ struct dao_dma_vchan_state {
 	uint64_t dma_enq_errs;
 	/** DMA completion errors */
 	uint64_t dma_compl_errs;
+	/** DMA events meta data */
+	struct dao_dma_cmpl_mdata mdata[DAO_DMA_MAX_INFLIGHT_MDATA];
 } __rte_cache_aligned;
 
 /** DMA per lcore vchan info */
@@ -503,4 +522,71 @@ dao_dma_check_compl(struct dao_dma_vchan_state *vchan)
 	}
 	vchan->head += cmpl;
 }
+
+/**
+ * Check and update DMA completions with metadata.
+ *
+ * @param vchan
+ *    Vchan state pointer
+ * @param mem_order
+ *    Memory order to update address
+ */
+
+static __rte_always_inline void
+dao_dma_check_meta_compl(struct dao_dma_vchan_state *vchan, const int mem_order)
+{
+	uint32_t cmpl, i, j, idx = 0;
+	bool has_err = 0;
+
+	/* Fetch all DMA completed status */
+	cmpl = rte_dma_completed(vchan->devid, vchan->vchan, 128, NULL, &has_err);
+	if (unlikely(has_err)) {
+		vchan->dma_compl_errs++;
+		cmpl += 1;
+	}
+	for (i = vchan->head; i < vchan->head + cmpl; i++) {
+		idx = i % DAO_DMA_MAX_INFLIGHT_MDATA;
+		for (j = 0; j < vchan->mdata[idx].cnt; j++) {
+			if (mem_order)
+				__atomic_store_n(vchan->mdata[idx].ptr[j], vchan->mdata[idx].val[j],
+						 __ATOMIC_RELAXED);
+			else
+				*vchan->mdata[idx].ptr[j] = vchan->mdata[idx].val[j];
+			*vchan->mdata[idx].pend_ptr[j] -= vchan->mdata[idx].pend_val[j];
+		}
+		vchan->mdata[idx].cnt = 0;
+	}
+	vchan->head += cmpl;
+}
+
+/**
+ * Update DMA op index metadata.
+ *
+ * @param vchan
+ *    Vchan state pointer
+ * @param ptr
+ *    desc location to write
+ * @param val
+ *    Value to store in descriptor location
+ * @param pend_ptr
+ *    Pending count location to write
+ * @param pend_val
+ *    Pending Value to store
+ * @param tail
+ *    Meta data index to store
+ */
+static __rte_always_inline void
+dao_dma_update_cmpl_meta(struct dao_dma_vchan_state *vchan, uint16_t *ptr, uint16_t val,
+			 uint16_t *pend_ptr, uint16_t pend_val, uint16_t tail)
+{
+	uint16_t idx = tail % DAO_DMA_MAX_INFLIGHT_MDATA;
+	uint16_t j = vchan->mdata[idx].cnt;
+
+	vchan->mdata[idx].ptr[j] = ptr;
+	vchan->mdata[idx].val[j] = val;
+	vchan->mdata[idx].pend_ptr[j] = pend_ptr;
+	vchan->mdata[idx].pend_val[j] = pend_val;
+	vchan->mdata[idx].cnt = j + 1;
+}
+
 #endif /* __INCLUDE_DAO_DMA_H__ */

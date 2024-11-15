@@ -113,22 +113,6 @@ process_mseg_pkts_enq(struct virtio_net_queue *q, struct dao_dma_vchan_state *me
 	return;
 }
 
-static __rte_always_inline void
-process_enq_compl(struct virtio_net_queue *q, struct dao_dma_vchan_state *mem2dev,
-		  const uint16_t flags)
-{
-	uint16_t sd_mbuf_off = q->sd_mbuf_off;
-	uint16_t last_off = q->last_off;
-
-	RTE_SET_USED(flags);
-
-	/* Check if mbuf DMA is complete */
-	if (sd_mbuf_off != last_off && dao_dma_op_status(mem2dev, q->pend_sd_mbuf_idx)) {
-		__atomic_store_n(&q->sd_mbuf_off, last_off, __ATOMIC_RELEASE);
-		q->pend_sd_mbuf = 0;
-	}
-}
-
 static __rte_always_inline uint16_t
 mbuf_pkt_type_to_virtio_hash_report(uint8_t *hash_report, uint32_t packet_type)
 {
@@ -542,7 +526,8 @@ exit:
 		off = desc_off_add(q->last_off, used, q_sz);
 		q->last_off = off;
 		q->pend_sd_mbuf += used;
-		q->pend_sd_mbuf_idx = last_idx;
+		dao_dma_update_cmpl_meta(mem2dev, &q->sd_mbuf_off, q->last_off, &q->pend_sd_mbuf,
+					 used, last_idx);
 	}
 	return i;
 }
@@ -560,10 +545,7 @@ virtio_net_enq(struct virtio_net_queue *q, struct rte_mbuf **mbufs, uint16_t nb_
 	mem2dev = &vchan_info->mem2dev[dma_vchan];
 
 	/* Fetch mem2dev DMA completed status */
-	dao_dma_check_compl(mem2dev);
-
-	/* Process enqueue completions */
-	process_enq_compl(q, mem2dev, flags);
+	dao_dma_check_meta_compl(mem2dev, 1 /* ATOMIC update */);
 
 	/* Send only mbufs as per available descriptors */
 	sd_desc_off = __atomic_load_n(&q->sd_desc_off, __ATOMIC_ACQUIRE);

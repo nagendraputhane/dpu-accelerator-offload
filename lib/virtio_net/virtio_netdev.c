@@ -898,12 +898,11 @@ virtio_net_desc_manage(uint16_t devid, uint16_t qp_count, const uint16_t flags)
 	mem2dev = &vchan_info->mem2dev[dma_vchan];
 
 	/* Fetch all DMA completed status */
-	dao_dma_check_compl(dev2mem);
-	dao_dma_check_compl(mem2dev);
+	dao_dma_check_meta_compl(dev2mem, 1 /* ATOMIC update */);
+	dao_dma_check_meta_compl(mem2dev, 1 /* ATOMIC update */);
 
 	for (i = 0; i < qp_count; i++) {
-		/* Need space for at least 2 pointers */
-		if (!dao_dma_flush(dev2mem, 2))
+		if (!dao_dma_flush(dev2mem, DAO_DMA_MAX_POINTER))
 			break;
 
 		/* Populate pointers for Host Rx queue */
@@ -914,7 +913,7 @@ virtio_net_desc_manage(uint16_t devid, uint16_t qp_count, const uint16_t flags)
 		dev2mem->src_i += sg_i;
 		dev2mem->dst_i += sg_i;
 
-		if (!dao_dma_flush(dev2mem, 2))
+		if (!dao_dma_flush(dev2mem, DAO_DMA_MAX_POINTER))
 			break;
 
 		/* Populate pointers for Host Tx queue */
