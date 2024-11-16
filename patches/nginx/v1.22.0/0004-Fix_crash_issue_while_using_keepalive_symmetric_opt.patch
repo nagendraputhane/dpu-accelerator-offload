@@ -1,0 +1,27 @@
+diff --git a/src/http/ngx_http_upstream.c b/src/http/ngx_http_upstream.c
+index d208ee86a..996b59224 100644
+--- a/src/http/ngx_http_upstream.c
++++ b/src/http/ngx_http_upstream.c
+@@ -1271,9 +1271,9 @@ failed:
+ static void
+ ngx_http_upstream_handler(ngx_event_t *ev)
+ {
+-    ngx_connection_t     *c;
+-    ngx_http_request_t   *r;
+-    ngx_http_upstream_t  *u;
++    ngx_connection_t     *c = NULL;
++    ngx_http_request_t   *r = NULL;
++    ngx_http_upstream_t  *u = NULL;
+ 
+     c = ev->data;
+     r = c->data;
+@@ -1281,6 +1281,9 @@ ngx_http_upstream_handler(ngx_event_t *ev)
+     u = r->upstream;
+     c = r->connection;
+ 
++   if(u == NULL)
++     return;
++
+     ngx_http_set_log_request(c->log, r);
+ 
+     ngx_log_debug2(NGX_LOG_DEBUG_HTTP, c->log, 0,
