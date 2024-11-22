@@ -421,3 +421,15 @@ dao_pem_host_interrupt_setup(uint16_t pem_devid, int vfid, uint64_t **intr_addr)
 
 	return rpvf;
 }
+
+uint16_t
+dao_pem_max_vfs_get(uint16_t pem_devid)
+{
+	struct pem *pem;
+
+	if (pem_devid >= DAO_PEM_DEV_ID_MAX)
+		return 0;
+
+	pem = &pem_devices[pem_devid];
+	return pem->max_vfs;
+}

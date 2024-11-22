@@ -168,4 +168,14 @@ size_t dao_pem_host_page_sz(uint16_t pem_devid);
  *   Number of interrupts configured.
  */
 uint8_t dao_pem_host_interrupt_setup(uint16_t pem_devid, int vfid, uint64_t **intr_addr);
+
+/**
+ * PEM max VFs get.
+ *
+ * @param pem_devid
+ *    PEM device ID
+ * @return
+ *    Max VFs supported.
+ */
+uint16_t dao_pem_max_vfs_get(uint16_t pem_devid);
 #endif /* __INCLUDE_DAO_PEM_H__ */
