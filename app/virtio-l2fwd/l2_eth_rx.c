@@ -10,6 +10,7 @@ l2_ethdev_rx_node_process_inline(struct rte_graph *graph, struct rte_node *node,
 	uint16_t virtio_devid = ctx->virtio_devid;
 	uint16_t nb_pkts = 0, next_index, count;
 	uint16_t max_pkts, max_que_per_ethdev;
+	uint16_t rxq_map_count, max_q;
 	struct rte_mbuf **mbufs;
 	uint16_t port, queue;
 	uint64_t rx_q_map;
@@ -17,9 +18,11 @@ l2_ethdev_rx_node_process_inline(struct rte_graph *graph, struct rte_node *node,
 
 	next_index = ctx->virtio_next;
 	rx_q_map = ctx->rx_q_map;
+	rxq_map_count = rte_clz64(rx_q_map);
 	port = ctx->eth_port;
 	max_pkts = L2_ETHDEV_RX_BURST_MAX;
 	max_que_per_ethdev = L2_ETHDEV_RX_Q_MAX - 1;
+	max_q = max_que_per_ethdev - rxq_map_count;
 
 	/* Get stream for pkts */
 	mbufs = (struct rte_mbuf **)rte_node_next_stream_get(graph, node, next_index, max_pkts);
@@ -28,7 +31,7 @@ l2_ethdev_rx_node_process_inline(struct rte_graph *graph, struct rte_node *node,
 	queue = ctx->next_q;
 	while (q_count && (nb_pkts < max_pkts)) {
 		if (!(rx_q_map & RTE_BIT64(queue))) {
-			queue = queue >= max_que_per_ethdev ? 0 : queue + 1;
+			queue = queue > max_q ? 0 : queue + 1;
 			continue;
 		}
 
@@ -44,7 +47,7 @@ l2_ethdev_rx_node_process_inline(struct rte_graph *graph, struct rte_node *node,
 		}
 
 		nb_pkts += count;
-		queue = queue >= max_que_per_ethdev ? 0 : queue + 1;
+		queue = queue > max_q ? 0 : queue + 1;
 		q_count--;
 	}
 	ctx->next_q = queue;
