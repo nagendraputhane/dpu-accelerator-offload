@@ -791,6 +791,11 @@ parse_args(int argc, char **argv)
 		j++;
 	}
 
+	if (!eth_mask_dflt || !virtio_mask_dflt) {
+		APP_ERR("At least 4 cores are required, please increase the cores\n");
+		return -1;
+	}
+
 	for (i = 0; i < RTE_MAX_ETHPORTS; i++)
 		lcore_eth_mask[i] = eth_mask_dflt;
 	for (i = 0; i < DAO_VIRTIO_DEV_MAX; i++)
