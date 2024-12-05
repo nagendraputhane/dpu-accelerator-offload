@@ -882,12 +882,11 @@ ood_flow_query(uint16_t repr_qid, struct dao_flow *flow, uint8_t reset,
 	       ood_msg_ack_data_t *adata)
 {
 	/* Currently only query count supported by cnxk driver */
-	struct rte_flow_query_count query;
+	struct dao_flow_query_count query;
 	representor_mapping_t *rep_map;
 	size_t sz;
 	int rc = 0;
 
-	sz = sizeof(struct rte_flow_query_count);
 	/* Get the flow ctrl structure */
 	rep_map = ood_representor_mapping_get(repr_qid);
 	if (!rep_map)
@@ -895,6 +894,7 @@ ood_flow_query(uint16_t repr_qid, struct dao_flow *flow, uint8_t reset,
 			     "Failed to get valid flow ctrl handle for repr queue %d", repr_qid);
 
 	/* Query the flow */
+	memset(&query, 0, sizeof(query));
 	query.reset = reset;
 	memset(err, 0, sizeof(*err));
 	rc = dao_flow_query(rep_map->host_port, flow, action, &query, err);
@@ -904,8 +904,11 @@ ood_flow_query(uint16_t repr_qid, struct dao_flow *flow, uint8_t reset,
 			     rep_map->host_port);
 	}
 
-	dao_dbg("Flow query: hits %ld hits_set %d", query.hits, query.hits_set);
+	dao_dbg("Flow query: hits %ld hits_set %d bytes %ld bytes_set %d", query.hits,
+		query.hits_set, query.bytes, query.bytes_set);
 
+	/* Copy only required for rte_flow_query_count */
+	sz = sizeof(struct rte_flow_query_count);
 	adata->u.data = rte_zmalloc("Ack Data", sz, 0);
 	rte_memcpy(adata->u.data, &query, sz);
 	adata->size = sz;
