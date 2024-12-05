@@ -204,7 +204,7 @@ post_process_pkts(struct virtio_net_queue *q, struct rte_mbuf **d_mbufs, uint16_
 		rte_prefetch0((uint8_t *)mbuf_arr[last_off + 1] + data_off);
 		mbuf0 = mbuf_arr[last_off];
 
-		dflags = (*DESC_PTR_OFF(desc_base, last_off, 8) >> VRING_DESC_F_NEXT) & 0x1;
+		dflags = (*DESC_PTR_OFF(desc_base, last_off, 8) >> 48) & VRING_DESC_F_NEXT;
 
 		mbuf1 = mbuf0;
 		off = last_off;
@@ -212,7 +212,7 @@ post_process_pkts(struct virtio_net_queue *q, struct rte_mbuf **d_mbufs, uint16_
 		/* Calculate additional segments required for mbuf-chain */
 		while (unlikely(dflags)) {
 			off = (off + 1) & (q_sz - 1);
-			dflags = (*DESC_PTR_OFF(desc_base, off, 8) >> VRING_DESC_F_NEXT) & 0x1;
+			dflags = (*DESC_PTR_OFF(desc_base, off, 8) >> 48) & VRING_DESC_F_NEXT;
 			segs++;
 		}
 

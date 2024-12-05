@@ -17,15 +17,20 @@
 #define VIRTIO_F_NOTIFICATION_DATA 38
 
 /** This marks a buffer as continuing via the next field. */
-#define VRING_DESC_F_NEXT 48
+#define VRING_DESC_F_NEXT 1
 /** This marks a buffer as write-only (otherwise read-only). */
-#define VRING_DESC_F_WRITE 50
+#define VRING_DESC_F_WRITE 2
 /** This means the buffer contains a list of buffer descriptors. */
-#define VRING_DESC_F_INDIRECT 52
-/** This flag means the descriptor was made available by the driver */
-#define VIRT_PACKED_RING_DESC_F_AVAIL (1UL << 55)
-/** This flag means the descriptor was used by the device */
-#define VIRT_PACKED_RING_DESC_F_USED (1UL << 63)
+#define VRING_DESC_F_INDIRECT 4
+
+/* This flag means the descriptor was made available by the driver */
+#define VRING_PACKED_DESC_F_AVAIL (1UL << 7)
+/* This flag means the descriptor was used by the device */
+#define VRING_PACKED_DESC_F_USED (1UL << 15)
+
+/* Flags to be used when working with second uint64_t in the VirtIO descriptor. */
+#define VIRT_PACKED_RING_DESC_F_AVAIL (VRING_PACKED_DESC_F_AVAIL << 48)
+#define VIRT_PACKED_RING_DESC_F_USED  (VRING_PACKED_DESC_F_USED << 48)
 #define VIRT_PACKED_RING_DESC_F_AVAIL_USED                                                         \
 	(VIRT_PACKED_RING_DESC_F_AVAIL | VIRT_PACKED_RING_DESC_F_USED)
 
