@@ -241,9 +241,9 @@ ood_representor_eswitch_dev_init(struct ood_main_cfg_data *ood_main_cfg)
 
 	portid = rte_eth_find_next(0);
 	while (portid < RTE_MAX_ETHPORTS) {
-		rte_eth_dev_info_get(portid, &ethdev_info);
-		if (ethdev_info.switch_info.domain_id !=
-			RTE_ETH_DEV_SWITCH_DOMAIN_ID_INVALID)
+		if (rte_eth_dev_info_get(portid, &ethdev_info))
+			DAO_ERR_GOTO(-EFAULT, fail, "Failed to get ethdev info");
+		if (ethdev_info.switch_info.domain_id != RTE_ETH_DEV_SWITCH_DOMAIN_ID_INVALID)
 			break;
 		portid = rte_eth_find_next(portid + 1);
 	}

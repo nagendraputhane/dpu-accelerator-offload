@@ -72,7 +72,10 @@ secgw_tap_configure(secgw_device_t *sdev, secgw_device_register_conf_t *conf)
 	ptap_conf = &tap->dev_tap_conf;
 
 	/* get underlying dp port id and get device_info */
-	rte_eth_dev_info_get(sdev->dp_port_id, &dev_info);
+	if (rte_eth_dev_info_get(sdev->dp_port_id, &dev_info)) {
+		dao_err("Failed to get device info for port: %d", sdev->dp_port_id);
+		return -1;
+	}
 
 	memcpy(ptap_conf, &secgw_def_port_conf, sizeof(struct rte_eth_conf));
 
@@ -134,7 +137,10 @@ secgw_tap_queue_setup(secgw_device_t *sdev)
 	tap = secgw_tap_cast(sdev);
 
 	/* get underlying dp port id and get device_info */
-	rte_eth_dev_info_get(sdev->dp_port_id, &dev_info);
+	if (rte_eth_dev_info_get(sdev->dp_port_id, &dev_info)) {
+		dao_err("Failed to get device info for port: %d", sdev->dp_port_id);
+		return -1;
+	}
 
 	/* TXQ setup */
 	for (iter = 0; iter < tap->n_txq; iter++) {
@@ -219,7 +225,10 @@ secgw_register_tap(secgw_device_t **ppdev, secgw_device_register_conf_t *conf)
 	uint32_t port_num;
 	int rc = -1;
 
-	rte_eth_dev_info_get(conf->dp_port_id, &devinfo);
+	if (rte_eth_dev_info_get(conf->dp_port_id, &devinfo)) {
+		dao_err("Failed to get device info for port: %d", conf->dp_port_id);
+		return -1;
+	}
 
 	/* Allocate new tap */
 	sdev = secgw_tap_alloc();

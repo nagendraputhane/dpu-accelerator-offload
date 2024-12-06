@@ -64,7 +64,8 @@ start_devices(void)
 	for (iter = 0; iter < secgw_num_devices_get(); iter++) {
 		sdev = secgw_get_device(iter);
 		dao_ds_put_cstr(&dev_str, sdev->dev_name);
-		rte_eth_link_get(sdev->dp_port_id, &link);
+		if (rte_eth_link_get(sdev->dp_port_id, &link))
+			return -1;
 		dao_ds_put_cstr(&dev_str, " LINK: ");
 		rte_eth_link_to_str(link_status, sizeof(link_status), &link);
 		dao_ds_put_cstr(&dev_str, link_status);
@@ -135,7 +136,10 @@ register_devices(void)
 
 		memset(&devinfo, 0, sizeof(struct rte_eth_dev_info));
 
-		rte_eth_dev_info_get(iter, &devinfo);
+		if (rte_eth_dev_info_get(iter, &devinfo)) {
+			dao_err("rte_eth_dev_info_get failed for port: %d", iter);
+			continue;
+		}
 
 		/* See if room present to new device */
 		if (secgw_num_devices_get() >= (sdm->max_num_devices_allocated - 1)) {

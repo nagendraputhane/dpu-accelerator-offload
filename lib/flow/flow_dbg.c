@@ -163,14 +163,13 @@ dump_item_string(const struct rte_flow_item *item)
 
 		dao_info("	type %s", "IPV6");
 		dao_info("	spec: version_tc_flow %x payload_len %x "
-			 "proto %x hop_limits %x src_addr %p dst_addr %p",
+			 "proto %x hop_limits %x",
 			 ipv6->hdr.vtc_flow, ipv6->hdr.payload_len, ipv6->hdr.proto,
-			 ipv6->hdr.hop_limits, ipv6->hdr.src_addr, ipv6->hdr.dst_addr);
+			 ipv6->hdr.hop_limits);
 		dao_info("	mask: version_tc_flow %x payload_len %x "
-			 "proto %x hop_limits %x src_addr %p dst_addr %p",
+			 "proto %x hop_limits %x",
 			 ipv6_mask->hdr.vtc_flow, ipv6_mask->hdr.payload_len, ipv6_mask->hdr.proto,
-			 ipv6_mask->hdr.hop_limits, ipv6_mask->hdr.src_addr,
-			 ipv6_mask->hdr.dst_addr);
+			 ipv6_mask->hdr.hop_limits);
 		break;
 	}
 	case RTE_FLOW_ITEM_TYPE_ICMP: {
@@ -573,15 +572,11 @@ dump_action_string(enum rte_flow_action_type type, const void *conf)
 		break;
 	}
 	case RTE_FLOW_ACTION_TYPE_SET_IPV6_SRC: {
-		struct rte_flow_action_set_ipv6 *set_ipv6_src =
-			(struct rte_flow_action_set_ipv6 *)conf;
-		dao_info("	type %s IPV6 src %p", "SET_IPV6_SRC", set_ipv6_src->ipv6_addr);
+		dao_info("	type %s", "SET_IPV6_SRC");
 		break;
 	}
 	case RTE_FLOW_ACTION_TYPE_SET_IPV6_DST: {
-		struct rte_flow_action_set_ipv6 *set_ipv6_dst =
-			(struct rte_flow_action_set_ipv6 *)conf;
-		dao_info("	type %s IPV6 dst %p", "SET_IPV6_DST", set_ipv6_dst->ipv6_addr);
+		dao_info("	type %s", "SET_IPV6_DST");
 		break;
 	}
 	case RTE_FLOW_ACTION_TYPE_SET_TP_SRC: {

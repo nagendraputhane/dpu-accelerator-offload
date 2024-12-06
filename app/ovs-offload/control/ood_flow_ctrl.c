@@ -469,7 +469,7 @@ vlan_insert_action_config_process(struct rte_flow_action **actions, uint16_t por
 
 	return mac_flow;
 remove_new_actions:
-	free(new_actions);
+	rte_free(new_actions);
 fail:
 	return NULL;
 }

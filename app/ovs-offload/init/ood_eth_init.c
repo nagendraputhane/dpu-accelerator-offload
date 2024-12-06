@@ -362,7 +362,8 @@ port_init(struct ood_main_cfg_data *ood_main_cfg, uint16_t portid, uint16_t nb_l
 		n_tx_queue = OOD_MAX_TX_QUEUE_PER_PORT;
 	dao_dbg("Creating queues: nb_rxq=%d nb_txq=%u... ", nb_rx_queue, n_tx_queue);
 
-	rte_eth_dev_info_get(portid, &dev_info);
+	if (rte_eth_dev_info_get(portid, &dev_info))
+		DAO_ERR_GOTO(-EINVAL, fail, "Error during getting device (port %u) info", portid);
 
 	rc = ood_config_port_max_pkt_len(ood_main_cfg->cfg_prm, &local_port_conf, &dev_info);
 	if (rc != 0)
@@ -474,7 +475,9 @@ eth_rx_queue_setup(struct ood_main_cfg_data *ood_main_cfg, uint16_t lcore_id)
 		dao_dbg("    portid=%d, rxq=%d, sockid=%d", portid, queueid, socketid);
 		fflush(stdout);
 
-		rte_eth_dev_info_get(portid, &dev_info);
+		if (rte_eth_dev_info_get(portid, &dev_info))
+			DAO_ERR_GOTO(-EINVAL, fail, "Error during getting device (port %u) info",
+				     portid);
 		rxq_conf = dev_info.default_rxconf;
 		rxq_conf.offloads = port_conf.rxmode.offloads;
 		if (!ood_main_cfg->cfg_prm->per_port_pool)
@@ -508,7 +511,8 @@ is_host_port(uint16_t portid)
 	struct rte_eth_dev_info dev_info;
 	const char *info;
 
-	rte_eth_dev_info_get(portid, &dev_info);
+	if (rte_eth_dev_info_get(portid, &dev_info))
+		return 0;
 
 	info = rte_dev_bus_info(dev_info.device);
 	return (strstr(info, "a0f7") != NULL);

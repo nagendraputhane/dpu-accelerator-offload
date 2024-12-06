@@ -82,7 +82,10 @@ secgw_ethdev_configure(secgw_device_t *sdev, secgw_device_register_conf_t *conf)
 	peth_conf = &ethdev->dev_eth_conf;
 
 	/* get underlying dp port id and get device_info */
-	rte_eth_dev_info_get(sdev->dp_port_id, &dev_info);
+	if (rte_eth_dev_info_get(sdev->dp_port_id, &dev_info)) {
+		dao_err(" %s: eth_dev_info_get() failed", sdev->dev_name);
+		return -1;
+	}
 
 	dao_info("%s: Rx/Tx offloads capa: [0x%lx, 0x%lx]", sdev->dev_name,
 		 dev_info.rx_offload_capa, dev_info.tx_offload_capa);
@@ -197,7 +200,10 @@ secgw_ethdev_queue_setup(secgw_device_t *sdev)
 		return -1;
 
 	/* get underlying dp port id and get device_info */
-	rte_eth_dev_info_get(sdev->dp_port_id, &dev_info);
+	if (rte_eth_dev_info_get(sdev->dp_port_id, &dev_info)) {
+		dao_err(" %s: eth_dev_info_get() failed", sdev->dev_name);
+		return -1;
+	}
 
 	/* TXQ setup */
 	for (iter = 0; iter < ethdev->n_txq; iter++) {
@@ -287,7 +293,10 @@ secgw_register_ethdev(secgw_device_t **ppdev, secgw_device_register_conf_t *conf
 	int32_t index;
 	int rc = -1;
 
-	rte_eth_dev_info_get(conf->dp_port_id, &devinfo);
+	if (rte_eth_dev_info_get(conf->dp_port_id, &devinfo)) {
+		dao_err(" %s: eth_dev_info_get() failed", conf->name);
+		return -1;
+	}
 
 	/* Allocate new ethdev */
 	sdev = secgw_ethdev_alloc();

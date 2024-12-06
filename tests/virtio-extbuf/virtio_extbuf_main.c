@@ -682,7 +682,11 @@ reconfig_ethdev(uint16_t portid, uint16_t q_count)
 		return rc;
 	}
 
-	rte_eth_dev_info_get(portid, &dev_info);
+	rc = rte_eth_dev_info_get(portid, &dev_info);
+	if (rc != 0) {
+		APP_ERR("Failed to get device info: port=%d\n", portid);
+		return rc;
+	}
 
 	/* Setup Tx queues */
 	for (queueid = eth_dev_q_count; queueid < nb_tx_queue; queueid++) {
@@ -1106,7 +1110,8 @@ lsc_event_callback(uint16_t port_id, enum rte_eth_event_type type __rte_unused, 
 	uint16_t virtio_devid = (uint64_t)param;
 	struct rte_eth_link eth_link;
 
-	rte_eth_link_get(port_id, &eth_link);
+	if (rte_eth_link_get(port_id, &eth_link))
+		return -1;
 	link_info.status = eth_link.link_status;
 	link_info.speed = eth_link.link_speed;
 	link_info.duplex = eth_link.link_duplex;
@@ -1159,7 +1164,8 @@ setup_eth_devices(void)
 
 	APP_INFO_NH("Creating queues: nb_rxq=%d nb_txq=%u... ", nb_rx_queue, nb_tx_queue);
 
-	rte_eth_dev_info_get(portid, &dev_info);
+	if (rte_eth_dev_info_get(portid, &dev_info))
+		rte_exit(EXIT_FAILURE, "Error during getting device (port %u) info\n", portid);
 	eth_dev_info = dev_info;
 
 	if (dev_info.tx_offload_capa & RTE_ETH_TX_OFFLOAD_MBUF_FAST_FREE)
@@ -1210,7 +1216,9 @@ setup_eth_devices(void)
 	for (queueid = 0; queueid < nb_rx_queue; queueid++) {
 		struct rte_eth_rxconf rxq_conf;
 
-		rte_eth_dev_info_get(portid, &dev_info);
+		if (rte_eth_dev_info_get(portid, &dev_info))
+			rte_exit(EXIT_FAILURE, "Error during getting device (port %u) info\n",
+				 portid);
 		rxq_conf = dev_info.default_rxconf;
 		rxq_conf.offloads = port_conf.rxmode.offloads;
 		rc = rte_eth_rx_queue_setup(portid, queueid, nb_rxd, 0, &rxq_conf, pktmbuf_pool);
@@ -1225,7 +1233,8 @@ setup_eth_devices(void)
 	 * RETA table will get updated when number of queue count
 	 * is available.
 	 */
-	rte_eth_dev_info_get(portid, &dev_info);
+	if (rte_eth_dev_info_get(portid, &dev_info))
+		rte_exit(EXIT_FAILURE, "Error during getting device (port %u) info\n", portid);
 	memset(reta_conf, 0, sizeof(reta_conf));
 	for (i = 0; i < 4; i++)
 		reta_conf[i].mask = UINT64_MAX;
@@ -1307,7 +1316,8 @@ setup_virtio_devices(void)
 	netdev_conf.reta_size = RTE_MAX(VIRTIO_NET_RSS_RETA_SIZE, eth_dev_info.reta_size);
 	netdev_conf.hash_key_size = eth_dev_info.hash_key_size;
 	eth_dev_get_overhead_len(eth_dev_info.max_rx_pktlen, eth_dev_info.max_mtu);
-	rte_eth_link_get(portid, &eth_link);
+	if (rte_eth_link_get(portid, &eth_link))
+		rte_exit(EXIT_FAILURE, "Failed to get link status for port %u\n", portid);
 	netdev_conf.link_info.status = eth_link.link_status;
 	netdev_conf.link_info.speed = eth_link.link_speed;
 	netdev_conf.link_info.duplex = eth_link.link_duplex;

@@ -126,9 +126,9 @@ fill_libipsec_sa_param(dao_netlink_xfrm_sa_t *xsa, dao_netlink_xfrm_policy_dir_t
 			if (v6) {
 				v6->vtc_flow = htonl(IPVERSION << 28); /* TODO: IP6VERSION fails*/
 				v6->proto = IPPROTO_ESP; /* TODO: Add udp, if udp_encap */
-				memcpy(v6->src_addr, xsa->in6_src.addr.s6_addr,
+				memcpy(v6->src_addr.a, xsa->in6_src.addr.s6_addr,
 				       sizeof(xsa->in6_src.addr));
-				memcpy(v6->dst_addr, xsa->in6_dst.addr.s6_addr,
+				memcpy(v6->dst_addr.a, xsa->in6_dst.addr.s6_addr,
 				       sizeof(xsa->in6_dst.addr));
 			}
 			sa_param->ipsec_xform.tunnel.type = RTE_SECURITY_IPSEC_TUNNEL_IPV6;
@@ -523,9 +523,9 @@ secgw_ipsec_sad_sa_add_del(secgw_ipsec_t *ips, secgw_ipsec_sad_t *sad, dao_netli
 			sad_key.v4.dip = dao_in6_addr_get_mapped_ipv4(&xsa->in6_dst.addr);
 		} else {
 			sad_key.v6.spi = xsa->spi;
-			memcpy(sad_key.v6.sip, xsa->in6_src.addr.s6_addr,
+			memcpy(sad_key.v6.sip.a, xsa->in6_src.addr.s6_addr,
 			       sizeof(xsa->in6_src.addr));
-			memcpy(sad_key.v6.dip, xsa->in6_dst.addr.s6_addr,
+			memcpy(sad_key.v6.dip.a, xsa->in6_dst.addr.s6_addr,
 			       sizeof(xsa->in6_dst.addr));
 		}
 		pkey[0] = &sad_key;
@@ -691,9 +691,9 @@ secgw_ipsec_sec_session_conf_fill(struct rte_security_session_conf *sess_conf,
 		sess_conf->ipsec.tunnel.ipv6.hlimit = 64;
 		sess_conf->ipsec.tunnel.ipv6.dscp = 0;
 		sess_conf->ipsec.tunnel.ipv6.flabel = 0;
-		memcpy(sess_conf->ipsec.tunnel.ipv6.src_addr.s6_addr, sa->in6_src.addr.s6_addr,
+		memcpy(sess_conf->ipsec.tunnel.ipv6.src_addr.a, sa->in6_src.addr.s6_addr,
 		       sizeof(sa->in6_src.addr));
-		memcpy(sess_conf->ipsec.tunnel.ipv6.dst_addr.s6_addr, sa->in6_dst.addr.s6_addr,
+		memcpy(sess_conf->ipsec.tunnel.ipv6.dst_addr.a, sa->in6_dst.addr.s6_addr,
 		       sizeof(sa->in6_dst.addr));
 	}
 	/* Add ESN enable/disable */
