@@ -293,7 +293,7 @@ fetch_host_data(struct virtio_net_queue *q, struct dao_dma_vchan_state *dev2mem,
 	uint64x2_t desc0, desc1, desc2, desc3;
 	uint16_t sd_desc_off, sd_mbuf_off;
 	uint32_t nb_mbufs, count, nb_enq;
-	uint32_t i = 0, slen, dlen, pend;
+	uint32_t i = 0, slen, dlen, pend = 0;
 	uint16_t data_off = q->data_off;
 	uint16_t buf_len = q->buf_len;
 	uint64x2_t flags01, flags23;
