@@ -752,6 +752,8 @@ static int octep_sriov_enable(struct pci_dev *pdev, int num_vfs)
 	bool done = false;
 	int index = 0;
 	int ret, i;
+	u8 rpvf;
+	u64 val;
 
 	ret = pci_enable_sriov(pdev, num_vfs);
 	if (ret)
@@ -770,9 +772,11 @@ static int octep_sriov_enable(struct pci_dev *pdev, int num_vfs)
 		}
 	}
 
+	val = readq(addr + OCTEP_EPF_RINFO(0));
+	rpvf = FIELD_GET(GENMASK_ULL(35, 32), val);
 	if (done) {
 		for (i = 0; i < pf->enabled_vfs; i++)
-			writeq(OCTEP_DEV_READY_SIGNATURE, addr + OCTEP_PF_MBOX_DATA(i));
+			writeq(OCTEP_DEV_READY_SIGNATURE, addr + OCTEP_PF_MBOX_DATA(i * rpvf));
 	}
 
 	return num_vfs;
