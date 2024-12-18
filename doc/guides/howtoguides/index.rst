@@ -10,6 +10,7 @@ HowTo Guides
 
     ovs
     virtio_host
+    pcie_config
     sdp_host
     octep_agent
     github_pr
