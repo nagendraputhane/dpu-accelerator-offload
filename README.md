@@ -95,10 +95,10 @@ Running NGINX DAO application
 | **VIRTIO Emulation** | VirtIO-Net | ![](https://img.shields.io/static/v1?label=&message=Ready&color=green) | [Link 1](https://marvellembeddedprocessors.github.io/dao/guides/prog_guide/virtio_net_lib.html) <br> [Link 2](https://marvellembeddedprocessors.github.io/dao/guides/applications/virtio-l2fwd.html) |
 |  | VirtIO-Crypto | ![](https://img.shields.io/static/v1?label=&message=Planned&color=orange) | |
 |  | VirtIO-Block | ![](https://img.shields.io/static/v1?label=&message=Planned&color=orange) | |
-| **OpenSSL** | SSL crypto Acceleration via Engine | ![](https://img.shields.io/static/v1?label=&message=WIP&color=red) | |
-|  | TLS MIM Application | ![](https://img.shields.io/static/v1?label=&message=WIP&color=red) | |
-|  | NGINX Proxy/TLS Proxy | ![](https://img.shields.io/static/v1?label=&message=WIP&color=red) | [Link 1](https://docs.nginx.com/nginx/admin-guide/web-server/reverse-proxy/) <br> [Link 2](https://marvellembeddedprocessors.github.io/dao/guides/applications/tls-proxy-nginx.html) |
-|  | NGINX Load Balancer | ![](https://img.shields.io/static/v1?label=&message=WIP&color=red) | [Link](http://nginx.org/en/docs/http/load_balancing.html) |
+| **OpenSSL** | SSL crypto Acceleration via Engine | ![](https://img.shields.io/static/v1?label=&message=Ready&color=green) | |
+|  | TLS MIM Application | ![](https://img.shields.io/static/v1?label=&message=Ready&color=green) | |
+|  | NGINX Proxy/TLS Proxy | ![](https://img.shields.io/static/v1?label=&message=Ready&color=green) | [Link 1](https://docs.nginx.com/nginx/admin-guide/web-server/reverse-proxy/) <br> [Link 2](https://marvellembeddedprocessors.github.io/dao/guides/applications/tls-proxy-nginx.html) |
+|  | NGINX Load Balancer | ![](https://img.shields.io/static/v1?label=&message=Ready&color=green) | [Link](http://nginx.org/en/docs/http/load_balancing.html) |
 | **AI/ML** | AI/ML Toolkit | ![](https://img.shields.io/static/v1?label=&message=Planned&color=orange) | |
 |  | Inferencing application - Resnet50 Image classification | ![](https://img.shields.io/static/v1?label=&message=Planned&color=orange) | |
 |  | Inferencing application - DDoS detection | ![](https://img.shields.io/static/v1?label=&message=Planned&color=orange) | |
