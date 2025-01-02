@@ -38,8 +38,8 @@ jobs:
           cd "${PWD}/MarvellMLTools/"
           ML_FW_VERSION=`cat ML_FW_VERSION`
           FW_PKG_POSTFIX=""
-          mkdir -p "${PWD}"/install/lib/firmware/ml_models
-          cp -r "${PWD}"/models "${PWD}"/install/lib/firmware/ml_models/
+          mkdir -p "${PWD}"/install/lib/firmware
+          cp -r "${PWD}"/models "${PWD}"/install/lib/firmware/ml_models
           mkdir -p "${PWD}"/install/usr/local/bin
           cp -r "${PWD}"/utils "${PWD}"/install/usr/local/bin
           mkdir -p "${PWD}/install/DEBIAN"
