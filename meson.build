@@ -24,6 +24,15 @@ DAO_STATIC_LIBS = []
 DAO_MODULES_ENABLED = []
 DAO_MODULES_DISABLED = []
 
+host_build = false
+if (get_option('enable_host_build'))
+	host_build = true
+endif
+
+# If CPU is not ARM, treat as host build
+if host_machine.cpu_family() != 'aarch64'
+	host_build = true
+endif
 
 dpdk_version = run_command(find_program('cat', 'more'),
 							files('DPDK_VERSION'), check: true).stdout().strip()
@@ -33,12 +42,10 @@ subdir('dep')
 subdir('config')
 
 # Mandatory dependency
-if host_machine.cpu_family() == 'aarch64'
-	if DAO_BUILD_CONF.has('DAO_LIBDPDK_DEP')
-		subdir('lib')
-		subdir('app')
-		subdir('tests')
-	endif
+if DAO_BUILD_CONF.has('DAO_LIBDPDK_DEP')
+	subdir('lib')
+	subdir('app')
+	subdir('tests')
 endif
 
 doxygen = find_program('doxygen', required: false)

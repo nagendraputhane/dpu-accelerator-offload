@@ -9,13 +9,19 @@ configure_file(
 	install_dir: '.'
 )
 
-sources = files(
-	'dma.c',
-	'dao_bitmap.c',
-	'dao_log.c',
-	'dao_util.c',
-	'dao_dynamic_string.c'
-)
+if host_build
+	sources = files(
+		'dao_log.c',
+	)
+else
+	sources = files(
+		'dma.c',
+		'dao_bitmap.c',
+		'dao_log.c',
+		'dao_util.c',
+		'dao_dynamic_string.c'
+	)
+endif
 
 headers = files(
 	'dao_bitmap.h',

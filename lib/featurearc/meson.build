@@ -3,6 +3,10 @@
 
 deps += ['common']
 
+if host_build
+	skip_lib = true
+endif
+
 sources = files(
 	'feature_arc.c'
 )

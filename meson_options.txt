@@ -11,3 +11,5 @@ option('platform', type: 'string', value: 'native', description:
        'Platform to build.')
 option('enable_kmods', type: 'boolean', value: true, description:
        'build kernel modules')
+option('enable_host_build', type: 'boolean', value: false, description:
+       'Build DAO packages required for host only.')

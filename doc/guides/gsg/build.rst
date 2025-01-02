@@ -76,7 +76,9 @@ documentation will be built by default.
 
 Meson Options
 -------------
- - kernel_dir: Path to the kernel for building kernel modules (octep_vdpa).
+ - **kernel_dir**: Path to the kernel for building kernel modules (octep_vdpa).
    Headers must be in $kernel_dir.
- - dma_stats: Enable DMA statistics for DAO library
- - virtio_debug: Enable virtio debug that perform descriptor validation, etc.
+ - **dma_stats**: Enable DMA statistics for DAO library
+ - **virtio_debug**: Enable virtio debug that perform descriptor validation, etc.
+ - **enable_host_build**: Enable the host build for the DAO library. This option
+   compiles only the components necessary for the host environment.

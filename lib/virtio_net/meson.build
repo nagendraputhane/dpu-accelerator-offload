@@ -1,6 +1,10 @@
 # SPDX-License-Identifier: Marvell-Proprietary
 # Copyright (c) 2023 Marvell.
 
+if host_build
+	skip_lib = true
+endif
+
 sources = files(
 	'virtio_net_deq.c',
 	'virtio_net_enq.c',

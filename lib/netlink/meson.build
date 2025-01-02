@@ -7,6 +7,10 @@ if not DAO_BUILD_CONF.has('DAO_LIBNL_DEP')
   subdir_done()
 endif
 
+if host_build
+	skip_lib = true
+endif
+
 deps += ['common']
 
 sources = files(
