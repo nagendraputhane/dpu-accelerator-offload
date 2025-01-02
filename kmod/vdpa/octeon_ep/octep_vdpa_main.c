@@ -2,6 +2,7 @@
  * Copyright (c) 2023 Marvell.
  */
 
+#include <linux/bitfield.h>
 #include <linux/interrupt.h>
 #include <linux/io-64-nonatomic-lo-hi.h>
 #include <linux/module.h>
