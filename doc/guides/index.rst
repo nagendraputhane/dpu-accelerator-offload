@@ -14,4 +14,5 @@ Welcome to Data Accelerator Offload(DAO) Documentation
  howtoguides/index
  contributing/index
  rel_notes/index
+ community_lab/index
  faq/index
