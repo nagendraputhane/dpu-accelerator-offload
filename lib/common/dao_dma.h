@@ -258,10 +258,12 @@ static __rte_always_inline bool
 dao_dma_flush(struct dao_dma_vchan_state *vchan, const uint8_t avail)
 {
 	int src_avail = vchan->flush_thr - vchan->src_i;
+	int dst_avail = vchan->flush_thr - vchan->dst_i;
 	uint64_t flags = (uint64_t)vchan->auto_free << 3;
 	int rc;
 
-	if (likely(src_avail >= avail || !vchan->src_i))
+	if (likely((src_avail >= (int)avail || !vchan->src_i) &&
+		   (dst_avail >= (int)avail || !vchan->dst_i)))
 		goto exit;
 
 	rc = rte_dma_copy_sg(vchan->devid, vchan->vchan, vchan->src, vchan->dst, vchan->src_i,
