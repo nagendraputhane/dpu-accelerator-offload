@@ -40,12 +40,17 @@ VERBOSE=${5:-}
 BUILD_ROOT=$(realpath $1)
 BUILD_DEPS_ROOT=$BUILD_ROOT/deps
 DEPS_INSTALL_DIR=$BUILD_DEPS_ROOT/deps-prefix
+EP_DEPS_INSTALL_DIR=$DEPS_INSTALL_DIR/ep
+HOST_DEPS_INSTALL_DIR=$DEPS_INSTALL_DIR/host
 DEPS_ENV=$(realpath ci/build/env/deps)
 DPDK_DIR=$BUILD_DEPS_ROOT/dpdk
 DPDK_ENV=$DEPS_ENV/dpdk.env
 BUILD_DPDK_DIR=$DPDK_DIR/build
 PREFIX_DPDK_DIR=$DPDK_DIR/out
 PKG_CACHE_DIR=${PKG_CACHE_DIR:-}
+HOST_DPDK_DIR=$BUILD_DEPS_ROOT/host/dpdk
+HOST_BUILD_DPDK_DIR=$HOST_DPDK_DIR/build
+HOST_DPDK_BRANCH="v24.11"
 GIT_USER=${2}
 ALL_DEPS="dpdk libnl"
 DEPS_TO_BUILD=${4:-$ALL_DEPS}
@@ -53,7 +58,7 @@ PKGCONFIG=${PKGCONFIG:-aarch64-linux-gnu-pkg-config}
 
 # libnl variables
 LIBNL_BUILD_DIR=$BUILD_DEPS_ROOT/libnl
-LIBNL_PREFIX_DIR=$DEPS_INSTALL_DIR
+LIBNL_PREFIX_DIR=$EP_DEPS_INSTALL_DIR
 LIBNL_INSTALL_DIR=$LIBNL_PREFIX_DIR
 LIBNL_TARBALL=libnl-3.7.0
 
@@ -61,7 +66,7 @@ LIBNL_TARBALL=libnl-3.7.0
 if [ ! -x ${PKGCONFIG} ]; then
   PKGCONFIG=pkg-config
 fi
-export PKG_CONFIG_LIBDIR=$DEPS_INSTALL_DIR/lib/pkgconfig
+export PKG_CONFIG_LIBDIR=$EP_DEPS_INSTALL_DIR/lib/pkgconfig
 
 if [[ $DEPS_TO_BUILD == "all" ]]; then
 	DEPS_TO_BUILD=$ALL_DEPS
@@ -74,6 +79,14 @@ function clone_dpdk() {
 	cd $DPDK_DIR
 	git clone ssh://$GIT_USER@$DPDK_REPO --single-branch --branch $DPDK_BRANCH .
 	git checkout $DPDK_COMMIT
+}
+
+# DPDK for host
+function clone_dpdk_host() {
+	# Source dpdk env
+	mkdir -p $HOST_DPDK_DIR
+	cd $HOST_DPDK_DIR
+	git clone https://github.com/DPDK/dpdk.git --single-branch --branch $HOST_DPDK_BRANCH .
 }
 
 function build_dpdk() {
@@ -104,10 +117,33 @@ function build_dpdk() {
 	fi
 
 	cd $DPDK_DIR
-	meson $BUILD_DPDK_DIR-$plat --prefix $DEPS_INSTALL_DIR $DPDK_CROSS_FILE --default-library=static \
+	meson $BUILD_DPDK_DIR-$plat --prefix $EP_DEPS_INSTALL_DIR $DPDK_CROSS_FILE \
+		--default-library=static
 
 	ninja -C $BUILD_DPDK_DIR-$plat -j $MAKE_J $verbose
 	ninja -C $BUILD_DPDK_DIR-$plat -j $MAKE_J $verbose install
+}
+
+function build_dpdk_host() {
+	local verbose=
+
+	if [[ "$DEPS_TO_BUILD" != *"dpdk"* ]]; then
+		return
+	fi
+
+	# Cloning the repositories
+	clone_dpdk_host
+
+	# enable verbose
+	if [[ -n $VERBOSE ]]; then
+		verbose='-v'
+	fi
+
+	cd $HOST_DPDK_DIR
+	meson $HOST_BUILD_DPDK_DIR --prefix $HOST_DEPS_INSTALL_DIR --default-library=static \
+
+	ninja -C $HOST_BUILD_DPDK_DIR -j $MAKE_J $verbose
+	ninja -C $HOST_BUILD_DPDK_DIR -j $MAKE_J $verbose install
 }
 
 function compile_libnl() {
@@ -159,3 +195,7 @@ function build_libnl() {
 # Building DPDK
 build_dpdk $PLAT
 build_libnl $@
+
+
+# Building DPDK for host
+build_dpdk_host

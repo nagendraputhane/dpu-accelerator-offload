@@ -72,6 +72,8 @@ done
 if [[ -z $DEPS_PREFIX ]]; then
 	DEPS_PREFIX=$BUILD_ROOT/deps/deps-prefix
 fi
+EP_DEPS_PREFIX=$DEPS_PREFIX/ep
+HOST_DEPS_PREFIX=$DEPS_PREFIX/host
 
 if [[ -z $BUILD_ROOT || -z $BUILD_ENV ]]; then
 	echo "Build root directory and build env should be passed !!"
@@ -85,7 +87,6 @@ BUILD_ROOT=$(realpath $BUILD_ROOT)
 BUILD_DIR=$BUILD_ROOT/build
 BUILD_HOST_DIR=$BUILD_ROOT/build_host
 PREFIX_DIR=$BUILD_ROOT/prefix
-export PKG_CONFIG_PATH=${PKG_CONFIG_PATH:-$DEPS_PREFIX/lib/pkgconfig}
 
 source $BUILD_ENV
 
@@ -100,13 +101,17 @@ ${BUILD_SETUP_CMD:-}
 
 # Building DAO libraries and applications
 cd $PROJECT_ROOT
+
+# Build for EP
+export PKG_CONFIG_PATH=${PKG_CONFIG_PATH:-$EP_DEPS_PREFIX/lib/pkgconfig}
 EXTRA_ARGS="$EXTRA_ARGS --prefer-static"
 meson $BUILD_DIR --prefix $PREFIX_DIR $EXTRA_ARGS
 
-# Build for EP
 ninja -C $BUILD_DIR -j $MAKE_J $VERBOSE
 ninja -C $BUILD_DIR -j $MAKE_J $VERBOSE install
 
 # Build for Host
+export PKG_CONFIG_PATH=$HOST_DEPS_PREFIX/lib/pkgconfig
+EXTRA_HOST_ARGS="$EXTRA_HOST_ARGS --prefer-static"
 meson $BUILD_HOST_DIR $EXTRA_HOST_ARGS
 ninja -C $BUILD_HOST_DIR -j $MAKE_J $VERBOSE
