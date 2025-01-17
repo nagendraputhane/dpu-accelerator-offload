@@ -1,16 +1,19 @@
 ..  SPDX-License-Identifier: Marvell-MIT
     Copyright (c) 2024 Marvell.
 
-*********************
-VFIO Platform Library
-*********************
+************
+VFIO Library
+************
 Platform devices in Linux refer to System-on-Chip (SoC) components that aren't situated on standard
 buses such as PCI or USB. You can see them in Linux at the path /sys/bus/platform/devices/. To
 interact with platform devices from user space, the vfio-platform driver provides a framework. This
 library provides DAO APIs built upon this framework, enabling access to the device resources.
 
-Prerequisites:
-~~~~~~~~~~~~~~
+Also this library can be used to access the standard PCIe devices present at /sys/bus/pci/devices/
+from the user space.
+
+Prerequisites for Platform Devices:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 To make use of VFIO platform framework, the ``vfio-platform`` module must be loaded first:
 
 .. code-block:: console
@@ -37,47 +40,65 @@ Next ``DEV`` device must be bound to ``vfio-platform`` driver:
 
    echo DEV | sudo tee /sys/bus/platform/drivers/vfio-platform/bind
 
+Prerequisites for PCIe Devices:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+To make use of VFIO PCIe framework, the ``vfio-pci`` module must be loaded first:
 
-Platform device initialization
+.. code-block:: console
+
+   sudo modprobe vfio-pci
+
+The PCIe device needs to be bound to vfio-pci, following a standard two-step procedure. Initially,
+the driver_override, located within the pci device directory, must be configured to vfio-pci:
+
+.. code-block:: console
+
+   echo vfio-pci | sudo tee /sys/bus/pci/devices/<BDF>/driver_override
+
+Next ``BDF`` of the device must be bound to ``vfio-pci`` driver:
+
+.. code-block:: console
+
+   echo <BDF> | sudo tee /sys/bus/pci/drivers/vfio-pci/bind
+
+DAO VFIO device initialization
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Invoking the `dao_vfio_platform_init()` API creates a VFIO container by opening the /dev/vfio/vfio
-character device and initializes the memory used for storing the details of platform devices. This
-API should be invoked only once to initiate the library.
+Invoking the `dao_vfio_init()` API creates a VFIO container by opening the /dev/vfio/vfio character
+device and initializes the memory used for storing the details of the devices. This API should be
+invoked only once to initiate the library.
 
 .. code-block:: c
 
-   int dao_vfio_platform_init(void);
+   int dao_vfio_init(void);
 
-After initializing the library, the `dao_vfio_platform_device_setup()` API can be used to initialize
-a platform device. The function takes the memory for storing platform device details, specified by
-the `struct dao_vfio_platform_device` argument. Upon successful execution, the resources of the
-platform devices are mapped, and the device structure is populated.
+After initializing the library, the `dao_vfio_device_setup()` API can be used to initialize the
+device. The function takes the memory for storing the device details, specified by the
+`struct dao_vfio_device` argument. Upon successful execution, the resources of the devices are
+mapped, and the device structure is populated.
 
 .. code-block:: c
 
-   int dao_vfio_platform_device_setup(const char *dev_name, struct dao_vfio_platform_device *pdev);
+   int dao_vfio_device_setup(const char *dev_name, struct dao_vfio_device *pdev);
 
-.. literalinclude:: ../../../lib/vfio/dao_vfio_platform.h
+.. literalinclude:: ../../../lib/vfio/dao_vfio.h
    :language: c
    :start-at: struct dao_vfio_mem_resouce
-   :end-before: End of structure dao_vfio_platform_device.
+   :end-before: End of structure dao_vfio_device.
 
-
-Platform device cleanup
+DAO VFIO device cleanup
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-`dao_vfio_platform_device_free()` releases the VFIO platform device and frees the associated
-memory.
+`dao_vfio_device_free()` releases the VFIO device and frees the associated memory.
 
 .. code-block:: c
 
-   void dao_vfio_platform_device_free(struct dao_vfio_platform_device *pdev);
+   void dao_vfio_device_free(struct dao_vfio_device *pdev);
 
 
-Upon closing all open devices, the container can be shut down by calling `dao_vfio_platform_fini()`.
+Upon closing all open devices, the container can be shut down by calling `dao_vfio_fini()`.
 
 .. code-block:: c
 
-   void dao_vfio_platform_fini(void);
+   void dao_vfio_fini(void);
 

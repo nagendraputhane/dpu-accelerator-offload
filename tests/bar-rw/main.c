@@ -20,7 +20,7 @@
 
 #include "dao_log.h"
 #include "dao_version.h"
-#include "dao_vfio_platform.h"
+#include "dao_vfio.h"
 
 #define DT_SOC_PATH "/proc/device-tree/soc@0"
 
@@ -58,7 +58,7 @@ int
 main(int argc, char *argv[])
 {
 	char bar4_pdev_name[VFIO_DEV_NAME_MAX_LEN];
-	struct dao_vfio_platform_device bar4_pdev;
+	struct dao_vfio_device bar4_pdev;
 	uint8_t *va;
 	size_t sz;
 	int rc;
@@ -68,17 +68,17 @@ main(int argc, char *argv[])
 	if (rc < 0)
 		rte_exit(EXIT_FAILURE, "Error with EAL initialization\n");
 
-	rc = dao_vfio_platform_init();
+	rc = dao_vfio_init();
 	if (rc < 0)
-		rte_exit(EXIT_FAILURE, "Failed to initialize VFIO platform\n");
+		rte_exit(EXIT_FAILURE, "Failed to initialize DAO VFIO\n");
 
 	rc = pem_bar4_pdev_name_get(bar4_pdev_name);
 	if (rc < 0)
-		rte_exit(EXIT_FAILURE, "Failed to find PEM platform device\n");
+		rte_exit(EXIT_FAILURE, "Failed to find PEM device\n");
 
-	rc = dao_vfio_platform_device_setup(bar4_pdev_name, &bar4_pdev);
+	rc = dao_vfio_device_setup(bar4_pdev_name, &bar4_pdev);
 	if (rc < 0)
-		rte_exit(EXIT_FAILURE, "Failed to setup PEM BAR4 platform device\n");
+		rte_exit(EXIT_FAILURE, "Failed to setup PEM BAR4 device\n");
 
 	va = bar4_pdev.mem[0].addr;
 	sz = bar4_pdev.mem[0].len;
@@ -88,8 +88,8 @@ main(int argc, char *argv[])
 	printf("Overwriting existing data with new data 0x%x\n", (uint8_t)getpid());
 	memset(va, getpid(), sz);
 
-	dao_vfio_platform_device_free(&bar4_pdev);
-	dao_vfio_platform_fini();
+	dao_vfio_device_free(&bar4_pdev);
+	dao_vfio_fini();
 
 	/* clean up the EAL */
 	rte_eal_cleanup();

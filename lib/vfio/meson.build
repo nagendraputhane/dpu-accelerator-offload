@@ -6,11 +6,11 @@ if host_build
 endif
 
 sources = files(
-	'dao_vfio_platform.c'
+	'dao_vfio.c'
 )
 
 headers = files(
-	'dao_vfio_platform.c'
+	'dao_vfio.c'
 )
 
 deps += ['common']

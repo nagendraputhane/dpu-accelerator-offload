@@ -43,7 +43,7 @@ The public API headers are grouped by topics
   - [pem]                 (@ref dao_pem.h)
 
 - **vfio**
-  - [vfio_platform]       (@ref dao_vfio_platform.h)
+  - [vfio]                (@ref dao_vfio.h)
 
 - **virtio**
   - [virtio]              (@ref dao_virtio.h)

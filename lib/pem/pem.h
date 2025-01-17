@@ -8,7 +8,7 @@
 
 #include <dao_log.h>
 #include <dao_util.h>
-#include <dao_vfio_platform.h>
+#include <dao_vfio.h>
 
 #define PEM_BAR4_NUM_INDEX     16
 #define PEM_BAR4_INDEX_START   0
@@ -36,8 +36,8 @@ struct pem {
 	bool ctrl_done;
 	struct pem_region *regions[DAO_PEM_CTRL_REGION_MAX];
 	uint64_t region_mask[DAO_PEM_CTRL_REGION_MASK_MAX];
-	struct dao_vfio_platform_device bar4_pdev;
-	struct dao_vfio_platform_device sdp_pdev;
+	struct dao_vfio_device bar4_pdev;
+	struct dao_vfio_device sdp_pdev;
 };
 
 #endif /* __INCLUDE_PEM_H__ */

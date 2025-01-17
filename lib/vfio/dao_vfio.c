@@ -14,7 +14,7 @@
 #include <unistd.h>
 
 #include <dao_log.h>
-#include <dao_vfio_platform.h>
+#include <dao_vfio.h>
 
 #define VFIO_MAX_GROUPS           8
 #define VFIO_GROUP_FMT            "/dev/vfio/%u"
@@ -35,12 +35,12 @@ struct vfio_config {
 static struct vfio_config vfio_cfg = {.container_fd = -1};
 
 int
-dao_vfio_platform_init(void)
+dao_vfio_init(void)
 {
 	int i;
 
 	if (vfio_cfg.container_fd != -1) {
-		dao_dbg("VFIO platform has already been initialized.");
+		dao_dbg("DAO VFIO has already been initialized.");
 		return 0;
 	}
 
@@ -136,7 +136,7 @@ vfio_get_group_fd(const char *dev_name)
 }
 
 static void
-vfio_platform_device_mem_free(struct dao_vfio_platform_device *pdev)
+vfio_device_mem_free(struct dao_vfio_device *pdev)
 {
 	unsigned int i;
 
@@ -165,7 +165,7 @@ vfio_clear_group(int group_fd)
 }
 
 int
-dao_vfio_platform_device_setup(const char *dev_name, struct dao_vfio_platform_device *pdev)
+dao_vfio_device_setup(const char *dev_name, struct dao_vfio_device *pdev)
 {
 	struct vfio_group_status group_status = {.argsz = sizeof(group_status)};
 	struct vfio_device_info device_info = {.argsz = sizeof(device_info)};
@@ -242,11 +242,11 @@ dao_vfio_platform_device_setup(const char *dev_name, struct dao_vfio_platform_de
 		pdev->mem[i].len = reg.size;
 	}
 
-	dao_dbg("%s: enabled VFIO platform device", dev_name);
+	dao_dbg("%s: enabled VFIO device", dev_name);
 	return 0;
 
 device_mem_free:
-	vfio_platform_device_mem_free(pdev);
+	vfio_device_mem_free(pdev);
 close_device_fd:
 	close(device_fd);
 clear_group:
@@ -255,15 +255,15 @@ clear_group:
 }
 
 void
-dao_vfio_platform_device_free(struct dao_vfio_platform_device *pdev)
+dao_vfio_device_free(struct dao_vfio_device *pdev)
 {
-	vfio_platform_device_mem_free(pdev);
+	vfio_device_mem_free(pdev);
 	vfio_clear_group(pdev->group_fd);
 	close(pdev->device_fd);
 }
 
 void
-dao_vfio_platform_fini(void)
+dao_vfio_fini(void)
 {
 	int i;
 

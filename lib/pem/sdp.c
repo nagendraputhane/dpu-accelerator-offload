@@ -14,10 +14,10 @@
 #include <dao_log.h>
 #include <dao_util.h>
 
-#define SDP_PLAT_DEV_NAME        "86e000000000.dpi_sdp_regs"
+#define SDP_PLAT_DEV_NAME "86e000000000.dpi_sdp_regs"
 
 int
-sdp_reg_write(struct dao_vfio_platform_device *sdp_pdev, uint64_t offset, uint64_t val)
+sdp_reg_write(struct dao_vfio_device *sdp_pdev, uint64_t offset, uint64_t val)
 {
 	if (offset > sdp_pdev->mem[0].len)
 		return -ENOMEM;
@@ -27,7 +27,7 @@ sdp_reg_write(struct dao_vfio_platform_device *sdp_pdev, uint64_t offset, uint64
 }
 
 uint64_t
-sdp_reg_read(struct dao_vfio_platform_device *sdp_pdev, uint64_t offset)
+sdp_reg_read(struct dao_vfio_device *sdp_pdev, uint64_t offset)
 {
 	if (offset > sdp_pdev->mem[0].len)
 		return -ENOMEM;
@@ -36,7 +36,7 @@ sdp_reg_read(struct dao_vfio_platform_device *sdp_pdev, uint64_t offset)
 }
 
 uint64_t *
-sdp_reg_addr(struct dao_vfio_platform_device *sdp_pdev, uint64_t offset)
+sdp_reg_addr(struct dao_vfio_device *sdp_pdev, uint64_t offset)
 {
 	if (offset > sdp_pdev->mem[0].len)
 		return NULL;
@@ -45,14 +45,14 @@ sdp_reg_addr(struct dao_vfio_platform_device *sdp_pdev, uint64_t offset)
 }
 
 int
-sdp_init(struct dao_vfio_platform_device *sdp_pdev)
+sdp_init(struct dao_vfio_device *sdp_pdev)
 {
 	uint64_t reg_val;
 	int rc;
 
-	rc = dao_vfio_platform_device_setup(SDP_PLAT_DEV_NAME, sdp_pdev);
+	rc = dao_vfio_device_setup(SDP_PLAT_DEV_NAME, sdp_pdev);
 	if (rc < 0) {
-		dao_err("Filed to setup VFIO platform device %s", SDP_PLAT_DEV_NAME);
+		dao_err("Filed to setup DAO VFIO device %s", SDP_PLAT_DEV_NAME);
 		return errno;
 	}
 
@@ -69,7 +69,7 @@ sdp_init(struct dao_vfio_platform_device *sdp_pdev)
 }
 
 void
-sdp_fini(struct dao_vfio_platform_device *sdp_pdev)
+sdp_fini(struct dao_vfio_device *sdp_pdev)
 {
-	dao_vfio_platform_device_free(sdp_pdev);
+	dao_vfio_device_free(sdp_pdev);
 }

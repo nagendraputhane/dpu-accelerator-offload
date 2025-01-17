@@ -6,7 +6,7 @@
 #include <dirent.h>
 
 #include "dao_pem.h"
-#include "dao_vfio_platform.h"
+#include "dao_vfio.h"
 #include "pem.h"
 #include "sdp.h"
 
@@ -135,11 +135,11 @@ pem_update_bar4_info(struct pem *pem)
 }
 
 static void
-release_vfio_platform_devices(struct pem *pem)
+release_vfio_devices(struct pem *pem)
 {
 	sdp_fini(&pem->sdp_pdev);
-	dao_vfio_platform_device_free(&pem->bar4_pdev);
-	dao_vfio_platform_fini();
+	dao_vfio_device_free(&pem->bar4_pdev);
+	dao_vfio_fini();
 }
 
 static int
@@ -175,32 +175,32 @@ pem_bar4_pdev_name_get(struct pem *pem, char *pdev_name)
 }
 
 static int
-setup_vfio_platform_devices(struct pem *pem)
+setup_vfio_devices(struct pem *pem)
 {
 	char bar4_pdev_name[VFIO_DEV_NAME_MAX_LEN];
 	int rc;
 
-	rc = dao_vfio_platform_init();
+	rc = dao_vfio_init();
 	if (rc < 0) {
-		dao_err("Failed to initialize VFIO platform");
+		dao_err("Failed to initialize DAO VFIO");
 		return -1;
 	}
 
 	rc = sdp_init(&pem->sdp_pdev);
 	if (rc < 0) {
-		dao_err("Failed to initialize SDP platform device");
+		dao_err("Failed to initialize SDP device");
 		return -1;
 	}
 
 	rc = pem_bar4_pdev_name_get(pem, bar4_pdev_name);
 	if (rc < 0) {
-		dao_err("Failed to get PEM platform device name");
+		dao_err("Failed to get PEM device name");
 		return -1;
 	}
 
-	rc = dao_vfio_platform_device_setup(bar4_pdev_name, &pem->bar4_pdev);
+	rc = dao_vfio_device_setup(bar4_pdev_name, &pem->bar4_pdev);
 	if (rc < 0) {
-		dao_err("Failed to initialize PEM BAR4 platform device");
+		dao_err("Failed to initialize PEM BAR4 device");
 		return -1;
 	}
 
@@ -222,7 +222,7 @@ dao_pem_dev_init(uint16_t pem_devid, struct dao_pem_dev_conf *conf)
 		return -1;
 	}
 
-	rc = setup_vfio_platform_devices(pem);
+	rc = setup_vfio_devices(pem);
 	if (rc < 0)
 		return -1;
 
@@ -267,7 +267,7 @@ dao_pem_dev_init(uint16_t pem_devid, struct dao_pem_dev_conf *conf)
 
 	return 0;
 err:
-	release_vfio_platform_devices(pem);
+	release_vfio_devices(pem);
 	return -EFAULT;
 }
 
@@ -287,7 +287,7 @@ dao_pem_dev_fini(uint16_t pem_devid)
 		pem->regions[i] = NULL;
 	}
 
-	release_vfio_platform_devices(pem);
+	release_vfio_devices(pem);
 	return 0;
 }
 
