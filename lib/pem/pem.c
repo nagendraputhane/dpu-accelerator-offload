@@ -46,7 +46,7 @@ dt_max_vfs_get(struct pem *pem)
 			continue;
 
 		/* Get RVU SDP entry */
-		snprintf(path, sizeof(path), RVU_SDP_NUM_VF_FMT, e->d_name, pem->pem_id);
+		snprintf(path, sizeof(path), RVU_SDP_NUM_VF_FMT, e->d_name, 0);
 		f = fopen(path, "r");
 		if (f)
 			break;
@@ -129,7 +129,8 @@ pem_update_bar4_info(struct pem *pem)
 	signature[1] = 0x3355ffaa;
 	signature[2] = (pem->host_pages_per_dev * pem->host_page_sz);
 	signature[3] = pem->max_vfs;
-	dao_dev_memcpy((void *)pem->bar4_pdev.mem[0].addr, signature, sizeof(signature));
+	dao_dev_memcpy((void *)pem->bar4_pdev.mem[pem->bar4_pdev.mbar].addr, signature,
+		       sizeof(signature));
 
 	return 0;
 }
@@ -138,7 +139,8 @@ static void
 release_vfio_devices(struct pem *pem)
 {
 	sdp_fini(&pem->sdp_pdev);
-	dao_vfio_device_free(&pem->bar4_pdev);
+	if (pem->bar4_pdev.type == DAO_VFIO_DEV_PLATFORM)
+		dao_vfio_device_free(&pem->bar4_pdev);
 	dao_vfio_fini();
 }
 
@@ -186,10 +188,18 @@ setup_vfio_devices(struct pem *pem)
 		return -1;
 	}
 
+	if (pem->pem_id == 0)
+		pem->sdp_pdev.prime = 1;
+
 	rc = sdp_init(&pem->sdp_pdev);
 	if (rc < 0) {
 		dao_err("Failed to initialize SDP device");
 		return -1;
+	}
+
+	if (pem->sdp_pdev.type == DAO_VFIO_DEV_PCIE) {
+		memcpy(&pem->bar4_pdev, &pem->sdp_pdev, sizeof(struct dao_vfio_device));
+		return 0;
 	}
 
 	rc = pem_bar4_pdev_name_get(pem, bar4_pdev_name);
@@ -204,6 +214,9 @@ setup_vfio_devices(struct pem *pem)
 		return -1;
 	}
 
+	pem->bar4_pdev.mbar = DAO_VFIO_DEV_BAR0;
+	pem->bar4_pdev.type = DAO_VFIO_DEV_PLATFORM;
+
 	return 0;
 }
 
@@ -211,6 +224,7 @@ int
 dao_pem_dev_init(uint16_t pem_devid, struct dao_pem_dev_conf *conf)
 {
 	struct pem *pem = &pem_devices[pem_devid];
+	uint8_t mbar;
 	size_t sz;
 	void *bar4;
 	int rc;
@@ -226,8 +240,9 @@ dao_pem_dev_init(uint16_t pem_devid, struct dao_pem_dev_conf *conf)
 	if (rc < 0)
 		return -1;
 
-	bar4 = pem->bar4_pdev.mem[0].addr;
-	sz = pem->bar4_pdev.mem[0].len;
+	mbar = pem->bar4_pdev.mbar;
+	bar4 = pem->bar4_pdev.mem[mbar].addr;
+	sz = pem->bar4_pdev.mem[mbar].len;
 
 	/* Clear bar 4 */
 	if (sz % 8 == 0)
@@ -376,7 +391,7 @@ dao_pem_vf_region_info_get(uint16_t pem_devid, uint16_t dev_id, uint8_t bar_idx,
 	if (pf > 0 || vf >= pem->max_vfs)
 		return -ENOTSUP;
 
-	*addr = (uintptr_t)pem->bar4_pdev.mem[0].addr +
+	*addr = (uintptr_t)pem->bar4_pdev.mem[pem->bar4_pdev.mbar].addr +
 		(vf * pem->host_pages_per_dev * pem->host_page_sz);
 	*size = pem->host_pages_per_dev * pem->host_page_sz;
 	return 0;
@@ -394,11 +409,13 @@ uint8_t
 dao_pem_host_interrupt_setup(uint16_t pem_devid, int vfid, uint64_t **intr_addr)
 {
 	struct pem *pem = &pem_devices[pem_devid];
+	uint64_t base;
 	int idx, ring_idx;
 	uint64_t reg_val;
 	uint8_t rpvf;
 
-	reg_val = sdp_reg_read(&pem->sdp_pdev, SDP_EPFX_RINFO(0));
+	base = pem->sdp_pdev.rbar ? 0 : 0x80000000;
+	reg_val = sdp_reg_read(&pem->sdp_pdev, base + SDP_VF_MBOX_DATA(0));
 	rpvf = (reg_val >> SDP_EPFX_RINFO_RPVF_SHIFT) & 0xf;
 
 	if (!rpvf) {
@@ -409,12 +426,12 @@ dao_pem_host_interrupt_setup(uint16_t pem_devid, int vfid, uint64_t **intr_addr)
 	for (idx = 0; idx < rpvf; idx++) {
 		ring_idx = idx + (vfid - 1) * rpvf;
 
-		sdp_reg_write(&pem->sdp_pdev, SDP_EPVF_RINGX(ring_idx), vfid);
-		sdp_reg_write(&pem->sdp_pdev, SDP_RX_OUT_ENABLE(ring_idx), 0x1);
-		sdp_reg_write(&pem->sdp_pdev, SDP_RX_OUT_CNTS(ring_idx), 0x1);
-		sdp_reg_write(&pem->sdp_pdev, SDP_RX_OUT_INT_LEVELS(ring_idx), ~0xfUL);
+		sdp_reg_write(&pem->sdp_pdev, base + SDP_RX_OUT_ENABLE(ring_idx), 0x1);
+		sdp_reg_write(&pem->sdp_pdev, base + SDP_RX_OUT_CNTS(ring_idx), 0x1);
+		sdp_reg_write(&pem->sdp_pdev, base + SDP_RX_OUT_INT_LEVELS(ring_idx), ~0xfUL);
 
-		__atomic_store_n(intr_addr, sdp_reg_addr(&pem->sdp_pdev, SDP_RX_OUT_CNTS(ring_idx)),
+		__atomic_store_n(intr_addr,
+				 sdp_reg_addr(&pem->sdp_pdev, base + SDP_RX_OUT_CNTS(ring_idx)),
 				 __ATOMIC_RELAXED);
 		intr_addr++;
 	}

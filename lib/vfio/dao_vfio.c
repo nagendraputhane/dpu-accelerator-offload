@@ -19,6 +19,7 @@
 #define VFIO_MAX_GROUPS           8
 #define VFIO_GROUP_FMT            "/dev/vfio/%u"
 #define PLATFORM_BUS_DEVICES_PATH "/sys/bus/platform/devices"
+#define PCIE_BUS_DEVICES_PATH     "/sys/bus/pci/devices"
 
 struct vfio_group {
 	int group_num;
@@ -101,8 +102,11 @@ vfio_get_group_fd(const char *dev_name)
 
 	rc = vfio_get_group_num(PLATFORM_BUS_DEVICES_PATH, dev_name, &group_num);
 	if (rc < 0) {
-		dao_err("%s: failed to get group number", dev_name);
-		return -1;
+		rc = vfio_get_group_num(PCIE_BUS_DEVICES_PATH, dev_name, &group_num);
+		if (rc < 0) {
+			dao_err("%s: failed to get group number", dev_name);
+			return -1;
+		}
 	}
 
 	for (i = 0; i < VFIO_MAX_GROUPS; i++) {
@@ -216,6 +220,10 @@ dao_vfio_device_setup(const char *dev_name, struct dao_vfio_device *pdev)
 		dao_err("%s: failed to get device info", dev_name);
 		goto close_device_fd;
 	}
+
+	/* Only PF device regions are sufficient */
+	if ((device_info.num_regions > 6) && (pdev->type == DAO_VFIO_DEV_PCIE))
+		device_info.num_regions = 6;
 
 	pdev->device_fd = device_fd;
 	pdev->group_fd = group_fd;

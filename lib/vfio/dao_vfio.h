@@ -15,6 +15,18 @@
 
 #define VFIO_DEV_NAME_MAX_LEN 64
 
+#define DAO_VFIO_DEV_BAR0 (0)
+#define DAO_VFIO_DEV_BAR2 (2)
+#define DAO_VFIO_DEV_BAR4 (4)
+
+/**
+ * VFIO device type.
+ */
+enum dao_vfio_dev_type {
+	DAO_VFIO_DEV_PLATFORM, /**< Platform device. */
+	DAO_VFIO_DEV_PCIE      /**< PCIe device. */
+};
+
 /**
  * VFIO device memory resource.
  */
@@ -30,6 +42,10 @@ struct dao_vfio_device {
 	int group_fd;                     /**< VFIO group fd */
 	unsigned int num_resource;        /**< Number of device resources */
 	struct dao_vfio_mem_resouce *mem; /**< Device resources */
+	enum dao_vfio_dev_type type;      /**< Device type */
+	uint8_t prime;                    /**< Primary device */
+	uint8_t mbar;                     /**< Bar index of memory */
+	uint8_t rbar;                     /**< Bar index of device registers */
 };
 
 /* End of structure dao_vfio_device. */
