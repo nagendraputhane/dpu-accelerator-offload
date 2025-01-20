@@ -118,7 +118,7 @@ function build_dpdk() {
 
 	cd $DPDK_DIR
 	meson $BUILD_DPDK_DIR-$plat --prefix $EP_DEPS_INSTALL_DIR $DPDK_CROSS_FILE \
-		--default-library=static
+		--default-library=static -Denable_iova_as_pa=false
 
 	ninja -C $BUILD_DPDK_DIR-$plat -j $MAKE_J $verbose
 	ninja -C $BUILD_DPDK_DIR-$plat -j $MAKE_J $verbose install
