@@ -41,7 +41,13 @@ if host_machine.cpu_family() == 'aarch64'
 	endif
 endif
 
-subdir('doc')
+doxygen = find_program('doxygen', required: false)
+if doxygen.found()
+    subdir('doc')
+else
+    warning('Doxygen not found. Skipping the documentation build!')
+endif
+
 if get_option('enable_kmods')
     subdir('kmod')
 endif
