@@ -25,7 +25,7 @@ socs = {
 
 machine_args = []
 if meson.is_cross_build()
-	args = meson.get_cross_property('machine_args')
+	args = meson.get_external_property('machine_args')
 	machine_args = args.split()
 else
 	platform = get_option('platform')

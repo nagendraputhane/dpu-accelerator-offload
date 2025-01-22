@@ -4,7 +4,7 @@
 project(
 	'Data Accelerator Offload',
 	'C',
-	meson_version: '>= 0.53.0',
+	meson_version: '>= 0.63.0',
 	version: run_command(find_program('cat', 'more'),
 							files('VERSION'), check: true).stdout().strip(),
 	default_options: ['warning_level=2', 'werror=true', 'buildtype=release']
