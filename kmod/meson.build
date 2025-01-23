@@ -20,6 +20,15 @@ if not meson.is_cross_build()
 		# use default path for native builds
 		kernel_source_dir = '/lib/modules/' + kernel_version + '/source'
 	endif
+
+	# Skip kmod build for kernel versions < 6.5
+	major_version = kernel_version.split('.')[0].to_int()
+	minor_version = kernel_version.split('.')[1].to_int()
+	if major_version < 6 or (major_version == 6 and minor_version < 5)
+		message('Skipping kmod build, kernel version ' + kernel_version + ' < reqired 6.5')
+		subdir_done()
+	endif
+
 	kernel_install_dir = '/lib/modules/' + kernel_version + '/extra/dpdk'
 	if kernel_build_dir == ''
 		# use default path for native builds
