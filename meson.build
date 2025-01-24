@@ -4,7 +4,7 @@
 project(
 	'Data Accelerator Offload',
 	'C',
-	meson_version: '>= 0.63.0',
+	meson_version: '>= 0.61.0',
 	version: run_command(find_program('cat', 'more'),
 							files('VERSION'), check: true).stdout().strip(),
 	default_options: ['warning_level=2', 'werror=true', 'buildtype=release']
@@ -32,6 +32,12 @@ endif
 # If CPU is not ARM, treat as host build
 if host_machine.cpu_family() != 'aarch64'
 	host_build = true
+endif
+
+if not host_build
+	if not meson.version().version_compare('>=0.63.0')
+		error('Meson version 0.63 or higher is required for DAO EP build.')
+	endif
 endif
 
 dpdk_version = run_command(find_program('cat', 'more'),
