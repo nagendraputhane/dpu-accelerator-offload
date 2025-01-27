@@ -38,7 +38,7 @@ function dao_virtio_setup()
 	fi
 
 	echo "Setting up EP device for virtio tests"
-	ep_device_op hugepage_setup 524288 24 6
+	ep_device_op hugepage_setup 524288 24 12
 	ep_device_op dpi_setup
 	ep_device_op pem_setup
 
