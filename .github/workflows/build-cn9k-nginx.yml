@@ -64,14 +64,16 @@ jobs:
           shell: /bin/bash
           install: |
             apt-get update -q -y
-            apt-get install -y build-essential gcc meson ccache git doxygen apt-utils
+            apt-get install -y apt-utils python3-sphinx-rtd-theme python3-pip
+            apt-get install -y python3-pyelftools python3-setuptools python3-wheel
+            apt-get install -y build-essential meson ccache git doxygen
             apt-get install -y build-essential ccache git software-properties-common
             apt-get install -y libnl-3-dev libnl-route-3-dev libnl-xfrm-3-dev
-            apt-get install -y sphinx-common python3-sphinx-rtd-theme pkg-config
+            apt-get install -y sphinx-common pkg-config
             apt-get install -y libarchive-dev libbsd-dev libbpf-dev
             apt-get install -y libfdt-dev libjansson-dev autoconf dh-autoreconf
-            apt-get install -y libssl-dev ninja-build python3-pip
-            apt-get install -y python3-pyelftools python3-setuptools python3-wheel zlib1g-dev
+            apt-get install -y libssl-dev ninja-build
+            apt-get install -y zlib1g-dev
             apt-get install -y gcc-14 bzip2-doc icu-devtools libacl1-dev libattr1-dev
             apt-get install -y libbz2-dev libgmp-dev libgmpxx4ldbl libicu-dev liblz4-dev
             apt-get install -y liblzma-dev libxml2-dev libzstd-dev nettle-dev wget lsb-release
@@ -94,7 +96,7 @@ jobs:
             for patch in ${BASE_DIR}/patches/nginx/deps/openssl/${OPENSSL_PATCH_VERSION}/*.patch; do
                 patch -p1 < "$patch"
             done
-            ./Configure --prefix=$PWD/install linux-aarch64
+            CFLAGS="-Wno-error=implicit-function-declaration" ./Configure --prefix=$PWD/install linux-aarch64
             until make; do echo "Building OpenSSL failed, retrying"; done
             make install
             mkdir -p "${PWD}/install/usr/lib/cn9k/openssl-${OPENSSL_VERSION}"
@@ -146,7 +148,7 @@ jobs:
             done
             chmod +x configure
             mkdir install
-            ./configure --with-pcre=${PCRE_PATH} --with-http_ssl_module --without-http_gzip_module --with-cc-opt="-DNGX_SECURE_MEM -I/usr/lib/cn9k/openssl-${OPENSSL_VERSION}/include -Wno-error=deprecated-declarations" --with-threads  --with-file-aio    --with-ld-opt="-Wl,-rpath=/usr/lib/cn9k/openssl-${OPENSSL_VERSION}/lib -L/usr/lib/cn9k/openssl-${OPENSSL_VERSION}/lib -lssl -lcrypto" --add-dynamic-module=modules/nginx_cpt_module/
+            ./configure --with-pcre=${PCRE_PATH} --with-http_ssl_module --without-http_gzip_module --with-cc-opt="-DNGX_SECURE_MEM -I/usr/lib/cn10k/openssl-${OPENSSL_VERSION}/include -Wno-error=deprecated-declarations -Wno-error=implicit-function-declaration" --with-threads  --with-file-aio    --with-ld-opt="-Wl,-rpath=/usr/lib/cn10k/openssl-${OPENSSL_VERSION}/lib -L/usr/lib/cn10k/openssl-${OPENSSL_VERSION}/lib -lssl -lcrypto" --add-dynamic-module=modules/nginx_cpt_module/
             until make; do make clean;echo "Building NGINX failed, retrying"; done
             DESTDIR=${PWD}/install/ make install
             mkdir -p "${PWD}/install/DEBIAN"

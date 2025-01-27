@@ -68,14 +68,16 @@ jobs:
           shell: /bin/bash
           install: |
             apt-get update -q -y
-            apt-get install -y build-essential gcc meson ccache git doxygen apt-utils
+            apt-get install -y apt-utils python3-sphinx-rtd-theme python3-pip
+            apt-get install -y python3-pyelftools python3-setuptools python3-wheel
+            apt-get install -y build-essential meson ccache git doxygen
             apt-get install -y build-essential ccache git software-properties-common
             apt-get install -y libnl-3-dev libnl-route-3-dev libnl-xfrm-3-dev
-            apt-get install -y sphinx-common python3-sphinx-rtd-theme pkg-config
+            apt-get install -y sphinx-common pkg-config
             apt-get install -y libarchive-dev libbsd-dev libbpf-dev
             apt-get install -y libfdt-dev libjansson-dev autoconf dh-autoreconf
-            apt-get install -y libssl-dev ninja-build python3-pip
-            apt-get install -y python3-pyelftools python3-setuptools python3-wheel zlib1g-dev
+            apt-get install -y libssl-dev ninja-build
+            apt-get install -y zlib1g-dev
             apt-get install -y gcc-14 bzip2-doc icu-devtools libacl1-dev libattr1-dev
             apt-get install -y libbz2-dev libgmp-dev libgmpxx4ldbl libicu-dev liblz4-dev
             apt-get install -y liblzma-dev libxml2-dev libzstd-dev nettle-dev wget lsb-release
