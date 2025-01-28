@@ -20,6 +20,125 @@ dao_net_desc_manage_fn_t dao_net_desc_manage_fns[VIRTIO_NET_DESC_MANAGE_LAST << 
 struct dao_virtio_netdev_cbs user_cbs;
 int virtio_netdev_clear_queue_info(struct virtio_netdev *netdev);
 
+static int
+virtio_netdev_feature_validate(struct virtio_dev *dev, uint64_t feature_bits)
+{
+	uint16_t dev_id = dev->dev_id;
+	int i;
+
+	if ((feature_bits | dev->dev_feature_bits) != dev->dev_feature_bits) {
+		dao_err("[dev %u] Invalid feature bits negotiated 0x%" PRIx64 "(dev %" PRIx64 ")",
+			dev_id, feature_bits, dev->dev_feature_bits);
+		return -EINVAL;
+	}
+
+	/* Dump features enabled for debug purpose */
+	dao_dbg("[dev %u] Features enabled:", dev_id);
+	for (i = 0; i < 64; i++) {
+		if (!(feature_bits & DAO_BIT(i)))
+			continue;
+		switch (i) {
+		case VIRTIO_NET_F_CSUM:
+			dao_dbg("[dev %u]    +%s", dev_id, "VIRTIO_NET_F_CSUM");
+			break;
+		case VIRTIO_NET_F_GUEST_CSUM:
+			dao_dbg("[dev %u]    +%s", dev_id, "VIRTIO_NET_F_GUEST_CSUM");
+			break;
+		case VIRTIO_NET_F_MTU:
+			dao_dbg("[dev %u]    +%s", dev_id, "VIRTIO_NET_F_MTU");
+			break;
+		case VIRTIO_NET_F_MAC:
+			dao_dbg("[dev %u]    +%s", dev_id, "VIRTIO_NET_F_MAC");
+			break;
+		case VIRTIO_NET_F_GUEST_TSO4:
+			dao_dbg("[dev %u]    +%s", dev_id, "VIRTIO_NET_F_GUEST_TSO4");
+			break;
+		case VIRTIO_NET_F_GUEST_TSO6:
+			dao_dbg("[dev %u]    +%s", dev_id, "VIRTIO_NET_F_GUEST_TSO6");
+			break;
+		case VIRTIO_NET_F_GUEST_ECN:
+			dao_dbg("[dev %u]    +%s", dev_id, "VIRTIO_NET_F_GUEST_ECN");
+			break;
+		case VIRTIO_NET_F_GUEST_UFO:
+			dao_dbg("[dev %u]    +%s", dev_id, "VIRTIO_NET_F_GUEST_UFO");
+			break;
+		case VIRTIO_NET_F_HOST_TSO4:
+			dao_dbg("[dev %u]    +%s", dev_id, "VIRTIO_NET_F_HOST_TSO4");
+			break;
+		case VIRTIO_NET_F_HOST_TSO6:
+			dao_dbg("[dev %u]    +%s", dev_id, "VIRTIO_NET_F_HOST_TSO6");
+			break;
+		case VIRTIO_NET_F_HOST_ECN:
+			dao_dbg("[dev %u]    +%s", dev_id, "VIRTIO_NET_F_HOST_ECN");
+			break;
+		case VIRTIO_NET_F_HOST_UFO:
+			dao_dbg("[dev %u]    +%s", dev_id, "VIRTIO_NET_F_HOST_UFO");
+			break;
+		case VIRTIO_NET_F_MRG_RXBUF:
+			dao_dbg("[dev %u]    +%s", dev_id, "VIRTIO_NET_F_MRG_RXBUF");
+			break;
+		case VIRTIO_NET_F_STATUS:
+			dao_dbg("[dev %u]    +%s", dev_id, "VIRTIO_NET_F_STATUS");
+			break;
+		case VIRTIO_NET_F_CTRL_VQ:
+			dao_dbg("[dev %u]    +%s", dev_id, "VIRTIO_NET_F_CTRL_VQ");
+			break;
+		case VIRTIO_NET_F_CTRL_RX:
+			dao_dbg("[dev %u]    +%s", dev_id, "VIRTIO_NET_F_CTRL_RX");
+			break;
+		case VIRTIO_NET_F_CTRL_VLAN:
+			dao_dbg("[dev %u]    +%s", dev_id, "VIRTIO_NET_F_CTRL_VLAN");
+			break;
+		case VIRTIO_NET_F_CTRL_RX_EXTRA:
+			dao_dbg("[dev %u]    +%s", dev_id, "VIRTIO_NET_F_CTRL_RX_EXTRA");
+			break;
+		case VIRTIO_NET_F_GUEST_ANNOUNCE:
+			dao_dbg("[dev %u]    +%s", dev_id, "VIRTIO_NET_F_GUEST_ANNOUNCE");
+			break;
+		case VIRTIO_NET_F_MQ:
+			dao_dbg("[dev %u]    +%s", dev_id, "VIRTIO_NET_F_MQ");
+			break;
+		case VIRTIO_NET_F_CTRL_MAC_ADDR:
+			dao_dbg("[dev %u]    +%s", dev_id, "VIRTIO_NET_F_CTRL_MAC_ADDR");
+			break;
+		case VIRTIO_NET_F_HASH_REPORT:
+			dao_dbg("[dev %u]    +%s", dev_id, "VIRTIO_NET_F_HASH_REPORT");
+			break;
+		case VIRTIO_NET_F_GUEST_HDRLEN:
+			dao_dbg("[dev %u]    +%s", dev_id, "VIRTIO_NET_F_GUEST_HDRLEN");
+			break;
+		case VIRTIO_NET_F_RSS:
+			dao_dbg("[dev %u]    +%s", dev_id, "VIRTIO_NET_F_RSS");
+			break;
+		case VIRTIO_NET_F_SPEED_DUPLEX:
+			dao_dbg("[dev %u]    +%s", dev_id, "VIRTIO_NET_F_SPEED_DUPLEX");
+			break;
+		case VIRTIO_F_VERSION_1:
+			dao_dbg("[dev %u]    +%s", dev->dev_id, "VIRTIO_F_VERSION_1");
+			break;
+		case VIRTIO_F_IOMMU_PLATFORM:
+			dao_dbg("[dev %u]    +%s", dev->dev_id, "VIRTIO_F_IOMMU_PLATFORM");
+			break;
+		case VIRTIO_F_RING_PACKED:
+			dao_dbg("[dev %u]    +%s", dev->dev_id, "VIRTIO_F_RING_PACKED");
+			break;
+		case VIRTIO_F_IN_ORDER:
+			dao_dbg("[dev %u]    +%s", dev->dev_id, "VIRTIO_F_IN_ORDER");
+			break;
+		case VIRTIO_F_ORDER_PLATFORM:
+			dao_dbg("[dev %u]    +%s", dev->dev_id, "VIRTIO_F_ORDER_PLATFORM");
+			break;
+		case VIRTIO_F_NOTIFICATION_DATA:
+			dao_dbg("[dev %u]    +%s", dev->dev_id, "VIRTIO_F_NOTIFICATION_DATA");
+			break;
+		default:
+			dao_err("[dev %u] Unknown feature bit %d", dev_id, i);
+			break;
+		};
+	}
+	return 0;
+}
+
 static void
 virtio_hash_types_to_hash_report(struct virtio_netdev *netdev, uint64_t virtio_hash_types)
 {
@@ -762,6 +881,7 @@ dao_virtio_netdev_init(uint16_t devid, struct dao_virtio_netdev_conf *conf)
 	dev_cbs[VIRTIO_DEV_TYPE_NET].cq_cmd_process = virtio_netdev_cq_cmd_process;
 	dev_cbs[VIRTIO_DEV_TYPE_NET].cq_id_get = virtio_netdev_cq_id_get;
 	dev_cbs[VIRTIO_DEV_TYPE_NET].queue_enable = virtio_netdev_queue_enable;
+	dev_cbs[VIRTIO_DEV_TYPE_NET].feature_validate = virtio_netdev_feature_validate;
 	return 0;
 }
 

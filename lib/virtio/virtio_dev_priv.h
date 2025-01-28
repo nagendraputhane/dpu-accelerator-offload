@@ -57,12 +57,14 @@ typedef void (*virtio_cq_cmd_process_cb_t)(struct virtio_dev *dev, struct rte_dm
 typedef int (*virtio_dev_status_cb_t)(struct virtio_dev *dev, uint8_t status);
 typedef uint16_t (*virtio_cq_id_get_cb_t)(struct virtio_dev *dev, uint64_t feature_bits);
 typedef int (*virtio_queue_enable_cb_t)(struct virtio_dev *dev, uint16_t queue_id);
+typedef int (*virtio_feature_validate_cb_t)(struct virtio_dev *dev, uint64_t feature_bits);
 
 struct virtio_dev_cbs {
 	virtio_cq_cmd_process_cb_t cq_cmd_process;
 	virtio_dev_status_cb_t dev_status;
 	virtio_cq_id_get_cb_t cq_id_get;
 	virtio_queue_enable_cb_t queue_enable;
+	virtio_feature_validate_cb_t feature_validate;
 };
 
 struct virtio_pci_cap {

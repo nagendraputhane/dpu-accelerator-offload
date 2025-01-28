@@ -15,7 +15,8 @@
 #define VIRTIO_QUEUE_SELECT_DELAY  3
 #define VIRTIO_DEVICE_STATUS_DELAY 5
 
-#define VIRTIO_INVALID_QUEUE_INDEX 0xFFFF
+#define VIRTIO_INVALID_QUEUE_INDEX    0xFFFF
+#define VIRTIO_INVALID_FEATURE_SELECT 0xFFFF
 
 struct virtio_ctrl_queue {
 	uintptr_t desc_base;
@@ -39,6 +40,12 @@ virtio_process_device_feature_select(struct virtio_dev *dev, uintptr_t shadow,
 	struct virtio_pci_common_cfg *shadow_cfg = (struct virtio_pci_common_cfg *)shadow;
 	volatile struct virtio_pci_common_cfg *common_cfg = dev->common_cfg;
 	uint32_t feature_select = device_feature_select & 0x7fff;
+
+	/* Skip if it is during init */
+	if (device_feature_select == VIRTIO_INVALID_FEATURE_SELECT) {
+		shadow_cfg->device_feature_select = device_feature_select;
+		return 0;
+	}
 
 	if (feature_select == 0)
 		common_cfg->device_feature = (uint32_t)dev->dev_feature_bits & BIT_MASK32;
@@ -75,6 +82,11 @@ virtio_process_driver_feature_select(struct virtio_dev *dev, uintptr_t shadow,
 	uint32_t prev_feature_select = dev->prev_drv_feature_select;
 	uint32_t feature_select = driver_feature_select & 0x7fff;
 
+	if (driver_feature_select == VIRTIO_INVALID_FEATURE_SELECT) {
+		shadow_cfg->driver_feature_select = driver_feature_select;
+		return 0;
+	}
+
 	if (prev_feature_select != 0xffff) {
 		if (prev_feature_select == 0)
 			dev->drv_feature_bits_lo = dev->common_cfg->driver_feature;
@@ -85,6 +97,7 @@ virtio_process_driver_feature_select(struct virtio_dev *dev, uintptr_t shadow,
 			dev->common_cfg->driver_feature);
 	}
 
+	dao_dbg("[dev %u] feature selected: %u", dev->dev_id, feature_select);
 	/* Store feature select as driver can proceed to write driver feature and again
 	 * change driver feature select before device processing device_feature of
 	 * previous one.
@@ -95,9 +108,10 @@ virtio_process_driver_feature_select(struct virtio_dev *dev, uintptr_t shadow,
 	else if (feature_select == 1)
 		dev->common_cfg->driver_feature = dev->drv_feature_bits_hi;
 
-	rte_wmb();
-	shadow_cfg->driver_feature_select = feature_select;
 	shadow_cfg->driver_feature = dev->common_cfg->driver_feature;
+	rte_wmb();
+
+	shadow_cfg->driver_feature_select = feature_select;
 	dev->common_cfg->driver_feature_select = feature_select;
 	rte_wmb();
 
@@ -110,7 +124,7 @@ static int
 virtio_process_driver_feature(struct virtio_dev *dev, uintptr_t shadow, uint32_t driver_feature)
 {
 	struct virtio_pci_common_cfg *shadow_cfg = (struct virtio_pci_common_cfg *)shadow;
-	uint32_t feature_select = dev->common_cfg->driver_feature_select;
+	uint32_t feature_select = dev->prev_drv_feature_select;
 
 	if (feature_select == 0)
 		dev->drv_feature_bits_lo = driver_feature;
@@ -146,8 +160,8 @@ virtio_config_populate(struct virtio_dev *dev)
 
 	/* Populate common config and init notify area with initial wrap count */
 	common_cfg->num_queues = max_virtio_queues;
-	common_cfg->device_feature_select = -1;
-	common_cfg->driver_feature_select = -1;
+	common_cfg->device_feature_select = VIRTIO_INVALID_FEATURE_SELECT;
+	common_cfg->driver_feature_select = VIRTIO_INVALID_FEATURE_SELECT;
 
 	/* Reset notification area */
 	for (i = 0; i < max_virtio_queues; i++) {
@@ -156,7 +170,7 @@ virtio_config_populate(struct virtio_dev *dev)
 	}
 
 	dev->prev_queue_select = VIRTIO_INVALID_QUEUE_INDEX;
-	dev->prev_drv_feature_select = 0xffff;
+	dev->prev_drv_feature_select = VIRTIO_INVALID_FEATURE_SELECT;
 
 	/* Initialize queue config defaults */
 	memset(dev->queue_conf, 0, max_virtio_queues * sizeof(struct virtio_queue_conf));
@@ -389,9 +403,11 @@ virtio_setup_cq_info(struct virtio_dev *dev)
 static int
 virtio_process_device_status(struct virtio_dev *dev, uintptr_t shadow, uint8_t device_status)
 {
+	virtio_feature_validate_cb_t feature_validate_cb = dev_cbs[dev->dev_type].feature_validate;
 	struct virtio_pci_common_cfg *shadow_cfg = (struct virtio_pci_common_cfg *)shadow;
 	virtio_dev_status_cb_t dev_status_cb = dev_cbs[dev->dev_type].dev_status;
 	uint8_t status = device_status & 0x7f;
+	uint64_t feature_bits;
 
 	dao_dbg("[dev %u] device_status: 0x%x", dev->dev_id, device_status);
 
@@ -414,14 +430,23 @@ virtio_process_device_status(struct virtio_dev *dev, uintptr_t shadow, uint8_t d
 	}
 
 	if (status & VIRTIO_DEV_FEATURES_OK && !dev->features_ok) {
+		feature_bits = dev->drv_feature_bits_lo | (uint64_t)dev->drv_feature_bits_hi << 32;
 		dao_info("[dev %u] %s", dev->dev_id,
 			 dao_virtio_dev_status_to_str(VIRTIO_DEV_FEATURES_OK));
 
-		dev->feature_bits = dev->drv_feature_bits_lo | (uint64_t)dev->drv_feature_bits_hi
-								       << 32;
+		dao_info("[dev %u] Feature bits negotiated : %lx", dev->dev_id, feature_bits);
+		if (feature_validate_cb && feature_validate_cb(dev, feature_bits)) {
+			/* Feature validation failed */
+			dao_err("[dev %u] Feature validation failed", dev->dev_id);
+			dev->common_cfg->device_status &= ~VIRTIO_DEV_FEATURES_OK;
+			shadow_cfg->device_status &= ~VIRTIO_DEV_FEATURES_OK;
+			goto next;
+		}
+
+		dev->feature_bits = feature_bits;
 		dev->features_ok = 1;
 		shadow_cfg->device_status |= VIRTIO_DEV_FEATURES_OK;
-		dao_info("[dev %u] Feature bits negotiated : %lx", dev->dev_id, dev->feature_bits);
+
 		if ((dev->feature_bits & RTE_BIT64(VIRTIO_F_ORDER_PLATFORM)) == 0) {
 			dao_warn("[dev %u] !!! VIRTIO_F_ORDER_PLATFORM not negotiated !!!",
 				 dev->dev_id);
@@ -429,7 +454,7 @@ virtio_process_device_status(struct virtio_dev *dev, uintptr_t shadow, uint8_t d
 				 dev->dev_id);
 		}
 	}
-
+next:
 	if (status & VIRTIO_DEV_DRIVER_OK && !dev->driver_ok) {
 		/* Return to go through other changes and come back as we might not seeing
 		 * writes in order.
@@ -798,12 +823,12 @@ dao_virtio_common_cfg_cb(void *ctx, uintptr_t shadow, uint32_t offset, uint64_t 
 		up_cfg.w0 = val;
 		shd_cfg.w0 = shadow_val;
 		update_shadow = false;
+		if (up_cfg.device_feature != shd_cfg.device_feature)
+			virtio_process_device_feature(dev, up_cfg.device_feature);
+
 		if (up_cfg.device_feature_select != shd_cfg.device_feature_select)
 			virtio_process_device_feature_select(dev, shadow,
 							     up_cfg.device_feature_select);
-
-		if (up_cfg.device_feature != shd_cfg.device_feature)
-			virtio_process_device_feature(dev, up_cfg.device_feature);
 		break;
 
 	case 1:
@@ -811,12 +836,12 @@ dao_virtio_common_cfg_cb(void *ctx, uintptr_t shadow, uint32_t offset, uint64_t 
 		up_cfg.w1 = val;
 		shd_cfg.w1 = shadow_val;
 		update_shadow = false;
+		if (up_cfg.driver_feature != shd_cfg.driver_feature)
+			virtio_process_driver_feature(dev, shadow, up_cfg.driver_feature);
+
 		if (up_cfg.driver_feature_select != shd_cfg.driver_feature_select)
 			virtio_process_driver_feature_select(dev, shadow,
 							     up_cfg.driver_feature_select);
-
-		if (up_cfg.driver_feature != shd_cfg.driver_feature)
-			virtio_process_driver_feature(dev, shadow, up_cfg.driver_feature);
 		break;
 
 	case 2:
