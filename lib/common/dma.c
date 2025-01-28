@@ -116,6 +116,9 @@ dao_dma_lcore_mem2dev_autofree_set(int16_t mem2dev_id, uint16_t vchan, bool enab
 	struct dao_dma_vchan_info *vchan_info = RTE_PER_LCORE(dao_dma_vchan_info);
 	int i;
 
+	if (!vchan_info)
+		return -ENOMEM;
+
 	for (i = 0; i < vchan_info->nb_mem2dev; i++) {
 		if (vchan_info->mem2dev[i].devid == mem2dev_id &&
 		    vchan_info->mem2dev[i].vchan == vchan) {
