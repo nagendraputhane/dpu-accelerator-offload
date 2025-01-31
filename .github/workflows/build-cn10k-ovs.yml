@@ -55,7 +55,7 @@ jobs:
             sudo apt-get install -y libnl-3-dev libnl-route-3-dev libnl-xfrm-3-dev
             sudo apt-get install -y libarchive-dev libbsd-dev libbpf-dev
             sudo apt-get install -y libfdt-dev libjansson-dev autoconf dh-autoreconf
-            sudo apt-get install -y libssl-dev ninja-build zlib1g-dev
+            sudo apt-get install -y libssl-dev ninja-build zlib1g-dev bash-completion
             sudo apt-get install -y gcc-14 bzip2-doc icu-devtools libacl1-dev libattr1-dev
             sudo apt-get install -y libbz2-dev libgmp-dev libgmpxx4ldbl libicu-dev liblz4-dev
             sudo apt-get install -y liblzma-dev libxml2-dev libzstd-dev nettle-dev wget lsb-release
