@@ -81,7 +81,7 @@ jobs:
             done
             ./boot.sh
             ./configure --prefix="${PWD}/install/usr/local" --localstatedir=${PWD}/install/usr/local/var --sysconfdir=${PWD}/install/usr/local/etc --with-dpdk=static CFLAGS="-DALLOW_EXPERIMENTAL_API  -mcpu=neoverse-n2+crypto+sve2"
-            make -j4 install
+            sudo make -j4 install
             mkdir -p "${PWD}/install/debian"
             mkdir -p "${PWD}/install/DEBIAN"
             cd "${PWD}/install"
