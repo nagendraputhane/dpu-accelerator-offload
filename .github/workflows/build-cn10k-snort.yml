@@ -90,7 +90,8 @@ jobs:
             mkdir hyperscan-build
             cd hyperscan-build
             cmake -DCMAKE_INSTALL_PREFIX=/usr/local -DBOOST_ROOT=${BASE_DIR}/snort_src/boost_1_85_0/ ${BASE_DIR}/snort_src/vectorscan/
-            sudo make -j$(nproc) && make install
+            sudo make -j$(nproc)
+            sudo make install
             cd ${BASE_DIR}/snort_src
             wget https://github.com/google/flatbuffers/archive/refs/tags/v22.12.6.tar.gz -O flatbuffers-v22.12.6.tar.gz
             tar -xzvf flatbuffers-v22.12.6.tar.gz
