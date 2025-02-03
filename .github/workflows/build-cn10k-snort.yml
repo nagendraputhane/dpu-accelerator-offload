@@ -108,7 +108,7 @@ jobs:
             ./configure
             sudo make -j$(nproc)
             sudo make install
-            ldconfig
+            sudo ldconfig
             mkdir ${BASE_DIR}/snort_src/install
             cd ${BASE_DIR}/snort_src
             wget https://github.com/snort3/snort3/archive/refs/tags/3.2.2.0.tar.gz -O snort3-3.2.2.0.tar.gz
