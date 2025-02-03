@@ -42,9 +42,9 @@ jobs:
             sudo apt-get update  -q -y
             sudo apt-get install -y build-essential ccache git software-properties-common lsb-release
             sudo apt-get install -y  python3-pip gcc-14 lsb-release libstdc++-13-dev apt-utils
-            sudo apt-get install -y  cmake flex g++ autotools-dev libdumbnet-dev libluajit-5.1-dev libpcap-dev
+            sudo apt-get install -y  cmake libfl-dev flex g++ autotools-dev libdumbnet-dev libluajit-5.1-dev libpcap-dev
             sudo apt-get install -y  ca-certificates cron dbus iproute2 zlib1g-dev pkg-config libhwloc-dev openssl cpputest libsqlite3-dev
-            sudo apt-get install -y  libtool uuid-dev autoconf bison flex libcmocka-dev libnetfilter-queue-dev libunwind-dev libssl-dev
+            sudo apt-get install -y  libtool uuid-dev autoconf bison libcmocka-dev libnetfilter-queue-dev libunwind-dev libssl-dev
             sudo apt-get install -y  libnl-3-dev libnl-route-3-dev libnl-xfrm-3-dev bzip2-doc icu-devtools libacl1-dev libattr1-dev libfdt-dev
             sudo apt-get install -y  libbz2-dev libgmp-dev libgmpxx4ldbl libicu-dev liblz4-dev
             sudo apt-get install -y  liblzma-dev libxml2-dev libzstd-dev nettle-dev perl
