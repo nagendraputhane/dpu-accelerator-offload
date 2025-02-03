@@ -1,0 +1,180 @@
+name: build-cn10k-snort
+
+on:
+  push:
+  schedule:
+    - cron: "0 0 * * 1"
+  pull_request:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+  packages: write
+
+jobs:
+  ubuntu-cn10k-build:
+    name: ubuntu-cn10k-arm64
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4.2.2
+      - name: Generate cache keys
+        id: get_ref_keys
+        run: |
+          echo 'ccache=ccache-'$(date -u +%Y-m%M) >> $GITHUB_OUTPUT
+      - name: Retrieve ccache cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.ccache
+          key: ${{ steps.get_ref_keys.outputs.ccache }}-${{ github.ref }}
+          restore-keys: |
+            ${{ steps.get_ref_keys.outputs.ccache }}-refs/heads/main
+      - name: Build and Package Snort
+        id: version
+        run: |
+            mkdir -p "${PWD}/artifacts"
+            git tag --points-at HEAD > /tmp/tags
+            [ -s /tmp/tags ] && PKG_POSTFIX= || PKG_POSTFIX=-devel
+            PKG_VERSION_NAME=`cat VERSION`
+            echo "PKG_VERSION_NAME=`cat VERSION`" >> "${PWD}/artifacts/env"
+            echo "PKG_POSTFIX=${PKG_POSTFIX}" >> "${PWD}/artifacts/env"
+            mkdir -p ~/.ccache
+            sudo apt-get update  -q -y
+            sudo apt-get install -y build-essential ccache git software-properties-common lsb-release
+            sudo apt-get install -y  python3-pip gcc-14 lsb-release libstdc++-13-dev apt-utils
+            sudo apt-get install -y  cmake libfl-dev flex g++ autotools-dev libdumbnet-dev libluajit-5.1-dev libpcap-dev
+            sudo apt-get install -y  ca-certificates cron dbus iproute2 zlib1g-dev pkg-config libhwloc-dev openssl cpputest libsqlite3-dev
+            sudo apt-get install -y  libtool uuid-dev autoconf bison libcmocka-dev libnetfilter-queue-dev libunwind-dev libssl-dev
+            sudo apt-get install -y  libnl-3-dev libnl-route-3-dev libnl-xfrm-3-dev bzip2-doc icu-devtools libacl1-dev libattr1-dev libfdt-dev
+            sudo apt-get install -y  libbz2-dev libgmp-dev libgmpxx4ldbl libicu-dev liblz4-dev
+            sudo apt-get install -y  liblzma-dev libxml2-dev libzstd-dev nettle-dev perl
+            sudo apt-get install -y  libmnl-dev ethtool libjemalloc-dev ragel wget vim
+            git config --global --add safe.directory "${PWD}"
+            DISTRO=ubuntu-`lsb_release -rs`
+            echo "DISTRO=${DISTRO}" >> ${PWD}/artifacts/env
+            export CC='ccache gcc-14'
+            echo "cache_dir = ~/.ccache" > ~/.ccache/ccache.conf
+            ccache -p
+            pkg-config --list-all
+            BASE_DIR=${PWD}
+            mkdir ${BASE_DIR}/snort_src
+            cd ${BASE_DIR}/snort_src
+            wget "https://github.com/rurban/safeclib/releases/download/v3.8.1/safeclib-3.8.1.tar.gz"
+            tar -xzvf safeclib-3.8.1.tar.gz > /dev/null 2>&1
+            cd safeclib-3.8.1.0-gdfea26
+            ./configure
+            sudo make -j$(nproc)
+            sudo make install
+            cd ${BASE_DIR}/snort_src
+            wget "https://github.com/gperftools/gperftools/releases/download/gperftools-2.15/gperftools-2.15.tar.gz"
+            tar xzvf gperftools-2.15.tar.gz > /dev/null 2>&1
+            cd gperftools-2.15
+            ./configure
+            sudo make -j$(nproc)
+            sudo make install
+            cd ${BASE_DIR}/snort_src
+            wget "https://sourceforge.net/projects/pcre/files/pcre/8.45/pcre-8.45.tar.gz"
+            tar -xzvf pcre-8.45.tar.gz > /dev/null 2>&1
+            cd pcre-8.45
+            ./configure
+            sudo make -j$(nproc)
+            sudo make install
+            cd ${BASE_DIR}/snort_src
+            wget "https://archives.boost.io/release/1.85.0/source/boost_1_85_0.tar.gz"
+            tar -xzvf boost_1_85_0.tar.gz > /dev/null 2>&1
+            cd ${BASE_DIR}/snort_src
+            git clone "https://github.com/VectorCamp/vectorscan"
+            cd vectorscan
+            cd ..
+            mkdir hyperscan-build
+            cd hyperscan-build
+            cmake -DCMAKE_INSTALL_PREFIX=/usr/local -DBOOST_ROOT=${BASE_DIR}/snort_src/boost_1_85_0/ ${BASE_DIR}/snort_src/vectorscan/
+            sudo make -j$(nproc)
+            sudo make install
+            cd ${BASE_DIR}/snort_src
+            wget "https://github.com/google/flatbuffers/archive/refs/tags/v22.12.6.tar.gz" -O flatbuffers-v22.12.6.tar.gz
+            tar -xzvf flatbuffers-v22.12.6.tar.gz > /dev/null 2>&1
+            mkdir flatbuffers-build
+            cd flatbuffers-build
+            cmake ../flatbuffers-22.12.6
+            sudo make -j$(nproc)
+            sudo make install
+            cd ${BASE_DIR}/snort_src
+            wget "https://github.com/snort3/libdaq/archive/refs/tags/v3.0.15.tar.gz" -O libdaq-3.0.15.tar.gz
+            tar -xzvf libdaq-3.0.15.tar.gz > /dev/null 2>&1
+            cd libdaq-3.0.15
+            ./bootstrap
+            ./configure
+            sudo make -j$(nproc)
+            sudo make install
+            sudo ldconfig
+            mkdir ${BASE_DIR}/snort_src/install
+            cd ${BASE_DIR}/snort_src
+            wget "https://github.com/snort3/snort3/archive/refs/tags/3.2.2.0.tar.gz" -O snort3-3.2.2.0.tar.gz
+            tar -xzvf snort3-3.2.2.0.tar.gz > /dev/null 2>&1
+            cd snort3-3.2.2.0
+            ./configure_cmake.sh --prefix=${BASE_DIR}/snort_src/install/usr/local --enable-tcmalloc
+            cd build
+            sudo make -j$(nproc)
+            sudo make install
+            mkdir -p ${BASE_DIR}/snort_src/install/usr/local/lib/
+            sudo cp -r /usr/local/* ${BASE_DIR}/snort_src/install/usr/local/
+            cd ${BASE_DIR}/snort_src
+            mkdir -p "${BASE_DIR}/snort_src/install/DEBIAN"
+            cd "${BASE_DIR}/snort_src/install"
+            echo 'Package: snort-3-cn10k'${PKG_POSTFIX} >> DEBIAN/control
+            echo 'Version: '${PKG_VERSION_NAME} >> DEBIAN/control
+            echo "Depends: libdumbnet1, libhwloc15, libluajit-5.1-2, libmnl0, libunwind8, liblzma5, libnuma1, libuuid1, libstdc++6" >> DEBIAN/control
+            echo "Maintainer: Jerin Jacob (jerinj@marvell.com)" >> DEBIAN/control
+            echo "Architecture: arm64" >> DEBIAN/control
+            echo "Description: Snort 3 with Vectorscan for Marvell Octeon 10" >> DEBIAN/control
+            cd ..
+            mv "${BASE_DIR}/snort_src/install" "${BASE_DIR}/snort_src/snort-3-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64"
+            dpkg --build "snort-3-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64"
+            cp -r "snort-3-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64.deb" ${BASE_DIR}/artifacts/.
+      - name: Export version name
+        id: artifacts
+        run: |
+          source "${PWD}/artifacts/env"
+          echo $PKG_VERSION_NAME
+          echo "PKG_VERSION_NAME=${PKG_VERSION_NAME}" >> "$GITHUB_OUTPUT"
+          echo $DISTRO
+          echo "DISTRO=${DISTRO}" >> "$GITHUB_OUTPUT"
+          [[ "$PKG_POSTFIX" == "-devel" ]] && TAG=devel || TAG=${PKG_VERSION_NAME}
+          [[ "$PKG_POSTFIX" == "-devel" ]] && IS_DEVEL="true" || IS_DEVEL="false"
+          echo "PKG_POSTFIX=${PKG_POSTFIX}" >> "$GITHUB_OUTPUT"
+          echo "TAG=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "IS_DEVEL=${IS_DEVEL}" >> "$GITHUB_OUTPUT"
+      - name: Delete existing release
+        if: ${{ github.event_name == 'push' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view snort-3-cn10k-${{ steps.artifacts.outputs.PKG_VERSION_NAME }}-${{ steps.artifacts.outputs.DISTRO }}-${{ steps.artifacts.outputs.TAG }}; then
+            gh release delete snort-3-cn10k-${{ steps.artifacts.outputs.PKG_VERSION_NAME }}-${{ steps.artifacts.outputs.DISTRO }}-${{ steps.artifacts.outputs.TAG }} --cleanup-tag -y
+          else
+            echo "Release not found"
+          fi
+      - name: Release Snort cn10k package
+        uses: softprops/action-gh-release@v2.0.4
+        if: ${{ github.event_name == 'push' }}
+        with:
+          draft: false
+          tag_name: snort-3-cn10k-${{ steps.artifacts.outputs.PKG_VERSION_NAME }}-${{ steps.artifacts.outputs.DISTRO }}-${{ steps.artifacts.outputs.TAG }}
+          files: |
+            ${{ github.workspace }}/artifacts/snort-3-cn10k${{ steps.artifacts.outputs.PKG_POSTFIX }}_${{ steps.artifacts.outputs.PKG_VERSION_NAME }}_arm64.deb
+      - name: Dispatch package update event
+        if: ${{ github.event_name == 'push' }}
+        run: |
+          curl -L \
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.PPA_REPO_SECRET }}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/marvellembeddedprocessors/packages/dispatches \
+            -d '{"event_type":"dispatch-event", "client_payload": {"package" : "snort",
+            "tag": "snort-3-cn10k-${{ steps.artifacts.outputs.PKG_VERSION_NAME }}-${{ steps.artifacts.outputs.DISTRO }}-${{ steps.artifacts.outputs.TAG }}",
+            "distro" : "${{ steps.artifacts.outputs.DISTRO }}",
+            "platform" : "cn10k",
+            "devel": "${{ steps.artifacts.outputs.IS_DEVEL }}"}}'
