@@ -39,11 +39,11 @@ jobs:
             echo "PKG_VERSION_NAME=`cat VERSION`" >> "${PWD}/artifacts/env"
             echo "PKG_POSTFIX=${PKG_POSTFIX}" >> "${PWD}/artifacts/env"
             mkdir -p ~/.ccache
-            sudo apt-get update -q -y
+            sudo apt-get update  -q -y
             sudo apt-get install -y build-essential ccache git software-properties-common lsb-release
             sudo apt-get install -y  python3-pip gcc-14 lsb-release libstdc++-13-dev apt-utils
-            sudo apt-get install -y  cmake flex gcc g++ autotools-dev libdumbnet-dev libluajit-5.1-dev libpcap-dev
-            sudo apt-get install -y  ca-certificates cron dbus iproute2 zlib1g-dev pkg-config libhwloc-dev cmake openssl cpputest libsqlite3-dev
+            sudo apt-get install -y  cmake flex g++ autotools-dev libdumbnet-dev libluajit-5.1-dev libpcap-dev
+            sudo apt-get install -y  ca-certificates cron dbus iproute2 zlib1g-dev pkg-config libhwloc-dev openssl cpputest libsqlite3-dev
             sudo apt-get install -y  libtool uuid-dev autoconf bison flex libcmocka-dev libnetfilter-queue-dev libunwind-dev libssl-dev
             sudo apt-get install -y  libnl-3-dev libnl-route-3-dev libnl-xfrm-3-dev bzip2-doc icu-devtools libacl1-dev libattr1-dev libfdt-dev
             sudo apt-get install -y  libbz2-dev libgmp-dev libgmpxx4ldbl libicu-dev liblz4-dev
@@ -64,22 +64,22 @@ jobs:
             tar -xzvf safeclib-3.8.1.tar.gz
             cd safeclib-3.8.1.0-gdfea26
             ./configure
-            make -j$(nproc)
-            make install
+            sudo make -j$(nproc)
+            sudo make install
             cd ${BASE_DIR}/snort_src
             wget https://github.com/gperftools/gperftools/releases/download/gperftools-2.15/gperftools-2.15.tar.gz
             tar xzvf gperftools-2.15.tar.gz
             cd gperftools-2.15
             ./configure
-            make -j$(nproc)
-            make install
+            sudo make -j$(nproc)
+            sudo make install
             cd ${BASE_DIR}/snort_src
             wget https://sourceforge.net/projects/pcre/files/pcre/8.45/pcre-8.45.tar.gz
             tar -xzvf pcre-8.45.tar.gz
             cd pcre-8.45
             ./configure
-            make -j$(nproc)
-            make install
+            sudo make -j$(nproc)
+            sudo make install
             cd ${BASE_DIR}/snort_src
             wget https://boostorg.jfrog.io/artifactory/main/release/1.85.0/source/boost_1_85_0.tar.gz
             tar -xvzf boost_1_85_0.tar.gz
@@ -90,23 +90,23 @@ jobs:
             mkdir hyperscan-build
             cd hyperscan-build
             cmake -DCMAKE_INSTALL_PREFIX=/usr/local -DBOOST_ROOT=${BASE_DIR}/snort_src/boost_1_85_0/ ${BASE_DIR}/snort_src/vectorscan/
-            make -j$(nproc) && make install
+            sudo make -j$(nproc) && make install
             cd ${BASE_DIR}/snort_src
             wget https://github.com/google/flatbuffers/archive/refs/tags/v22.12.6.tar.gz -O flatbuffers-v22.12.6.tar.gz
             tar -xzvf flatbuffers-v22.12.6.tar.gz
             mkdir flatbuffers-build
             cd flatbuffers-build
             cmake ../flatbuffers-22.12.6
-            make -j$(nproc)
-            make install
+            sudo make -j$(nproc)
+            sudo make install
             cd ${BASE_DIR}/snort_src
             wget https://github.com/snort3/libdaq/archive/refs/tags/v3.0.15.tar.gz -O libdaq-3.0.15.tar.gz
             tar -xzvf libdaq-3.0.15.tar.gz
             cd libdaq-3.0.15
             ./bootstrap
             ./configure
-            make -j$(nproc)
-            make install
+            sudo make -j$(nproc)
+            sudo make install
             ldconfig
             mkdir ${BASE_DIR}/snort_src/install
             cd ${BASE_DIR}/snort_src
@@ -115,8 +115,8 @@ jobs:
             cd snort3-3.2.2.0
             ./configure_cmake.sh --prefix=${BASE_DIR}/snort_src/install/usr/local --enable-tcmalloc
             cd build
-            make -j$(nproc)
-            make install
+            sudo make -j$(nproc)
+            sudo make install
             mkdir -p ${BASE_DIR}/snort_src/install/usr/local/lib/
             cp -r /usr/local/* ${BASE_DIR}/snort_src/install/usr/local/
             cd ${BASE_DIR}/snort_src
