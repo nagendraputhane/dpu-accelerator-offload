@@ -81,7 +81,7 @@ jobs:
             sudo make -j$(nproc)
             sudo make install
             cd ${BASE_DIR}/snort_src
-            wget https://boostorg.jfrog.io/artifactory/main/release/1.85.0/source/boost_1_85_0.tar.gz
+            wget "https://archives.boost.io/release/1.85.0/source/boost_1_85_0.tar.gz"
             tar -xvzf boost_1_85_0.tar.gz
             cd ${BASE_DIR}/snort_src
             git clone https://github.com/VectorCamp/vectorscan
