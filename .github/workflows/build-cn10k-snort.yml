@@ -30,12 +30,13 @@ jobs:
           key: ${{ steps.get_ref_keys.outputs.ccache }}-${{ github.ref }}
           restore-keys: |
             ${{ steps.get_ref_keys.outputs.ccache }}-refs/heads/main
-      - name: Extract version details
+      - name: Build and Package Snort
         id: version
         run: |
             mkdir -p "${PWD}/artifacts"
             git tag --points-at HEAD > /tmp/tags
             [ -s /tmp/tags ] && PKG_POSTFIX= || PKG_POSTFIX=-devel
+            PKG_VERSION_NAME=`cat VERSION`
             echo "PKG_VERSION_NAME=`cat VERSION`" >> "${PWD}/artifacts/env"
             echo "PKG_POSTFIX=${PKG_POSTFIX}" >> "${PWD}/artifacts/env"
             mkdir -p ~/.ccache
