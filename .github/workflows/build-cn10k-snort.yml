@@ -119,7 +119,7 @@ jobs:
             sudo make -j$(nproc)
             sudo make install
             mkdir -p ${BASE_DIR}/snort_src/install/usr/local/lib/
-            cp -r /usr/local/* ${BASE_DIR}/snort_src/install/usr/local/
+            sudp cp -r /usr/local/* ${BASE_DIR}/snort_src/install/usr/local/
             cd ${BASE_DIR}/snort_src
             mkdir -p "${BASE_DIR}/snort_src/install/DEBIAN"
             cd "${BASE_DIR}/snort_src/install"
