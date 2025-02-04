@@ -89,6 +89,9 @@ major_version = version_list[0]
 minor_version = version_list[1]
 point_version = version_list[2]
 
+# Set library version before updating DAO_VERSION
+DAO_BUILD_CONF.set('DAO_LIB_VERSION', DAO_VERSION)
+
 # Append DPDK version
 if DAO_BUILD_CONF.has('DAO_LIBDPDK_DEP')
 	DAO_VERSION += '-' + dpdk_version

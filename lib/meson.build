@@ -42,6 +42,8 @@ foreach l:libraries
     libname = 'dao_' + name
     includes += include_directories(l)
     includes += DAO_INCLUDES
+
+    shared_deps = []
     static_deps = []
     foreach d:deps
 	if not is_variable('static_dao_' + d)
@@ -50,6 +52,7 @@ foreach l:libraries
             message('Disabling @1@ [@2@]: missing internal dependency "@0@"'
                     .format(d, name, 'lib/' + l))
         else
+            shared_deps += [get_variable('shared_dao_' + d)]
             static_deps += [get_variable('static_dao_' + d)]
         endif
     endforeach
@@ -74,6 +77,19 @@ foreach l:libraries
             include_directories: includes,
             dependencies: static_deps)
 
+    shared_lib = shared_library(libname,
+            sources,
+            c_args: cflags,
+            dependencies: shared_deps + DAO_DPDK_LIB_DEPS,
+            include_directories: includes,
+            version: DAO_BUILD_CONF.get('DAO_LIB_VERSION'),
+            soversion: DAO_BUILD_CONF.get('DAO_VERSION_MAJOR'),
+            install: true)
+    shared_dep = declare_dependency(link_with: shared_lib,
+            include_directories: includes,
+            dependencies: shared_deps)
+
+    set_variable('shared_dao_' + name, shared_dep)
     set_variable('static_dao_' + name, static_dep)
 
     DAO_STATIC_LIBS += static_lib
