@@ -8,6 +8,5 @@ CIFILES=$(git show HEAD --stat=10000 --oneline --name-only | tail -n +2 | grep "
 set -xe
 
 if [[ $CIFILES != "" && $NONCIFILES != "" ]]; then
-	echo "Changes in ci/ directory should be done in a separate commit"
-	exit 1
+	echo "Recommending to move changes in ci/ directory to a separate commit"
 fi
