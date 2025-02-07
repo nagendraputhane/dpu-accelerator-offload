@@ -22,19 +22,31 @@ Installing OVS from the distribution repository
 
 .. code-block:: console
 
- # apt-get install ovs-3.3.0-cn10k
+ # apt-get install ovs-3.4.1-cn10k
+
+To install OVS devel package:
+
+.. code-block:: console
+
+ # apt-get install ovs-3.4.1-cn10k-devel
 
 To remove the installed package:
 
 .. code-block:: console
 
- # apt-get remove ovs-3.3.0-cn10k
+ # apt-get remove ovs-3.4.1-cn10k
+
+Remove the devel package:
+
+.. code-block:: console
+
+ # apt-get remove ovs-3.4.1-cn10k-devel
 
 Clear cache:
 
 .. code-block:: console
 
- # rm /var/cache/apt/archives/ovs-3.3*
+ # rm /var/cache/apt/archives/ovs-3.4*
 
 Building OVS from source
 ------------------------

@@ -10,7 +10,7 @@ distributions
 Following are supported operating systems which can run with ease on
 Marvell's Octeon platform.
 
-1. Ubuntu 22.04
+1. Ubuntu 24.04
 2. RHEL
 
 Packages available for different distributions
@@ -22,11 +22,11 @@ Packages available for different distributions
    +-------------------------+-----------------------+-----------------------+
    |   Available Packages    |        Ubuntu         |        RHEL           |
    +=========================+=======================+=======================+
-   | DAO 24.05               | Yes                   | Planned               |
+   | DAO 25.01               | Yes                   | Planned               |
    +-------------------------+-----------------------+-----------------------+
-   | DPDK 23.11              | Yes                   | Planned               |
+   | DPDK 24.11              | Yes                   | Planned               |
    +-------------------------+-----------------------+-----------------------+
-   | OVS 3.3                 | Yes                   | Planned               |
+   | OVS 3.4.1               | Yes                   | Planned               |
    +-------------------------+-----------------------+-----------------------+
    | VPP                     | Yes                   | Planned               |
    +-------------------------+-----------------------+-----------------------+
@@ -37,8 +37,8 @@ Packages available for different distributions
    | OpenSSL 1.1.1q          | Yes                   | Planned               |
    +-------------------------+-----------------------+-----------------------+
 
-Ubuntu 22.04
-============
+Ubuntu
+======
 
 To get started with the DAO package on Ubuntu, first set up the root
 file system for octeon platform, then follow the step-by-step instructions
@@ -52,12 +52,15 @@ To access the Ubuntu root file system from the Octeon platform, prepare
 the file system first and then enable Network File Sharing (NFS), thereby
 facilitating seamless cross-platform file access and management.
 
+Ubuntu 24.04
+^^^^^^^^^^^^
+
 .. code-block:: console
 
  # mkdir ubuntu_base
  # cd ubuntu_base
- # wget https://cdimage.ubuntu.com/ubuntu-base/releases/22.04/release/ubuntu-base-22.04-base-arm64.tar.gz
- # sudo tar xvfp ubuntu-base-22.04-base-arm64.tar.gz
+ # wget https://cdimage.ubuntu.com/ubuntu-base/releases/noble/release/ubuntu-base-24.04.1-base-arm64.tar.gz
+ # sudo tar xvfp ubuntu-base-24.04.1-base-arm64.tar.gz
 
 Setting up the ubuntu environment
 ---------------------------------
@@ -123,8 +126,8 @@ PPA for stable version:
 
 .. code-block:: console
 
- # curl -fsSL https://www.marvell.com/public/repo/octeon/dao/cn10k/ubuntu/v2204/release/dao.gpg | sudo gpg --dearmor -o /etc/apt/keyrings/dao.gpg
- # curl -SsL -o /etc/apt/sources.list.d/dao.list https://www.marvell.com/public/repo/octeon/dao/cn10k/ubuntu/v2204/release/dao.list
+ # curl -fsSL https://www.marvell.com/public/repo/octeon/dao/cn10k/ubuntu/v2404/release/dao.gpg | sudo gpg --dearmor -o /etc/apt/keyrings/dao.gpg
+ # curl -SsL -o /etc/apt/sources.list.d/dao.list https://www.marvell.com/public/repo/octeon/dao/cn10k/ubuntu/v2404/release/dao.list
  # sudo chmod 644 /etc/apt/sources.list.d/dao.list
  # sudo chmod 644 /etc/apt/keyrings/dao.gpg
  # apt-get update
@@ -135,8 +138,8 @@ PPA for development version:
 
 .. code-block:: console
 
- # curl -fsSL https://www.marvell.com/public/repo/octeon/dao/cn10k/ubuntu/v2204/devel/dao.gpg | sudo gpg --dearmor -o /etc/apt/keyrings/dao.gpg
- # curl -SsL -o /etc/apt/sources.list.d/dao.list https://www.marvell.com/public/repo/octeon/dao/cn10k/ubuntu/v2204/devel/dao.list
+ # curl -fsSL https://www.marvell.com/public/repo/octeon/dao/cn10k/ubuntu/v2404/devel/dao.gpg | sudo gpg --dearmor -o /etc/apt/keyrings/dao.gpg
+ # curl -SsL -o /etc/apt/sources.list.d/dao.list https://www.marvell.com/public/repo/octeon/dao/cn10k/ubuntu/v2404/devel/dao.list
  # sudo chmod 644 /etc/apt/sources.list.d/dao.list
  # sudo chmod 644 /etc/apt/keyrings/dao.gpg
  # apt-get update
@@ -220,7 +223,7 @@ Removing old packages
  # apt-get remove dao-cn10k-devel -y
 
  Remove dpdk package and its dependents
- # apt-get remove dpdk-23.11-cn10k -y
+ # apt-get remove dpdk-24.11-cn10k -y
 
 .. _clear_repo_cache:
 
@@ -229,7 +232,7 @@ Removing old packages
 .. code-block:: console
 
  # rm /var/cache/apt/archives/dao-cn10k*
- # rm /var/cache/apt/archives/dpdk-23.11-cn10k_*
+ # rm /var/cache/apt/archives/dpdk-24.11-cn10k_*
 
 Installation demo
 -----------------
