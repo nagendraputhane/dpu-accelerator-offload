@@ -1,0 +1,141 @@
+name: build-cn10k-ovs
+
+on:
+  push:
+  schedule:
+    - cron: "0 0 * * 1"
+  pull_request:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+  packages: write
+
+jobs:
+  ubuntu-cn10k-build:
+    name: ubuntu-cn10k-arm64
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4.2.2
+      - name: Generate cache keys
+        id: get_ref_keys
+        run: |
+          echo 'ccache=ccache-'$(date -u +%Y-%m) >> $GITHUB_OUTPUT
+      - name: Retrieve ccache cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.ccache
+          key: ${{ steps.get_ref_keys.outputs.ccache }}-${{ github.ref }}
+          restore-keys: |
+            ${{ steps.get_ref_keys.outputs.ccache }}-refs/heads/main
+      - name: Extract version details
+        id: version
+        run: |
+          mkdir -p "${PWD}/artifacts"
+          git tag --points-at HEAD > /tmp/tags
+          [ -s /tmp/tags ] && PKG_POSTFIX= || PKG_POSTFIX=-devel
+          [ -s /tmp/tags ] && NIGHTLY=false || NIGHTLY=true
+          echo "PKG_VERSION_NAME=$(cat VERSION)" >> "${PWD}/artifacts/env"
+          echo "DPDK_PKG_VERSION=$(grep RELEASE_VERSION DPDK_VERSION | awk -F'=' '{print $2}')" >> "${PWD}/artifacts/env"
+          echo "DPDK_BASE_PKG_VERSION=$(grep BASE_VERSION DPDK_VERSION | awk -F'=' '{print $2}' | awk -F'.' '{print $1"."$2}')" >> "${PWD}/artifacts/env"
+          source "${PWD}/artifacts/env"
+          echo "PKG_POSTFIX=${PKG_POSTFIX}" >> "${PWD}/artifacts/env"
+          echo "NIGHTLY=${NIGHTLY}" >> $GITHUB_OUTPUT
+      - name: Install dependencies
+        run: |
+          mkdir -p ~/.ccache
+          sudo apt-get update -q -y
+          sudo apt-get install -y apt-utils python3-sphinx-rtd-theme python3-pip
+          sudo apt-get install -y python3-pyelftools python3-setuptools python3-wheel
+          sudo apt-get install -y build-essential meson ccache git doxygen
+          sudo apt-get install -y software-properties-common sphinx-common pkg-config
+          sudo apt-get install -y libnl-3-dev libnl-route-3-dev libnl-xfrm-3-dev
+          sudo apt-get install -y libarchive-dev libbsd-dev libbpf-dev
+          sudo apt-get install -y libfdt-dev libjansson-dev autoconf dh-autoreconf
+          sudo apt-get install -y libssl-dev ninja-build zlib1g-dev bash-completion
+          sudo apt-get install -y gcc-14 bzip2-doc icu-devtools libacl1-dev libattr1-dev
+          sudo apt-get install -y libbz2-dev libgmp-dev libgmpxx4ldbl libicu-dev liblz4-dev
+          sudo apt-get install -y liblzma-dev libxml2-dev libzstd-dev nettle-dev wget lsb-release
+          git config --global --add safe.directory "${PWD}"
+          DISTRO=ubuntu-$(lsb_release -rs)
+          source "${PWD}/artifacts/env"
+          echo "DISTRO=${DISTRO}" >> ${PWD}/artifacts/env
+          wget "https://github.com/MarvellEmbeddedProcessors/marvell-dpdk/releases/download/dpdk-cn10k-${DPDK_BASE_PKG_VERSION}_${DPDK_PKG_VERSION}-${DISTRO}-${DPDK_PKG_VERSION}/dpdk-${DPDK_BASE_PKG_VERSION}-cn10k_${DPDK_PKG_VERSION}_arm64.deb"
+          sudo apt-get install -y "./dpdk-${DPDK_BASE_PKG_VERSION}-cn10k_${DPDK_PKG_VERSION}_arm64.deb"
+          export CC='ccache gcc-14'
+          echo "cache_dir = ~/.ccache" > ~/.ccache/ccache.conf
+          ccache -p
+          pkg-config --list-all
+      - name: Build OVS (Normal Build)
+        id: build_normal
+        run: |
+          source "${PWD}/artifacts/env"
+          OVS_PATCH_VERSION=$(ls patches/ovs | head -n 1)
+          OVS_VERSION=${OVS_PATCH_VERSION#v}
+          echo "OVS_VERSION=$OVS_VERSION" >> ${PWD}/artifacts/env
+          wget "https://www.openvswitch.org/releases/openvswitch-${OVS_VERSION}.tar.gz"
+          tar xzf openvswitch-${OVS_VERSION}.tar.gz
+          BASE_DIR=${PWD}
+          echo "OVS_DIR=${PWD}/openvswitch-${OVS_VERSION}" >> ${PWD}/artifacts/env
+          cd "${PWD}/openvswitch-${OVS_VERSION}"
+          for patch in ${BASE_DIR}/patches/ovs/${OVS_PATCH_VERSION}/*.patch; do
+            patch -p1 < "$patch"
+          done
+          ./boot.sh
+          ./configure --prefix="${PWD}/install/usr/local" --localstatedir=${PWD}/install/usr/local/var --sysconfdir=${PWD}/install/usr/local/etc --with-dpdk=static CFLAGS="-DALLOW_EXPERIMENTAL_API  -mcpu=neoverse-n2+crypto+sve2"
+          make -j4 install
+      - name: Build OVS (Debug Build)
+        id: build_debug
+        run: |
+          git config --global --add safe.directory "${PWD}"
+          source "${PWD}/artifacts/env"
+          BASE_DIR=${PWD}
+          cd "${PWD}/openvswitch-${OVS_VERSION}"
+          make clean
+          ./configure --prefix="${PWD}/install/usr/local" --localstatedir=${PWD}/install/usr/local/var --sysconfdir=${PWD}/install/usr/local/etc --with-dpdk=static CFLAGS="-g -DALLOW_EXPERIMENTAL_API  -mcpu=neoverse-n2+crypto+sve2"
+          make -j4 install
+      - name: Package OVS Debian Package
+        id: package_ovs
+        run: |
+          source "${PWD}/artifacts/env"
+          BASE_DIR=${PWD}
+          cd "${OVS_DIR}/install"
+          mkdir -p "${PWD}/debian"
+          mkdir -p "${PWD}/DEBIAN"
+          echo 'Source: Open vSwitch' > debian/control
+          echo 'Package: ovs-'$OVS_VERSION'-cn10k'$PKG_POSTFIX >> DEBIAN/control
+          echo 'Version: '$PKG_VERSION_NAME >> DEBIAN/control
+          echo "Depends: $(dpkg-shlibdeps -O usr/local/sbin/ovs-vswitchd | awk -F'Depends=' '{print $2}'), dpdk-${DPDK_BASE_PKG_VERSION}-cn10k (= ${DPDK_PKG_VERSION})" >> DEBIAN/control
+          echo "Maintainer: Jerin Jacob (jerinj@marvell.com)" >> DEBIAN/control
+          echo "Architecture: arm64" >> DEBIAN/control
+          echo "Homepage: https://www.openvswitch.org/" >> DEBIAN/control
+          echo "Description: Open vSwitch (OVS) for Marvell Octeon 10" >> DEBIAN/control
+          rm -rf debian
+          cd ..
+          mv "${PWD}/install" "${PWD}/ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64"
+          dpkg --build "${PWD}/ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64"
+          cp "${PWD}/ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64.deb" ${BASE_DIR}/artifacts/.
+      - name: Package OVS Debug Debian Package
+        id: package_debug_ovs
+        run: |
+          source "${PWD}/artifacts/env"
+          BASE_DIR=${PWD}
+          cd "${OVS_DIR}/debug-install"
+          mkdir -p "${PWD}/debian"
+          mkdir -p "${PWD}/DEBIAN"
+          echo 'Source: Open vSwitch' > debian/control
+          echo 'Package: ovs-'$OVS_VERSION'-cn10k'$PKG_POSTFIX'-dbg' >> DEBIAN/control
+          echo 'Version: '$PKG_VERSION_NAME >> DEBIAN/control
+          echo "Depends: $(dpkg-shlibdeps -O usr/local/sbin/ovs-vswitchd | awk -F'Depends=' '{print $2}'), dpdk-${DPDK_BASE_PKG_VERSION}-cn10k (= ${DPDK_PKG_VERSION}), ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX} (= ${PKG_VERSION_NAME})" >> DEBIAN/control
+          echo "Maintainer: Jerin Jacob (jerinj@marvell.com)" >> DEBIAN/control
+          echo "Architecture: arm64" >> DEBIAN/control
+          echo "Homepage: https://www.openvswitch.org/" >> DEBIAN/control
+          echo "Description: Open vSwitch (OVS) for Marvell Octeon 10" >> DEBIAN/control
+          rm -rf debian
+          cd ..
+          mv "${PWD}/debug-install" "${PWD}/ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64-dbg"
+          dpkg --build "${PWD}/ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64-dbg"
+          cp "${PWD}/ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64-dbg.deb" ${BASE_DIR}/artifacts/.
+
