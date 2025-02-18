@@ -79,7 +79,7 @@ jobs:
           tar xzf openvswitch-${OVS_VERSION}.tar.gz
           BASE_DIR=${PWD}
           echo "OVS_DIR=${PWD}/openvswitch-${OVS_VERSION}" >> ${PWD}/artifacts/env
-          cd "${OVS_DIR}"
+          cd "${PWD}/openvswitch-${OVS_VERSION}"
           for patch in ${BASE_DIR}/patches/ovs/${OVS_PATCH_VERSION}/*.patch; do
             patch -p1 < "$patch"
           done
