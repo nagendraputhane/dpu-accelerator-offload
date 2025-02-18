@@ -1,0 +1,186 @@
+name: build-cn10k-openssl-with-debug
+
+on:
+  push:
+  schedule:
+    - cron: "0 0 * * 1"
+  pull_request:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+  packages: write
+
+jobs:
+  ubuntu-cn10k-build:
+    name: ubuntu-cn10k-arm64
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4.2.2
+      - name: Generate cache keys
+        id: get_ref_keys
+        run: |
+          echo 'ccache=ccache-'$(date -u +%Y-%m) >> $GITHUB_OUTPUT
+      - name: Retrieve ccache cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.ccache
+          key: ${{ steps.get_ref_keys.outputs.ccache }}-${{ github.ref }}
+          restore-keys: |
+            ${{ steps.get_ref_keys.outputs.ccache }}-refs/heads/main
+      - name: Extract version details
+        id: version
+        run: |
+          mkdir -p "${PWD}/artifacts"
+          git tag --points-at HEAD > /tmp/tags
+          [ -s /tmp/tags ] && PKG_POSTFIX= || PKG_POSTFIX=-devel
+          echo "PKG_VERSION_NAME=`cat VERSION`" >> "${PWD}/artifacts/env"
+          echo "PKG_POSTFIX=${PKG_POSTFIX}" >> "${PWD}/artifacts/env"
+      - name: Install dependencies
+        run: |
+            mkdir -p ~/.ccache
+            sudo apt-get update -q -y
+            sudo apt-get install -y apt-utils python3-sphinx-rtd-theme python3-pip
+            sudo apt-get install -y python3-pyelftools python3-setuptools python3-wheel
+            sudo apt-get install -y build-essential meson ccache git doxygen
+            sudo apt-get install -y libnl-3-dev libnl-route-3-dev libnl-xfrm-3-dev
+            sudo apt-get install -y sphinx-common pkg-config software-properties-common
+            sudo apt-get install -y libarchive-dev libbsd-dev libbpf-dev
+            sudo apt-get install -y libfdt-dev libjansson-dev autoconf dh-autoreconf
+            sudo apt-get install -y libssl-dev ninja-build zlib1g-dev
+            sudo apt-get install -y gcc-14 bzip2-doc icu-devtools libacl1-dev libattr1-dev
+            sudo apt-get install -y libbz2-dev libgmp-dev libgmpxx4ldbl libicu-dev liblz4-dev
+            sudo apt-get install -y liblzma-dev libxml2-dev libzstd-dev nettle-dev wget lsb-release
+            git config --global --add safe.directory "${PWD}"
+            DISTRO=ubuntu-$(lsb_release -rs)
+            source "${PWD}/artifacts/env"
+            echo "DISTRO=${DISTRO}" >> ${PWD}/artifacts/env
+            export CC='ccache gcc-14'
+            echo "cache_dir = ~/.ccache" > ~/.ccache/ccache.conf
+            ccache -p
+            pkg-config --list-all
+      - name: Build OpenSSL (Normal Build)
+        id: build_normal
+        run: |
+            source "${PWD}/artifacts/env"
+            BASE_DIR=${PWD}
+            OPENSSL_PATCH_VERSION=$(ls patches/nginx/deps/openssl/ | head -n 1)
+            OPENSSL_VERSION=${OPENSSL_PATCH_VERSION#v}
+            echo "OPENSSL_VERSION=${OPENSSL_VERSION}" >> ${PWD}/artifacts/env
+            wget "https://www.openssl.org/source/old/1.1.1/openssl-${OPENSSL_VERSION}.tar.gz"
+            tar -xzf openssl-${OPENSSL_VERSION}.tar.gz
+            echo "OPENSSL_DIR=${PWD}/openssl-${OPENSSL_VERSION}" >> ${PWD}/artifacts/env
+            cd "${PWD}/openssl-${OPENSSL_VERSION}"
+            for patch in ${BASE_DIR}/patches/nginx/deps/openssl/${OPENSSL_PATCH_VERSION}/*.patch; do
+                patch -p1 < "$patch"
+            done
+            CFLAGS="-Wno-error=implicit-function-declaration" ./Configure --prefix=$PWD/install linux-aarch64
+            until make; do echo "Building OpenSSL failed, retrying"; done
+            make install
+            mkdir -p "${PWD}/install/usr/lib/cn10k/openssl-${OPENSSL_VERSION}"
+            mv "${PWD}/install/lib" "${PWD}/install/usr/lib/cn10k/openssl-${OPENSSL_VERSION}/."
+            mv "${PWD}/install/bin" "${PWD}/install/usr/lib/cn10k/openssl-${OPENSSL_VERSION}/."
+            mv "${PWD}/install/include" "${PWD}/install/usr/lib/cn10k/openssl-${OPENSSL_VERSION}/."
+            mv "${PWD}/install/ssl" "${PWD}/install/usr/lib/cn10k/openssl-${OPENSSL_VERSION}/."
+            mv "${PWD}/install/share" "${PWD}/install/usr/lib/cn10k/openssl-${OPENSSL_VERSION}/."
+            cd "${PWD}/install"
+            sed -i "s/^prefix=.*/prefix=\/usr\/lib\/cn10k\/openssl-${OPENSSL_VERSION}/g" usr/lib/cn10k/openssl-${OPENSSL_VERSION}/lib/pkgconfig/openssl.pc
+            sed -i "s/^prefix=.*/prefix=\/usr\/lib\/cn10k\/openssl-${OPENSSL_VERSION}/g" usr/lib/cn10k/openssl-${OPENSSL_VERSION}/lib/pkgconfig/libssl.pc
+            sed -i "s/^prefix=.*/prefix=\/usr\/lib\/cn10k\/openssl-${OPENSSL_VERSION}/g" usr/lib/cn10k/openssl-${OPENSSL_VERSION}/lib/pkgconfig/libcrypto.pc
+      - name: Build OpenSSL (Debug Build)
+        id: build_debug
+        run: |
+          source "${PWD}/artifacts/env"
+            BASE_DIR=${PWD}
+            cd "${PWD}/openssl-${OPENSSL_VERSION}"
+            for patch in ${BASE_DIR}/patches/nginx/deps/openssl/${OPENSSL_PATCH_VERSION}/*.patch; do
+                patch -p1 < "$patch"
+            done
+            CFLAGS="-Wno-error=implicit-function-declaration" ./Configure --debug --prefix=$PWD/debug-install linux-aarch64
+            until make; do echo "Building OpenSSL failed, retrying"; done
+            make install
+            mkdir -p "${PWD}/debug-install/usr/lib/cn10k/openssl-${OPENSSL_VERSION}"
+            mv "${PWD}/debug-install/lib" "${PWD}/debug-install/usr/lib/cn10k/openssl-${OPENSSL_VERSION}/."
+            mv "${PWD}/debug-install/bin" "${PWD}/debug-install/usr/lib/cn10k/openssl-${OPENSSL_VERSION}/."
+            mv "${PWD}/debug-install/include" "${PWD}/debug-install/usr/lib/cn10k/openssl-${OPENSSL_VERSION}/."
+            mv "${PWD}/debug-install/ssl" "${PWD}/debug-install/usr/lib/cn10k/openssl-${OPENSSL_VERSION}/."
+            mv "${PWD}/debug-install/share" "${PWD}/debug-install/usr/lib/cn10k/openssl-${OPENSSL_VERSION}/."
+            cd "${PWD}/debug-install"
+            sed -i "s/^prefix=.*/prefix=\/usr\/lib\/cn10k\/openssl-${OPENSSL_VERSION}/g" usr/lib/cn10k/openssl-${OPENSSL_VERSION}/lib/pkgconfig/openssl.pc
+            sed -i "s/^prefix=.*/prefix=\/usr\/lib\/cn10k\/openssl-${OPENSSL_VERSION}/g" usr/lib/cn10k/openssl-${OPENSSL_VERSION}/lib/pkgconfig/libssl.pc
+            sed -i "s/^prefix=.*/prefix=\/usr\/lib\/cn10k\/openssl-${OPENSSL_VERSION}/g" usr/lib/cn10k/openssl-${OPENSSL_VERSION}/lib/pkgconfig/libcrypto.pc
+      - name: Package OpenSSL Debian Package
+        id: package_openssl
+        run: |
+          source "${PWD}/artifacts/env"
+          BASE_DIR=${PWD}
+          cd "${OPENSSL_DIR}/install"
+          mkdir -p "${PWD}/debian"
+          mkdir -p "${PWD}/DEBIAN"
+          echo 'Source: OpenSSL' > debian/control
+          echo 'Package: openssl-'${OPENSSL_VERSION}'-cn10k'${PKG_POSTFIX} >> DEBIAN/control
+          echo 'Version: '${PKG_VERSION_NAME} >> DEBIAN/control >> DEBIAN/control
+          echo "Maintainer: Jerin Jacob (jerinj@marvell.com)" >> DEBIAN/control
+          echo "Architecture: arm64" >> DEBIAN/control
+          echo "Homepage: https://www.openssl.org/" >> DEBIAN/control
+          echo "Description: OpenSSL with Asynchronous support for Marvell Octeon 10" >> DEBIAN/control
+          echo "Provides: libssl.so.1.1, libcrypto.so.1.1" >> DEBIAN/control
+          rm -rf debian
+          cd ..
+          mv "${PWD}/install" "${PWD}/openssl-${OPENSSL_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64"
+          dpkg --build "openssl-${OPENSSL_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64"
+          cp -r "openssl-${OPENSSL_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64.deb" ${BASE_DIR}/artifacts/.
+      - name: Package OpenSSL Debug Debian Package
+        id: package_debug_openssl
+        run: |
+          source "${PWD}/artifacts/env"
+          BASE_DIR=${PWD}
+          cd "${OPENSSL_DIR}/debug-install"
+          mkdir -p "${PWD}/debian"
+          mkdir -p "${PWD}/DEBIAN"
+          echo 'Source: OpenSSL' > debian/control
+          echo 'Package: openssl-'${OPENSSL_VERSION}'-cn10k'${PKG_POSTFIX}-dbg >> DEBIAN/control
+          echo 'Version: '${PKG_VERSION_NAME} >> DEBIAN/control >> DEBIAN/control
+          echo "Maintainer: Jerin Jacob (jerinj@marvell.com)" >> DEBIAN/control
+          echo "Architecture: arm64" >> DEBIAN/control
+          echo "Homepage: https://www.openssl.org/" >> DEBIAN/control
+          echo "Description: OpenSSL with Asynchronous support for Marvell Octeon 10" >> DEBIAN/control
+          echo "Provides: libssl.so.1.1, libcrypto.so.1.1" >> DEBIAN/control
+          rm -rf debian
+          cd ..
+          mv "${PWD}/debug-install" "${PWD}/openssl-${OPENSSL_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64-dbg"
+          dpkg --build "openssl-${OPENSSL_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64-dbg"
+          cp -r "openssl-${OPENSSL_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64-dbg.deb" ${BASE_DIR}/artifacts/.
+      - name: Export version name
+        id: artifacts
+        run: |
+          source "${PWD}/artifacts/env"
+          echo $PKG_VERSION_NAME
+          echo "PKG_VERSION_NAME=${PKG_VERSION_NAME}" >> "$GITHUB_OUTPUT"
+          echo $OPENSSL_VERSION
+          echo "OPENSSL_VERSION=${OPENSSL_VERSION}" >> "$GITHUB_OUTPUT"
+          echo $DISTRO
+          echo "DISTRO=${DISTRO}" >> "$GITHUB_OUTPUT"
+          [[ "$PKG_POSTFIX" == "-devel" ]] && TAG=devel || TAG=${PKG_VERSION_NAME}
+          [[ "$PKG_POSTFIX" == "-devel" ]] && IS_DEVEL="true" || IS_DEVEL="false"
+          echo "PKG_POSTFIX=${PKG_POSTFIX}" >> "$GITHUB_OUTPUT"
+          echo "TAG=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "IS_DEVEL=${IS_DEVEL}" >> "$GITHUB_OUTPUT"
+      - name: Release OpenSSL cn10k package
+        uses: softprops/action-gh-release@v2.0.4
+        if: ${{ github.event_name == 'push' }}
+        with:
+          draft: false
+          tag_name: openssl-${{ steps.artifacts.outputs.OPENSSL_VERSION }}-cn10k-${{ steps.artifacts.outputs.PKG_VERSION_NAME }}-${{ steps.artifacts.outputs.DISTRO }}-${{ steps.artifacts.outputs.TAG }}
+          files: |
+            ${{ github.workspace }}/artifacts/openssl-${{ steps.artifacts.outputs.OPENSSL_VERSION }}-cn10k${{ steps.artifacts.outputs.PKG_POSTFIX }}_${{ steps.artifacts.outputs.PKG_VERSION_NAME }}_arm64.deb
+      - name: Release OpenSSL Debug cn10k package
+        uses: softprops/action-gh-release@v2.0.4
+        if: ${{ github.event_name == 'push' }}
+        with:
+          draft: false
+          tag_name: openssl-${{ steps.artifacts.outputs.OPENSSL_VERSION }}-cn10k-${{ steps.artifacts.outputs.PKG_VERSION_NAME }}-${{ steps.artifacts.outputs.DISTRO }}-${{ steps.artifacts.outputs.TAG }}-dbg
+          files: |
+            ${{ github.workspace }}/artifacts/openssl-${{ steps.artifacts.outputs.OPENSSL_VERSION }}-cn10k${{ steps.artifacts.outputs.PKG_POSTFIX }}_${{ steps.artifacts.outputs.PKG_VERSION_NAME }}_arm64-dbg.deb
