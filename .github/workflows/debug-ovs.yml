@@ -1,4 +1,4 @@
-name: build-cn10k-ovs
+name: build-cn10k-ovs-with-debug
 
 on:
   push:
