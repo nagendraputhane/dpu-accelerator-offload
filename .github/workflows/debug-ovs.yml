@@ -79,7 +79,7 @@ jobs:
           tar xzf openvswitch-${OVS_VERSION}.tar.gz
           BASE_DIR=${PWD}
           echo "OVS_DIR=${PWD}/openvswitch-${OVS_VERSION}" >> ${PWD}/artifacts/env
-          cd "${PWD}/openvswitch-${OVS_VERSION}"
+          cd "${OVS_DIR}"
           for patch in ${BASE_DIR}/patches/ovs/${OVS_PATCH_VERSION}/*.patch; do
             patch -p1 < "$patch"
           done
@@ -94,7 +94,7 @@ jobs:
           BASE_DIR=${PWD}
           cd "${PWD}/openvswitch-${OVS_VERSION}"
           make clean
-          ./configure --prefix="${PWD}/install/usr/local" --localstatedir=${PWD}/install/usr/local/var --sysconfdir=${PWD}/install/usr/local/etc --with-dpdk=static CFLAGS="-g -DALLOW_EXPERIMENTAL_API  -mcpu=neoverse-n2+crypto+sve2"
+          ./configure --prefix="${PWD}/debug-install/usr/local" --localstatedir=${PWD}/debug-install/usr/local/var --sysconfdir=${PWD}/debug-install/usr/local/etc --with-dpdk=static CFLAGS="-g -DALLOW_EXPERIMENTAL_API  -mcpu=neoverse-n2+crypto+sve2"
           make -j4 install
       - name: Package OVS Debian Package
         id: package_ovs
@@ -116,6 +116,7 @@ jobs:
           cd ..
           mv "${PWD}/install" "${PWD}/ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64"
           dpkg --build "${PWD}/ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64"
+          echo "ls -l ${PWD}/ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64.deb"
           cp "${PWD}/ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64.deb" ${BASE_DIR}/artifacts/.
       - name: Package OVS Debug Debian Package
         id: package_debug_ovs
@@ -137,5 +138,41 @@ jobs:
           cd ..
           mv "${PWD}/debug-install" "${PWD}/ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64-dbg"
           dpkg --build "${PWD}/ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64-dbg"
+          echo "ls -l ${PWD}/ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64-dbg.deb"
           cp "${PWD}/ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64-dbg.deb" ${BASE_DIR}/artifacts/.
-
+      - name: Export version name
+        id: artifacts
+        run: |
+          source "${PWD}/artifacts/env"
+          echo $PKG_VERSION_NAME
+          echo "PKG_VERSION_NAME=${PKG_VERSION_NAME}" >> "$GITHUB_OUTPUT"
+          echo $OVS_VERSION
+          echo "OVS_VERSION=${OVS_VERSION}" >> "$GITHUB_OUTPUT"
+          echo $DISTRO
+          echo "DISTRO=${DISTRO}" >> "$GITHUB_OUTPUT"
+          echo $DPDK_PKG_VERSION
+          echo "DPDK_PKG_VERSION=${DPDK_PKG_VERSION}" >> $GITHUB_OUTPUT
+          echo $DPDK_BASE_PKG_VERSION
+          echo "DPDK_BASE_PKG_VERSION=${DPDK_BASE_PKG_VERSION}" >> $GITHUB_OUTPUT
+          echo $PKG_POSTFIX
+          echo "PKG_POSTFIX=${PKG_POSTFIX}" >> "$GITHUB_OUTPUT"
+          [[ "$PKG_POSTFIX" == "-devel" ]] && TAG=devel || TAG=${PKG_VERSION_NAME}
+          [[ "$PKG_POSTFIX" == "-devel" ]] && IS_DEVEL="true" || IS_DEVEL="false"
+          echo "TAG=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "IS_DEVEL=${IS_DEVEL}" >> "$GITHUB_OUTPUT"
+      - name: Release OVS cn10k package
+        uses: softprops/action-gh-release@v2.0.4
+        if: ${{ github.event_name == 'push' }}
+        with:
+          draft: false
+          tag_name: ovs-${{ steps.artifacts.outputs.OVS_VERSION }}-cn10k-${{ steps.artifacts.outputs.PKG_VERSION_NAME }}-${{ steps.artifacts.outputs.DISTRO }}-${{ steps.artifacts.outputs.TAG }}
+          files: |
+            ${{ github.workspace }}/artifacts/ovs-${{ steps.artifacts.outputs.OVS_VERSION }}-cn10k${{ steps.artifacts.outputs.PKG_POSTFIX }}_${{ steps.artifacts.outputs.PKG_VERSION_NAME }}_arm64.deb
+      - name: Release OVS Debug cn10k package
+        uses: softprops/action-gh-release@v2.0.4
+        if: ${{ github.event_name == 'push' }}
+        with:
+          draft: false
+          tag_name: ovs-${{ steps.artifacts.outputs.OVS_VERSION }}-cn10k-${{ steps.artifacts.outputs.PKG_VERSION_NAME }}-${{ steps.artifacts.outputs.DISTRO }}-${{ steps.artifacts.outputs.TAG }}-dbg
+          files: |
+            ${{ github.workspace }}/artifacts/ovs-${{ steps.artifacts.outputs.OVS_VERSION }}-cn10k${{ steps.artifacts.outputs.PKG_POSTFIX }}_${{ steps.artifacts.outputs.PKG_VERSION_NAME }}_arm64-dbg.deb
