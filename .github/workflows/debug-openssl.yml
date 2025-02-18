@@ -92,12 +92,10 @@ jobs:
       - name: Build OpenSSL (Debug Build)
         id: build_debug
         run: |
-          source "${PWD}/artifacts/env"
+            source "${PWD}/artifacts/env"
             BASE_DIR=${PWD}
             cd "${PWD}/openssl-${OPENSSL_VERSION}"
-            for patch in ${BASE_DIR}/patches/nginx/deps/openssl/${OPENSSL_PATCH_VERSION}/*.patch; do
-                patch -p1 < "$patch"
-            done
+            make clean
             CFLAGS="-Wno-error=implicit-function-declaration" ./Configure --debug --prefix=$PWD/debug-install linux-aarch64
             until make; do echo "Building OpenSSL failed, retrying"; done
             make install
