@@ -149,7 +149,6 @@ jobs:
           echo "Homepage: https://www.openvswitch.org/" >> ${PACKAGE_DIR}/DEBIAN/control
           echo "Description: Open vSwitch (OVS) for Marvell Octeon 10" >> ${PACKAGE_DIR}/DEBIAN/control
           rm -rf ${PACKAGE_DIR}/debian
-
           dpkg --build "${PACKAGE_DIR}"
           echo "ls -l ${OVS_DIR}/ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64-dbg.deb"
           cp "${OVS_DIR}/${PACKAGE_DIR}.deb" ${BASE_DIR}/artifacts/.
