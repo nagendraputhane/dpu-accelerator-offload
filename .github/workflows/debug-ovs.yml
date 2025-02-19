@@ -128,6 +128,7 @@ jobs:
           mkdir -p "${DEBUG_SYM_DIR}"
           #Extract debug symbols from debug binary
           objcopy --only-keep-debug "${DEBUG_BIN}" "${DEBUG_BIN}.dbg"
+          echo "ls -l ${DEBUG_BIN}"
           #Strip debug symbols from the binary
           strip --strip-debug "${DEBUG_BIN}"
           #copy the extracted debug symbols to the designated debug symbol directory
@@ -135,7 +136,7 @@ jobs:
           #Create directory to package only the debug symbols
           PACKAGE_DIR="${OVS_DIR}/ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64-dbg"
           mkdir -p ${PACKAGE_DIR}/usr/lib/debug/usr/local/sbin
-          cp "${DEBUG_SYM_DIR}/ovs-vswitchd.dbg" ${PACKAGE_DIR}/usr/lib/debug/usr/local/sbin/
+          cp "${DEBUG_BIN}.dbg" ${PACKAGE_DIR}/usr/lib/debug/usr/local/sbin/
 
 
           mkdir -p "${PACKAGE_DIR}/debian"
