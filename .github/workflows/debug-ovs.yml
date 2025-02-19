@@ -2,8 +2,9 @@ name: build-cn10k-ovs-with-debug
 
 on:
   push:
-    tags:
-      - "[0-9]+.[0-9]+.[0-9]+"
+  schedule:
+    - cron: "0 0 * * 1"
+  pull_request:
 
 permissions:
   contents: write
@@ -117,28 +118,41 @@ jobs:
           dpkg --build "${PWD}/ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64"
           echo "ls -l ${PWD}/ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64.deb"
           cp "${PWD}/ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64.deb" ${BASE_DIR}/artifacts/.
-      - name: Package OVS Debug Debian Package
+      - name: Package OVS Debug Debian Package (Debug Symbols Only)
         id: package_debug_ovs
         run: |
           source "${PWD}/artifacts/env"
           BASE_DIR=${PWD}
-          cd "${OVS_DIR}/debug-install"
-          mkdir -p "${PWD}/debian"
-          mkdir -p "${PWD}/DEBIAN"
-          echo 'Source: Open vSwitch' > debian/control
-          echo 'Package: ovs-'$OVS_VERSION'-cn10k'$PKG_POSTFIX'-dbg' >> DEBIAN/control
-          echo 'Version: '$PKG_VERSION_NAME >> DEBIAN/control
-          echo "Depends: $(dpkg-shlibdeps -O usr/local/sbin/ovs-vswitchd | awk -F'Depends=' '{print $2}'), dpdk-${DPDK_BASE_PKG_VERSION}-cn10k (= ${DPDK_PKG_VERSION}), ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX} (= ${PKG_VERSION_NAME})" >> DEBIAN/control
-          echo "Maintainer: Jerin Jacob (jerinj@marvell.com)" >> DEBIAN/control
-          echo "Architecture: arm64" >> DEBIAN/control
-          echo "Homepage: https://www.openvswitch.org/" >> DEBIAN/control
-          echo "Description: Open vSwitch (OVS) for Marvell Octeon 10" >> DEBIAN/control
-          rm -rf debian
-          cd ..
-          mv "${PWD}/debug-install" "${PWD}/ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64-dbg"
-          dpkg --build "${PWD}/ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64-dbg"
-          echo "ls -l ${PWD}/ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64-dbg.deb"
-          cp "${PWD}/ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64-dbg.deb" ${BASE_DIR}/artifacts/.
+          DEBUG_BIN="${OVS_DIR}/debug-install/usr/local/sbin/ovs-vswitchd"
+          DEBUG_SYM_DIR="${OVS_DIR}/debug-install/usr/local/sbin"
+          mkdir -p "${DEBUG_SYM_DIR}"
+          #Extract debug symbols from debug binary
+          objcopy --only-keep-debug "${DEBUG_BIN}" "${DEBUG_BIN}.dbg"
+          #Strip debug symbols from the binary
+          strip --strip-debug "${DEBUG_BIN}"
+          #copy the extracted debug symbols to the designated debug symbol directory
+          cp "${DEBUG_BIN}.dbg" "${DEBUG_SYM_DIR}/"
+          #Create directory to package only the debug symbols
+          PACKAGE_DIR="${OVS_DIR}/ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64-dbg"
+          mkdir -p ${PACKAGE_DIR}/usr/lib/debug/usr/local/sbin
+          cp "${DEBUG_SYM_DIR}/ovs-vswitchd.dbg" ${PACKAGE_DIR}/usr/lib/debug/usr/local/sbin/
+
+
+          mkdir -p "${PACKAGE_DIR}/debian"
+          mkdir -p "${PACKAGE_DIR}/DEBIAN"
+          echo 'Source: Open vSwitch' > ${PACKAGE_DIR}/debian/control
+          echo 'Package: ovs-'$OVS_VERSION'-cn10k'$PKG_POSTFIX'-dbg' >> ${PACKAGE_DIR}/DEBIAN/control
+          echo 'Version: '$PKG_VERSION_NAME >> ${PACKAGE_DIR}/DEBIAN/control
+          echo "Depends: $(dpkg-shlibdeps -O usr/local/sbin/ovs-vswitchd | awk -F'Depends=' '{print $2}'), dpdk-${DPDK_BASE_PKG_VERSION}-cn10k (= ${DPDK_PKG_VERSION}), ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX} (= ${PKG_VERSION_NAME})" >> ${PACKAGE_DIR}/DEBIAN/control
+          echo "Maintainer: Jerin Jacob (jerinj@marvell.com)" >> ${PACKAGE_DIR}/DEBIAN/control
+          echo "Architecture: arm64" >> ${PACKAGE_DIR}/DEBIAN/control
+          echo "Homepage: https://www.openvswitch.org/" >> ${PACKAGE_DIR}/DEBIAN/control
+          echo "Description: Open vSwitch (OVS) for Marvell Octeon 10" >> ${PACKAGE_DIR}/DEBIAN/control
+          rm -rf ${PACKAGE_DIR}/debian
+
+          dpkg --build "${PACKAGE_DIR}"
+          echo "ls -l ${OVS_DIR}/ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64-dbg.deb"
+          cp "${OVS_DIR}/${PACKAGE_DIR}.deb" ${BASE_DIR}/artifacts/.
       - name: Export version name
         id: artifacts
         run: |
