@@ -94,7 +94,7 @@ jobs:
         run: |
               source "${PWD}/artifacts/env"
               # Set the path for the installed binary.
-              DEBUG_BIN="$OPENSSL_DIR/install/bin/openssl"
+              DEBUG_BIN="${OPENSSL_DIR}/install/usr/lib/cn10k/openssl-${OPENSSL_VERSION}/bin/openssl"
               # Create a temporary directory to hold the debug symbols.
               mkdir -p "${PWD}/debug-symbols/usr/local/sbin"
               # Extract the debug symbols into a separate file.
@@ -111,7 +111,7 @@ jobs:
           mkdir -p "${PWD}/DEBIAN"
           echo 'Source: OpenSSL' > debian/control
           echo 'Package: openssl-'${OPENSSL_VERSION}'-cn10k'${PKG_POSTFIX} >> DEBIAN/control
-          echo 'Version: '${PKG_VERSION_NAME} >> DEBIAN/control >> DEBIAN/control
+          echo 'Version: '${PKG_VERSION_NAME} >> DEBIAN/control
           echo "Maintainer: Jerin Jacob (jerinj@marvell.com)" >> DEBIAN/control
           echo "Architecture: arm64" >> DEBIAN/control
           echo "Homepage: https://www.openssl.org/" >> DEBIAN/control
@@ -122,8 +122,8 @@ jobs:
           mv "${PWD}/install" "${PWD}/openssl-${OPENSSL_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64"
           dpkg --build "openssl-${OPENSSL_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64"
           cp -r "openssl-${OPENSSL_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64.deb" ${BASE_DIR}/artifacts/.
-      - name: Package OVS Debug Debian Package (Debug Symbols Only)
-        id: package_ovs_debug
+      - name: Package OpenSSL Debug Debian Package (Debug Symbols Only)
+        id: package_openssl_debug
         run: |
           source "${PWD}/artifacts/env"
           # Define a package directory for the debug symbols.
@@ -134,12 +134,12 @@ jobs:
           cp ${PWD}/debug-symbols/usr/local/sbin/openssl.dbg ${PACKAGE_DIR}/usr/lib/debug/usr/local/sbin/
           # Create a DEBIAN control file for the debug package.
           mkdir -p ${PACKAGE_DIR}/DEBIAN
-          echo 'Package: openssl-'${OPENSSL_VERSION}'-cn10k'${PKG_POSTFIX}-dbg' >> ${PACKAGE_DIR}/DEBIAN/control
+          echo 'Package: openssl-'${OPENSSL_VERSION}'-cn10k'${PKG_POSTFIX}'-dbg' >> ${PACKAGE_DIR}/DEBIAN/control
           echo 'Version: '$PKG_VERSION_NAME >> ${PACKAGE_DIR}/DEBIAN/control
           echo "Depends: openssl-'${OPENSSL_VERSION}'-cn10k'${PKG_POSTFIX} (= ${PKG_VERSION_NAME})" >> ${PACKAGE_DIR}/DEBIAN/control
           echo "Maintainer: Jerin Jacob (jerinj@marvell.com)" >> ${PACKAGE_DIR}/DEBIAN/control
           echo "Architecture: arm64" >> ${PACKAGE_DIR}/DEBIAN/control
-          echo "Homepage: https://www.openvswitch.org/" >> ${PACKAGE_DIR}/DEBIAN/control
+          echo "Homepage: https://www.openssl.org/" >> ${PACKAGE_DIR}/DEBIAN/control
           echo "Description: OpenSSL with Asynchronous support for Marvell Octeon 10" >> ${PACKAGE_DIR}/DEBIAN/control
           dpkg --build ${PACKAGE_DIR}
           cp ${PACKAGE_DIR}.deb artifacts/.
