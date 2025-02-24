@@ -150,7 +150,7 @@ jobs:
           mkdir -p ${PACKAGE_DIR}/DEBIAN
           echo 'Package: ovs-'$OVS_VERSION'-cn10k'$PKG_POSTFIX'-dbg' >> ${PACKAGE_DIR}/DEBIAN/control
           echo 'Version: '$PKG_VERSION_NAME >> ${PACKAGE_DIR}/DEBIAN/control
-          echo "Depends: $(dpkg-shlibdeps -O usr/local/sbin/ovs-vswitchd | awk -F'Depends=' '{print $2}'), dpdk-${DPDK_BASE_PKG_VERSION}-cn10k (= ${DPDK_PKG_VERSION}), ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX} (= ${PKG_VERSION_NAME})" >> ${PACKAGE_DIR}/DEBIAN/control
+          echo "Depends: ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX} (= ${PKG_VERSION_NAME})" >> ${PACKAGE_DIR}/DEBIAN/control
           echo "Maintainer: Jerin Jacob (jerinj@marvell.com)" >> ${PACKAGE_DIR}/DEBIAN/control
           echo "Architecture: arm64" >> ${PACKAGE_DIR}/DEBIAN/control
           echo "Homepage: https://www.openvswitch.org/" >> ${PACKAGE_DIR}/DEBIAN/control
