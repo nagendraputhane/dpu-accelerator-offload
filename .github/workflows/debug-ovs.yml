@@ -47,8 +47,8 @@ jobs:
             NIGHTLY=true
           fi
           echo "PKG_VERSION_NAME=$(cat VERSION)" >> "${PWD}/artifacts/env"
-          echo "DPDK_PKG_VERSION=$(grep RELEASE_VERSION DPDK_VERSION | awk -F'=' '{print $2}')" >> "${PWD}/artifacts/env"
-          echo "DPDK_BASE_PKG_VERSION=$(grep BASE_VERSION DPDK_VERSION | awk -F'=' '{print $2}' | awk -F'.' '{print $1\".\"$2}')" >> "${PWD}/artifacts/env"
+          echo "DPDK_PKG_VERSION=`cat DPDK_VERSION | grep RELEASE_VERSION | awk -F'=' '{print $2}'`" >> "${PWD}/artifacts/env"
+          echo "DPDK_BASE_PKG_VERSION=`cat DPDK_VERSION | grep BASE_VERSION | awk -F'=' '{print $2}' | awk -F'.' '{print $1"."$2}'`" >> "${PWD}/artifacts/env"
           source "${PWD}/artifacts/env"
           echo "PKG_POSTFIX=${PKG_POSTFIX}" >> "${PWD}/artifacts/env"
           echo "NIGHTLY=${NIGHTLY}" >> $GITHUB_OUTPUT
@@ -57,15 +57,16 @@ jobs:
         run: |
           mkdir -p ~/.ccache
           sudo apt-get update -q -y
-          sudo apt-get install -y \
-            apt-utils python3-sphinx-rtd-theme python3-pip python3-pyelftools \
-            python3-setuptools python3-wheel build-essential meson ccache git doxygen \
-            software-properties-common sphinx-common pkg-config \
-            libnl-3-dev libnl-route-3-dev libnl-xfrm-3-dev libarchive-dev libbsd-dev libbpf-dev \
-            libfdt-dev libjansson-dev autoconf dh-autoreconf libssl-dev ninja-build zlib1g-dev \
-            bash-completion gcc-14 bzip2-doc icu-devtools libacl1-dev libattr1-dev libbz2-dev \
-            libgmp-dev libgmpxx4ldbl libicu-dev liblz4-dev liblzma-dev libxml2-dev libzstd-dev \
-            nettle-dev wget lsb-release
+          sudo apt-get install -y build-essential meson ccache ninja-build
+          sudo apt-get install -y apt-utils python3-sphinx-rtd-theme python3-pip python3-pyelftools python3-setuptools python3-wheel
+          sudo apt-get install -y doxygen sphinx-common
+          sudo apt-get install -y software-properties-common pkg-config wget lsb-release bash-completion
+          sudo apt-get install -y git
+          sudo apt-get install -y libnl-3-dev libnl-route-3-dev libnl-xfrm-3-dev
+          sudo apt-get install -y libarchive-dev libbz2-dev liblz4-dev liblzma-dev libzstd-dev bzip2-doc
+          sudo apt-get install -y libssl-dev libgmp-dev libgmpxx4ldbl nettle-dev
+          sudo apt-get install -y libbsd-dev libbpf-dev libfdt-dev libjansson-dev autoconf dh-autoreconf zlib1g-dev
+          sudo apt-get install -y gcc-14 icu-devtools libacl1-dev libattr1-dev libicu-dev libxml2-dev
           git config --global --add safe.directory "${PWD}"
           DISTRO="ubuntu-$(lsb_release -rs)"
           echo "DISTRO=${DISTRO}" >> "${PWD}/artifacts/env"
@@ -76,8 +77,7 @@ jobs:
           echo "cache_dir = ~/.ccache" > ~/.ccache/ccache.conf
           ccache -p
           pkg-config --list-all
-
-      - name: Build OVS with Debug Flags (Single Build)
+      - name: Build OVS with Debug Flags
         id: build_ovs
         run: |
           source "${PWD}/artifacts/env"
@@ -94,14 +94,12 @@ jobs:
               patch -p1 < "$patch"
           done
           ./boot.sh
-          # Configure with -g to include debug information.
           ./configure --prefix="${BASE_DIR}/install/usr/local" \
                       --localstatedir="${BASE_DIR}/install/usr/local/var" \
                       --sysconfdir="${BASE_DIR}/install/usr/local/etc" \
                       --with-dpdk=static \
                       CFLAGS="-g -DALLOW_EXPERIMENTAL_API -mcpu=neoverse-n2+crypto+sve2"
           make -j4 install
-
       - name: Extract Debug Symbols and Strip Binary
         id: extract_strip
         run: |
@@ -147,7 +145,7 @@ jobs:
           # Create the directory structure where debug symbols are expected.
           mkdir -p ${PACKAGE_DIR}/usr/lib/debug/usr/local/sbin
           # Copy the extracted debug symbol file from the temporary directory.
-          cp debug-symbols/usr/local/sbin/ovs-vswitchd.dbg ${PACKAGE_DIR}/usr/lib/debug/usr/local/sbin/
+          cp ${PWD}/debug-symbols/usr/local/sbin/ovs-vswitchd.dbg ${PACKAGE_DIR}/usr/lib/debug/usr/local/sbin/
           # Create a DEBIAN control file for the debug package.
           mkdir -p ${PACKAGE_DIR}/DEBIAN
           mkdir -p "${PACKAGE_DIR}/debian"
