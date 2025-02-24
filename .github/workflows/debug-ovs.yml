@@ -141,15 +141,13 @@ jobs:
         run: |
           source "${PWD}/artifacts/env"
           # Define a package directory for the debug symbols.
-          PACKAGE_DIR="ovs-dbg-${OVS_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64"
+          PACKAGE_DIR="ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64-dbg"
           # Create the directory structure where debug symbols are expected.
           mkdir -p ${PACKAGE_DIR}/usr/lib/debug/usr/local/sbin
           # Copy the extracted debug symbol file from the temporary directory.
           cp ${PWD}/debug-symbols/usr/local/sbin/ovs-vswitchd.dbg ${PACKAGE_DIR}/usr/lib/debug/usr/local/sbin/
           # Create a DEBIAN control file for the debug package.
           mkdir -p ${PACKAGE_DIR}/DEBIAN
-          mkdir -p "${PACKAGE_DIR}/debian"
-          echo 'Source: Open vSwitch' > ${PACKAGE_DIR}/debian/control
           echo 'Package: ovs-'$OVS_VERSION'-cn10k'$PKG_POSTFIX'-dbg' >> ${PACKAGE_DIR}/DEBIAN/control
           echo 'Version: '$PKG_VERSION_NAME >> ${PACKAGE_DIR}/DEBIAN/control
           echo "Depends: $(dpkg-shlibdeps -O usr/local/sbin/ovs-vswitchd | awk -F'Depends=' '{print $2}'), dpdk-${DPDK_BASE_PKG_VERSION}-cn10k (= ${DPDK_PKG_VERSION}), ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX} (= ${PKG_VERSION_NAME})" >> ${PACKAGE_DIR}/DEBIAN/control
@@ -157,7 +155,6 @@ jobs:
           echo "Architecture: arm64" >> ${PACKAGE_DIR}/DEBIAN/control
           echo "Homepage: https://www.openvswitch.org/" >> ${PACKAGE_DIR}/DEBIAN/control
           echo "Description: Open vSwitch (OVS) for Marvell Octeon 10" >> ${PACKAGE_DIR}/DEBIAN/control
-          rm -rf ${PACKAGE_DIR}/debian
           dpkg --build ${PACKAGE_DIR}
           cp ${PACKAGE_DIR}.deb artifacts/.
 
@@ -189,4 +186,4 @@ jobs:
           tag_name: ovs-${{ steps.artifacts.outputs.OVS_VERSION }}-cn10k-${{ steps.artifacts.outputs.PKG_VERSION_NAME }}-${{ steps.artifacts.outputs.DISTRO }}-${{ steps.artifacts.outputs.TAG }}
           files: |
             ${{ github.workspace }}/artifacts/ovs-${{ steps.artifacts.outputs.OVS_VERSION }}-cn10k${{ steps.artifacts.outputs.PKG_POSTFIX }}_${{ steps.artifacts.outputs.PKG_VERSION_NAME }}_arm64.deb
-            ${{ github.workspace }}/artifacts/ovs-dbg-${{ steps.artifacts.outputs.OVS_VERSION }}-cn10k${{ steps.artifacts.outputs.PKG_POSTFIX }}_${{ steps.artifacts.outputs.PKG_VERSION_NAME }}_arm64.deb
+            ${{ github.workspace }}/artifacts/ovs-${{ steps.artifacts.outputs.OVS_VERSION }}-cn10k${{ steps.artifacts.outputs.PKG_POSTFIX }}_${{ steps.artifacts.outputs.PKG_VERSION_NAME }}_arm64-dbg.deb
