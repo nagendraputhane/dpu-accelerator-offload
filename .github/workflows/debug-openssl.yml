@@ -136,7 +136,7 @@ jobs:
           mkdir -p ${PACKAGE_DIR}/DEBIAN
           echo 'Package: openssl-'${OPENSSL_VERSION}'-cn10k'${PKG_POSTFIX}'-dbg' >> ${PACKAGE_DIR}/DEBIAN/control
           echo 'Version: '$PKG_VERSION_NAME >> ${PACKAGE_DIR}/DEBIAN/control
-          echo "Depends: openssl-'${OPENSSL_VERSION}'-cn10k'${PKG_POSTFIX} (= ${PKG_VERSION_NAME})" >> ${PACKAGE_DIR}/DEBIAN/control
+          echo "Depends: openssl-${OPENSSL_VERSION}-cn10k${PKG_POSTFIX} (= ${PKG_VERSION_NAME})" >> ${PACKAGE_DIR}/DEBIAN/control
           echo "Maintainer: Jerin Jacob (jerinj@marvell.com)" >> ${PACKAGE_DIR}/DEBIAN/control
           echo "Architecture: arm64" >> ${PACKAGE_DIR}/DEBIAN/control
           echo "Homepage: https://www.openssl.org/" >> ${PACKAGE_DIR}/DEBIAN/control
