@@ -84,19 +84,19 @@ jobs:
             sudo mkdir -p "${PWD}/install/debian"
             sudo mkdir -p "${PWD}/install/DEBIAN"
             cd "${PWD}/install"
-            echo 'Source: Open vSwitch' > debian/control
-            echo 'Package: ovs-'$OVS_VERSION'-cn10k'$PKG_POSTFIX >> DEBIAN/control
-            echo 'Version: '$PKG_VERSION_NAME >> DEBIAN/control
-            echo "Depends: `dpkg-shlibdeps -O usr/local/sbin/ovs-vswitchd | awk -F'Depends=' '{print $2}'`, dpdk-"$DPDK_BASE_PKG_VERSION"-cn10k (= "$DPDK_PKG_VERSION")" >> DEBIAN/control
-            echo "Maintainer: Jerin Jacob (jerinj@marvell.com)" >> DEBIAN/control
-            echo "Architecture: arm64" >> DEBIAN/control
-            echo "Homepage: https://www.openvswitch.org/" >> DEBIAN/control
-            echo "Description: Open vSwitch (OVS) for Marvell Octeon 10" >> DEBIAN/control
-            rm -rf debian
+            sudo echo 'Source: Open vSwitch' > debian/control
+            sudo echo 'Package: ovs-'$OVS_VERSION'-cn10k'$PKG_POSTFIX >> DEBIAN/control
+            sudo echo 'Version: '$PKG_VERSION_NAME >> DEBIAN/control
+            sudo echo "Depends: `dpkg-shlibdeps -O usr/local/sbin/ovs-vswitchd | awk -F'Depends=' '{print $2}'`, dpdk-"$DPDK_BASE_PKG_VERSION"-cn10k (= "$DPDK_PKG_VERSION")" >> DEBIAN/control
+            sudo echo "Maintainer: Jerin Jacob (jerinj@marvell.com)" >> DEBIAN/control
+            sudo echo "Architecture: arm64" >> DEBIAN/control
+            sudo echo "Homepage: https://www.openvswitch.org/" >> DEBIAN/control
+            sudo echo "Description: Open vSwitch (OVS) for Marvell Octeon 10" >> DEBIAN/control
+            sudo rm -rf debian
             cd -
-            mv "${PWD}/install" "${PWD}/ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64"
-            dpkg --build "${PWD}/ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64"
-            cp "${PWD}/ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64.deb" ${BASE_DIR}/artifacts/.
+            sudo mv "${PWD}/install" "${PWD}/ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64"
+            sudo dpkg --build "${PWD}/ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64"
+            sudo cp "${PWD}/ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64.deb" ${BASE_DIR}/artifacts/.
       - name: Export version name
         id: artifacts
         run: |
