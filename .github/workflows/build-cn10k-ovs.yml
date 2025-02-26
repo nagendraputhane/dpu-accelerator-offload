@@ -84,14 +84,14 @@ jobs:
             sudo mkdir -p "${PWD}/install/debian"
             sudo mkdir -p "${PWD}/install/DEBIAN"
             cd "${PWD}/install"
-            sudo echo 'Source: Open vSwitch' > debian/control
-            sudo echo 'Package: ovs-'$OVS_VERSION'-cn10k'$PKG_POSTFIX >> DEBIAN/control
-            sudo echo 'Version: '$PKG_VERSION_NAME >> DEBIAN/control
-            sudo echo "Depends: `dpkg-shlibdeps -O usr/local/sbin/ovs-vswitchd | awk -F'Depends=' '{print $2}'`, dpdk-"$DPDK_BASE_PKG_VERSION"-cn10k (= "$DPDK_PKG_VERSION")" >> DEBIAN/control
-            sudo echo "Maintainer: Jerin Jacob (jerinj@marvell.com)" >> DEBIAN/control
-            sudo echo "Architecture: arm64" >> DEBIAN/control
-            sudo echo "Homepage: https://www.openvswitch.org/" >> DEBIAN/control
-            sudo echo "Description: Open vSwitch (OVS) for Marvell Octeon 10" >> DEBIAN/control
+            echo 'Source: Open vSwitch' | sudo tee debian/control
+            echo 'Package: ovs-'$OVS_VERSION'-cn10k'$PKG_POSTFIX | sudo tee -a DEBIAN/control
+            echo 'Version: '$PKG_VERSION_NAME | sudo tee -a DEBIAN/control
+            echo "Depends: `dpkg-shlibdeps -O usr/local/sbin/ovs-vswitchd | awk -F'Depends=' '{print $2}'`, dpdk-"$DPDK_BASE_PKG_VERSION"-cn10k (= "$DPDK_PKG_VERSION")" | sudo tee -a DEBIAN/control
+            echo "Maintainer: Jerin Jacob (jerinj@marvell.com)" | sudo tee -a DEBIAN/control
+            echo "Architecture: arm64" | sudo tee -a DEBIAN/control
+            echo "Homepage: https://www.openvswitch.org/" | sudo tee -a DEBIAN/control
+            echo "Description: Open vSwitch (OVS) for Marvell Octeon 10" | sudo tee -a DEBIAN/control
             sudo rm -rf debian
             cd -
             sudo mv "${PWD}/install" "${PWD}/ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64"
