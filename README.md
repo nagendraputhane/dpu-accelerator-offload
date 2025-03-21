@@ -114,5 +114,5 @@ Running NGINX DAO application
 | **Other Applications** | Compression | ![](https://img.shields.io/static/v1?label=&message=Planned&color=orange) | |
 |  | NAT | ![](https://img.shields.io/static/v1?label=&message=Planned&color=orange) | |
 |  | SmartNIC | ![](https://img.shields.io/static/v1?label=&message=Experimental&color=blue) | [Link](https://marvellembeddedprocessors.github.io/dao/guides/applications/smart-nic.html) |
-|  | SNORT Integration | ![](https://img.shields.io/static/v1?label=&message=Planned&color=orange) | |
+|  | SNORT Integration | ![](https://img.shields.io/static/v1?label=&message=Experimental&color=blue) | |
 |  | TLS offload | ![](https://img.shields.io/static/v1?label=&message=WIP&color=red) | |
