@@ -276,8 +276,9 @@ dao_eth_trs_dev_alloc(uint8_t dev_id, struct dao_eth_trs_dev_config *conf)
 	}
 
 	memset(&eth_conf, 0, sizeof(eth_conf));
-	eth_conf.txmode.offloads = dev_info.tx_offload_capa;
-	eth_conf.rxmode.offloads = dev_info.rx_offload_capa;
+	eth_conf.rxmode.mtu = dev_info.max_mtu;
+	eth_conf.rxmode.mq_mode = RTE_ETH_MQ_RX_RSS;
+	eth_conf.txmode.mq_mode = RTE_ETH_MQ_TX_NONE;
 
 	/* Configure the ethernet ports */
 	for (i = 0; i < dev->nb_ports; i++) {
@@ -372,6 +373,7 @@ int
 dao_eth_trs_init(void)
 {
 	uint8_t i;
+	int ret;
 
 	if (eth_trs) {
 		dao_warn("Ethernet transport already initialized");
@@ -381,7 +383,7 @@ dao_eth_trs_init(void)
 	eth_trs = rte_zmalloc(NULL, sizeof(struct eth_trs_info), 0);
 	if (eth_trs == NULL) {
 		dao_err("Failed to allocate memory for ethernet transport info");
-		return -1;
+		return -ENOMEM;
 	}
 
 	/* Coalesce all the ethernet devices as of now and expose as one */
@@ -403,19 +405,23 @@ dao_eth_trs_init(void)
 
 	if (eth_trs->nb_ports == 0) {
 		dao_err("No supported ethernet devices found");
-		goto fail;
+		ret = -ENODEV;
+		goto eth_trs_free;
 	}
 
 	eth_trs->devs = rte_zmalloc(NULL, sizeof(struct eth_trs_dev) * eth_trs->nb_devs, 0);
 	if (eth_trs->devs == NULL) {
 		dao_err("Failed to allocate memory for ethernet transport devices");
-		goto fail;
+		ret = -ENOMEM;
+		goto eth_trs_free;
 	}
 
 	return 0;
-fail:
-	dao_eth_trs_fini();
-	return -1;
+
+eth_trs_free:
+	rte_free(eth_trs);
+	eth_trs = NULL;
+	return ret;
 }
 
 int

@@ -20,16 +20,58 @@
 #define DAO_CRYPTO_MAX_NB_DEV 1
 
 /**
+ * CPT hardware completion codes.
+ */
+enum dao_cpt_comp_code {
+	/** Request not completed. */
+	DAO_CPT_COMP_NOT_DONE = 0,
+	/** Request completed successfully. */
+	DAO_CPT_COMP_GOOD,
+	/** CPT detected a memory fault. */
+	DAO_CPT_COMP_FAULT,
+	/** Microcode detected an illegal instruction. */
+	DAO_CPT_COMP_SWERR,
+	/** CPT detected an uncorrectable error. */
+	DAO_CPT_COMP_HWERR,
+	/** CPT detected an illegal instruction. */
+	DAO_CPT_COMP_INSTERR,
+	/** Request completed with a warning. */
+	DAO_CPT_COMP_WARN
+};
+
+/**
+ * CPT microcode completion codes.
+ */
+enum dao_uc_rsa_comp_code {
+	/** Request completed. */
+	DAO_UC_RSA_SUCCESS = 0x00,
+	/** Scatter/Gather not supported. */
+	DAO_UC_RSA_SG_NOT_SUPPORTED = 0x04,
+	/** Invalid mod length. */
+	DAO_UC_RSA_MOD_LEN_INVALID = 0x06,
+	/** Mod length not even. */
+	DAO_UC_RSA_MOD_LEN_NOT_EVEN = 0x09,
+	/** PKCS decrypt incorrect. */
+	DAO_UC_RSA_PKCS_DEC_INCORRECT = 0x0A
+};
+
+/**
  * The completion code returned by the CPT.
  */
 union dao_cpt_res_s {
 	/** CPT_RES_S for cn10k */
 	struct cpt_cn10k_res_s {
-		/** HW Completion code */
+		/**
+		 * HW Completion code.
+		 * @see enum dao_cpt_comp_code
+		 */
 		uint64_t compcode : 7;
 		/** HW Done interrupt */
 		uint64_t doneint : 1;
-		/** Microcode Completion code */
+		/**
+		 * Microcode Completion code.
+		 * @see enum dao_uc_rsa_comp_code
+		 */
 		uint64_t uc_compcode : 8;
 		/** Rlen */
 		uint64_t rlen : 16;
@@ -42,9 +84,15 @@ union dao_cpt_res_s {
 
 	/** CPT_RES_S for cn9k */
 	struct cpt_cn9k_res_s {
-		/** HW Completion code */
+		/**
+		 * HW Completion code.
+		 * @see enum dao_cpt_comp_code
+		 */
 		uint64_t compcode : 8;
-		/** Microcode Completion code */
+		/**
+		 * Microcode Completion code.
+		 * @see enum dao_uc_rsa_comp_code
+		 */
 		uint64_t uc_compcode : 8;
 		/** HW Done Interrupt */
 		uint64_t doneint : 1;
@@ -62,7 +110,7 @@ union dao_cpt_res_s {
 /**
  * The liquid crypto information structure.
  */
-struct dao_liquid_crypto_info {
+struct dao_lc_info {
 	/** The version of the liquid crypto library. */
 	char version[DAO_CRYPTO_VERSION_LEN];
 	/** The number of devices supported by the liquid crypto library. */
@@ -72,12 +120,24 @@ struct dao_liquid_crypto_info {
 };
 
 /**
+ * The liquid crypto device configuration structure.
+ *
+ * This structure is used to configure a liquid crypto device.
+ */
+struct dao_lc_dev_conf {
+	/** The device identifier. Value must be between 0 and ``dao_lc_info.nb_dev`` - 1. */
+	uint8_t dev_id;
+	/** The number of queue pairs. */
+	uint16_t nb_qp;
+};
+
+/**
  * The liquid crypto queue pair configuration structure.
  *
  * This structure is used to configure a liquid crypto queue pair.
  *
  */
-struct dao_liquid_crypto_qp_conf {
+struct dao_lc_qp_conf {
 	/** Enable out of order delivery. */
 	bool out_of_order_delivery_en;
 	/**
@@ -94,21 +154,31 @@ struct dao_liquid_crypto_qp_conf {
  *
  * This structure is used to store the result of a liquid crypto operation.
  */
-struct dao_crypto_res {
+struct dao_lc_res {
 	/** The result of the operation returned by CPT */
 	union dao_cpt_res_s res;
 	/** Additional metadata from the operation */
 	union {
-		/** Metadata associated with RSA decrypt operation */
+		/** Metadata associated with RSA operations */
 		struct {
-			/** The length of the message */
-			uint16_t msg_len;
-		} rsa_dec;
+			/** The length of the output data */
+			uint16_t data_out_len;
+		} rsa;
 		/** Generic 64-bit metadata */
 		uint64_t u64;
 	};
 	/** The cookie associated with the operation */
 	uint64_t op_cookie;
+};
+
+/**
+ * The liquid crypto RSA key type.
+ */
+enum dao_liquid_crypto_rsa_key_type {
+	/** Public key */
+	DAO_LC_RSA_KEY_TYPE_PUBLIC,
+	/** Private key */
+	DAO_LC_RSA_KEY_TYPE_PRIVATE,
 };
 
 /**
@@ -147,24 +217,21 @@ int dao_liquid_crypto_fini(void);
  * - On success, 0 is returned.
  * - On failure, a negative value is returned indicating the cause
  */
-int dao_liquid_crypto_info_get(struct dao_liquid_crypto_info *info);
+int dao_liquid_crypto_info_get(struct dao_lc_info *info);
 
 /**
  * Create a liquid crypto device.
  *
  * This function creates a liquid crypto device.
  *
- * @param dev_id
- * The device identifier. Value must between 0 and
- * ``dao_liquid_crypto_info.nb_dev`` - 1.
- * @param nb_qp
- * The number of queue pairs.
+ * @param conf
+ * A pointer to the liquid crypto device configuration structure.
  *
  * @return
  * - On success, 0 is returned.
  * - On failure, a negative value is returned indicating the cause
  */
-int dao_liquid_crypto_dev_create(uint8_t dev_id, uint16_t nb_qp);
+int dao_liquid_crypto_dev_create(struct dao_lc_dev_conf *conf);
 
 /**
  * Destroy a liquid crypto device.
@@ -189,18 +256,17 @@ int dao_liquid_crypto_dev_destroy(uint8_t dev_id);
  *
  * @param dev_id
  * The device identifier. Value must between 0 and
- * ``dao_liquid_crypto_info.nb_dev`` - 1.
+ * ``dao_lc_info.nb_dev`` - 1.
  * @param qp_id
  * The queue pair identifier. Value must between 0 and
- * ``dao_liquid_crypto_info.nb_qp[dev_id]`` - 1.
+ * ``dao_lc_info.nb_qp[dev_id]`` - 1.
  * @param conf
  * A pointer to the liquid crypto queue pair configuration structure.
  * @return
  * - On success, 0 is returned.
  * - On failure, a negative value is returned indicating the cause
  */
-int dao_liquid_crypto_qp_configure(uint8_t dev_id, uint16_t qp_id,
-				   struct dao_liquid_crypto_qp_conf *conf);
+int dao_liquid_crypto_qp_configure(uint8_t dev_id, uint16_t qp_id, struct dao_lc_qp_conf *conf);
 
 /**
  * Start a liquid crypto device.
@@ -238,9 +304,163 @@ int dao_liquid_crypto_dev_stop(uint8_t dev_id);
  * The index of the queue pair on which the operation is to be enqueued.
  * @param op_cookie
  * The cookie to be associated with the operation. This cookie is returned
- * in the *dao_crypto_res* structure when the operation is dequeued.
+ * in the *dao_lc_res* structure when the operation is dequeued.
  */
 int dao_liquid_crypto_enqueue_op_passthrough(uint8_t dev_id, uint16_t qp_id, uint64_t op_cookie);
+
+/**
+ * Enqueue request to perform RSA encrypt operation on the crypto device.
+ *
+ * @param dev_id
+ *  The identifier of the device.
+ * @param qp_id
+ *  The index of the queue pair on which the operation is to be enqueued.
+ * @param key_type
+ *  The type of RSA key to be used.
+ * @param mod_len
+ *  The length of the modulus.
+ * @param exp_len
+ *  The length of the exponent.
+ * @param msg_len
+ *  The length of the message.
+ * @param mod
+ *  The address of the buffer containing the modulus.
+ * @param exp
+ *  The address of the buffer containing the exponent.
+ * @param msg
+ *  The address of the buffer containing the message.
+ * @param em
+ *  The address of the buffer where the encrypted message is to be stored.
+ * @param op_cookie
+ *  The cookie to be associated with the operation. This cookie is returned
+ *  in the *dao_crypto_res* structure when the operation is dequeued.
+ *
+ * @return
+ *  0 on success, negative value on failure.
+ */
+int dao_crypto_enqueue_op_pkcs1v15enc(uint8_t dev_id, uint16_t qp_id,
+				      enum dao_liquid_crypto_rsa_key_type key_type,
+				      uint16_t mod_len, uint16_t exp_len, uint16_t msg_len,
+				      uint8_t *mod, uint8_t *exp, uint8_t *msg, uint8_t *em,
+				      uint64_t op_cookie);
+
+/**
+ * Enqueue request to perform RSA decrypt operation on the crypto device.
+ *
+ * @param dev_id
+ *  The identifier of the device.
+ * @param qp_id
+ *  The index of the queue pair on which the operation is to be enqueued.
+ * @param key_type
+ *  The type of RSA key to be used.
+ * @param mod_len
+ *  The length of the modulus.
+ * @param exp_len
+ *  The length of the exponent.
+ * @param mod
+ *  The address of the buffer containing the modulus.
+ * @param exp
+ *  The address of the buffer containing the exponent.
+ * @param em
+ *  The address of the buffer containing the encrypted message. Length of this
+ *  buffer must be at least *mod_len* bytes.
+ * @param msg
+ *  The address of the buffer where the decrypted message is to be stored.
+ * @param op_cookie
+ *  The cookie to be associated with the operation. This cookie is returned
+ *  in the *dao_crypto_res* structure when the operation is dequeued.
+ *
+ * @return
+ *  0 on success, negative value on failure.
+ */
+int dao_crypto_enqueue_op_pkcs1v15dec(uint8_t dev_id, uint16_t qp_id,
+				      enum dao_liquid_crypto_rsa_key_type key_type,
+				      uint16_t mod_len, uint16_t exp_len, uint8_t *mod,
+				      uint8_t *exp, uint8_t *em, uint8_t *msg, uint64_t op_cookie);
+
+/**
+ * Enqueue request to perform RSA CRT encrypt operation on the crypto device.
+ *
+ * @param dev_id
+ *  The identifier of the device.
+ * @param qp_id
+ *  The index of the queue pair on which the operation is to be enqueued.
+ * @param mod_len
+ *  The length of the modulus. Value must be even and should be at least 34 bytes
+ *  and at most 1024 bytes.
+ * @param msg_len
+ *  The length of the message in bytes. Value must be at most mod_len - 11.
+ * @param q
+ *  The address of the buffer containing the first factor. Length of this buffer
+ *  must be mod_len/2 bytes and the value must be odd.
+ * @param dQ
+ *  The address of the buffer containing the first factor's CRT exponent. Length
+ *  of this buffer must be mod_len/2 bytes.
+ * @param p
+ *  The address of the buffer containing the second factor. Length of this
+ *  buffer must be mod_len/2 bytes and the value must be odd.
+ * @param dP
+ *  The address of the buffer containing the second factor's CRT exponent.
+ *  Length of this buffer must be mod_len/2 bytes.
+ * @param qInv
+ *  The address of the buffer containing the CRT coefficient. Length of this
+ *  buffer must be mod_len/2 bytes.
+ * @param msg
+ *  The address of the buffer containing the message.
+ * @param em
+ *  The address of the buffer where the encrypted message is to be stored.
+ * @param op_cookie
+ *  The cookie to be associated with the operation. This cookie is returned
+ *  in the *dao_crypto_res* structure when the operation is dequeued.
+ *
+ * @return
+ *  0 on success, negative value on failure.
+ */
+int dao_crypto_enqueue_op_pkcs1v15enc_crt(uint8_t dev_id, uint16_t qp_id, uint16_t mod_len,
+					  uint16_t msg_len, uint8_t *q, uint8_t *dQ, uint8_t *p,
+					  uint8_t *dP, uint8_t *qInv, uint8_t *msg, uint8_t *em,
+					  uint64_t op_cookie);
+
+/**
+ * Enqueue request to perform RSA CRT decrypt operation on the crypto device.
+ *
+ * @param dev_id
+ *  The identifier of the device.
+ * @param qp_id
+ *  The index of the queue pair on which the operation is to be enqueued.
+ * @param mod_len
+ *  The length of the modulus in bytes. Value must be even and should be at least
+ *  34 bytes and at most 1024 bytes.
+ * @param q
+ *  The address of the buffer containing the first factor. Length of this buffer
+ *  must be mod_len/2 bytes and the value must be odd.
+ * @param dQ
+ *  The address of the buffer containing the first factor's CRT exponent. Length
+ *  of this buffer must be mod_len/2 bytes.
+ * @param p
+ *  The address of the buffer containing the second factor. Length of this
+ *  buffer must be mod_len/2 bytes and the value must be odd.
+ * @param dP
+ *  The address of the buffer containing the second factor's CRT exponent.
+ *  Length of this buffer must be mod_len/2 bytes.
+ * @param qInv
+ *  The address of the buffer containing the CRT coefficient. Length of this
+ *  buffer must be mod_len/2 bytes.
+ * @param em
+ *  The address of the buffer containing the encrypted message.
+ * @param msg
+ *  The address of the buffer where the decrypted message is to be stored.
+ * @param op_cookie
+ *  The cookie to be associated with the operation. This cookie is returned
+ *  in the *dao_crypto_res* structure when the operation is dequeued.
+ *
+ * @return
+ *  0 on success, negative value on failure.
+ */
+int dao_crypto_enqueue_op_pkcs1v15dec_crt(uint8_t dev_id, uint16_t qp_id, uint16_t mod_len,
+					  uint8_t *q, uint8_t *dQ, uint8_t *p, uint8_t *dP,
+					  uint8_t *qInv, uint8_t *em, uint8_t *msg,
+					  uint64_t op_cookie);
 
 /**
  * Dequeue burst of crypto operations from the crypto device.
@@ -250,7 +470,7 @@ int dao_liquid_crypto_enqueue_op_passthrough(uint8_t dev_id, uint16_t qp_id, uin
  * @param qp_id
  * The index of the queue pair on which ops are to be dequeued.
  * @param res [out]
- * The array of pointers to *dao_crypto_res* structures where the results
+ * The array of pointers to *dao_lc_res* structures where the results
  * of the operations are stored.
  * @param nb_ops
  * The maximum number of operations to dequeue.
@@ -258,7 +478,7 @@ int dao_liquid_crypto_enqueue_op_passthrough(uint8_t dev_id, uint16_t qp_id, uin
  * @return
  * The number of operations dequeued.
  */
-uint16_t dao_liquid_crypto_dequeue_burst(uint8_t dev_id, uint16_t qp_id, struct dao_crypto_res *res,
+uint16_t dao_liquid_crypto_dequeue_burst(uint8_t dev_id, uint16_t qp_id, struct dao_lc_res *res,
 					 uint16_t nb_ops);
 
 #endif /* __DAO_LIQUID_CRYPTO_H__ */
