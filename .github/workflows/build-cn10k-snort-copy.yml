@@ -152,7 +152,8 @@ jobs:
             -DHS_INCLUDE_DIR="${INSTALL_PREFIX}/usr/local/include" \
             -DHS_LIBRARIES_DIR="${INSTALL_PREFIX}/usr/local/lib" \
             -DCMAKE_PREFIX_PATH="${INSTALL_PREFIX}/usr/local" \
-            -DCMAKE_INSTALL_RPATH="${INSTALL_PREFIX}/usr/local/lib"
+            -DCMAKE_INSTALL_RPATH="${INSTALL_PREFIX}/usr/local/lib" \
+            ..
             sudo make -j$(nproc)
             sudo make install
             sudo cp -dR ${INSTALL_PREFIX}/usr/local/lib/* ${BASE_DIR}/snort_src/install/usr/local/lib/ || true
