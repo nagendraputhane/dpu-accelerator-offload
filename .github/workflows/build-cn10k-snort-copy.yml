@@ -138,7 +138,7 @@ jobs:
             tar -xzvf snort3-3.2.2.0.tar.gz > /dev/null 2>&1
             cd snort3-3.2.2.0
             sudo rm -rf build
-            sudo mkdir -p build
+            mkdir -p build
             cd build
             cmake \
             -DCMAKE_INSTALL_PREFIX="${BASE_DIR}/snort_src/install/usr/local" \
