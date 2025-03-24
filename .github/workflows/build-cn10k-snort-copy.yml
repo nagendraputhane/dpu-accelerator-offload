@@ -103,6 +103,7 @@ jobs:
                   -DCMAKE_LIBRARY_PATH=${INSTALL_PREFIX}/usr/local/lib \
                   -DPCRE_INCLUDE_DIR=${INSTALL_PREFIX}/usr/local/include \
                   -DPCRE_LIBRARY=${INSTALL_PREFIX}/usr/local/lib/libpcre.so \
+                  -DBUILD_COLLIDER=OFF \
                   ${BASE_DIR}/snort_src/vectorscan
             sudo make -j$(nproc)
             sudo make DESTDIR=${INSTALL_PREFIX} install
