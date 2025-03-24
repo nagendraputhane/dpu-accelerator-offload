@@ -133,7 +133,6 @@ jobs:
             sudo ldconfig
             mkdir -p ${BASE_DIR}/snort_src/install/usr/local/lib/
             sudo cp -a /usr/local/lib/libdaq.so* ${BASE_DIR}/snort_src/install/usr/local/lib/
-            mkdir ${BASE_DIR}/snort_src/install
             cd ${BASE_DIR}/snort_src
             wget "https://github.com/snort3/snort3/archive/refs/tags/3.2.2.0.tar.gz" -O snort3-3.2.2.0.tar.gz
             tar -xzvf snort3-3.2.2.0.tar.gz > /dev/null 2>&1
