@@ -137,6 +137,9 @@ jobs:
             wget "https://github.com/snort3/snort3/archive/refs/tags/3.2.2.0.tar.gz" -O snort3-3.2.2.0.tar.gz
             tar -xzvf snort3-3.2.2.0.tar.gz > /dev/null 2>&1
             cd snort3-3.2.2.0
+            sudo rm -rf build
+            sudo mkdir -p build
+            cd build
             cmake \
             -DCMAKE_INSTALL_PREFIX="${BASE_DIR}/snort_src/install/usr/local" \
             -DCMAKE_BUILD_TYPE=RelWithDebInfo \
@@ -150,7 +153,6 @@ jobs:
             -DHS_LIBRARIES_DIR="${INSTALL_PREFIX}/usr/local/lib" \
             -DCMAKE_PREFIX_PATH="${INSTALL_PREFIX}/usr/local" \
             -DCMAKE_INSTALL_RPATH="${INSTALL_PREFIX}/usr/local/lib"
-            cd build
             sudo make -j$(nproc)
             sudo make install
             sudo cp -dR ${INSTALL_PREFIX}/usr/local/lib/* ${BASE_DIR}/snort_src/install/usr/local/lib/ || true
