@@ -137,15 +137,19 @@ jobs:
             wget "https://github.com/snort3/snort3/archive/refs/tags/3.2.2.0.tar.gz" -O snort3-3.2.2.0.tar.gz
             tar -xzvf snort3-3.2.2.0.tar.gz > /dev/null 2>&1
             cd snort3-3.2.2.0
-            export CMAKE_PREFIX_PATH="${INSTALL_PREFIX}/usr/local"
-            export CMAKE_INSTALL_RPATH="${INSTALL_PREFIX}/usr/local/lib"
-            export DAQ_INCLUDE_DIR="${INSTALL_PREFIX}/usr/local/include"
-            export DAQ_LIBRARY="${INSTALL_PREFIX}/usr/local/lib/libdaq.so"
-            ./configure_cmake.sh \
-              --prefix=${BASE_DIR}/snort_src/install/usr/local \
-              --enable-tcmalloc \
-              --with-daq-includes="${INSTALL_PREFIX}/usr/local/include" \
-              --with-daq-libraries="${INSTALL_PREFIX}/usr/local/lib"
+            cmake \
+            -DCMAKE_INSTALL_PREFIX="${BASE_DIR}/snort_src/install/usr/local" \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DENABLE_TCMALLOC=ON \
+            -DENABLE_STATIC_DAQ=OFF \
+            -DDAQ_INCLUDE_DIR_HINT="${INSTALL_PREFIX}/usr/local/include" \
+            -DDAQ_LIBRARIES_DIR_HINT="${INSTALL_PREFIX}/usr/local/lib" \
+            -DPCRE_INCLUDE_DIR_HINT="${INSTALL_PREFIX}/usr/local/include" \
+            -DPCRE_LIBRARIES_DIR_HINT="${INSTALL_PREFIX}/usr/local/lib" \
+            -DHS_INCLUDE_DIR="${INSTALL_PREFIX}/usr/local/include" \
+            -DHS_LIBRARIES_DIR="${INSTALL_PREFIX}/usr/local/lib" \
+            -DCMAKE_PREFIX_PATH="${INSTALL_PREFIX}/usr/local" \
+            -DCMAKE_INSTALL_RPATH="${INSTALL_PREFIX}/usr/local/lib" \
             cd build
             sudo make -j$(nproc)
             sudo make install
