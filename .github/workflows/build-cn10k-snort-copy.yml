@@ -127,33 +127,19 @@ jobs:
             tar -xzvf libdaq-3.0.15.tar.gz > /dev/null 2>&1
             cd libdaq-3.0.15
             ./bootstrap
-            ./configure --prefix=/usr/local
+            ./configure
             sudo make -j$(nproc)
-            sudo make DESTDIR=${INSTALL_PREFIX} install
-            find "${INSTALL_PREFIX}/usr/local/include" -name 'daq*.h' -o -name '*daq*.h'
+            sudo make install
             sudo ldconfig
+            mkdir -p ${BASE_DIR}/snort_src/install/usr/local/lib/
+            sudo cp -a /usr/local/lib/libdaq.so* ${BASE_DIR}/snort_src/install/usr/local/lib/
             mkdir ${BASE_DIR}/snort_src/install
             cd ${BASE_DIR}/snort_src
             wget "https://github.com/snort3/snort3/archive/refs/tags/3.2.2.0.tar.gz" -O snort3-3.2.2.0.tar.gz
             tar -xzvf snort3-3.2.2.0.tar.gz > /dev/null 2>&1
             cd snort3-3.2.2.0
-            sudo rm -rf build
-            mkdir -p build
+            ./configure_cmake.sh --prefix=${BASE_DIR}/snort_src/install/usr/local --enable-tcmalloc
             cd build
-            cmake \
-            -DCMAKE_INSTALL_PREFIX="${BASE_DIR}/snort_src/install/usr/local" \
-            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-            -DENABLE_TCMALLOC=ON \
-            -DENABLE_STATIC_DAQ=OFF \
-            -DDAQ_INCLUDE_DIR_HINT="${INSTALL_PREFIX}/usr/local/include" \
-            -DDAQ_LIBRARIES_DIR_HINT="${INSTALL_PREFIX}/usr/local/lib" \
-            -DPCRE_INCLUDE_DIR_HINT="${INSTALL_PREFIX}/usr/local/include" \
-            -DPCRE_LIBRARIES_DIR_HINT="${INSTALL_PREFIX}/usr/local/lib" \
-            -DHS_INCLUDE_DIR="${INSTALL_PREFIX}/usr/local/include" \
-            -DHS_LIBRARIES_DIR="${INSTALL_PREFIX}/usr/local/lib" \
-            -DCMAKE_PREFIX_PATH="${INSTALL_PREFIX}/usr/local" \
-            -DCMAKE_INSTALL_RPATH="${INSTALL_PREFIX}/usr/local/lib" \
-            ..
             sudo make -j$(nproc)
             sudo make install
             sudo cp -dR ${INSTALL_PREFIX}/usr/local/lib/* ${BASE_DIR}/snort_src/install/usr/local/lib/ || true
