@@ -59,12 +59,6 @@ jobs:
             ccache -p
             pkg-config --list-all
             BASE_DIR=${PWD}
-            INSTALL_PREFIX=${BASE_DIR}/snort_src/local
-            mkdir -p ${INSTALL_PREFIX}/usr/local
-            export PKG_CONFIG_PATH=${INSTALL_PREFIX}/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH
-            export LD_LIBRARY_PATH=${INSTALL_PREFIX}/usr/local/lib:$LD_LIBRARY_PATH
-            export C_INCLUDE_PATH=${INSTALL_PREFIX}/usr/local/include:$C_INCLUDE_PATH
-            export CPLUS_INCLUDE_PATH=${INSTALL_PREFIX}/usr/local/include:$CPLUS_INCLUDE_PATH
             mkdir -p ${BASE_DIR}/snort_src
             cd ${BASE_DIR}/snort_src
             wget "https://github.com/rurban/safeclib/releases/download/v3.8.1/safeclib-3.8.1.tar.gz"
@@ -72,37 +66,33 @@ jobs:
             cd safeclib-3.8.1.0-gdfea26
             ./configure --prefix=/usr/local
             sudo make -j$(nproc)
-            sudo make DESTDIR=${INSTALL_PREFIX} install
+            sudo make install
+            sudo ldconfig
             cd ${BASE_DIR}/snort_src
             wget "https://github.com/gperftools/gperftools/releases/download/gperftools-2.15/gperftools-2.15.tar.gz"
             tar xzvf gperftools-2.15.tar.gz > /dev/null 2>&1
             cd gperftools-2.15
             ./configure --prefix=/usr/local
             sudo make -j$(nproc)
-            sudo make DESTDIR=${INSTALL_PREFIX} install
+            sudo make install
+            sudo ldconfig
             cd ${BASE_DIR}/snort_src
             wget "https://sourceforge.net/projects/pcre/files/pcre/8.45/pcre-8.45.tar.gz"
             tar -xzvf pcre-8.45.tar.gz > /dev/null 2>&1
             cd pcre-8.45
             ./configure --prefix=/usr/local
             sudo make -j$(nproc)
-            sudo make DESTDIR=${INSTALL_PREFIX} install
+            sudo make install
+            sudo ldconfig
             cd ${BASE_DIR}/snort_src
             wget "https://archives.boost.io/release/1.85.0/source/boost_1_85_0.tar.gz"
             tar -xzvf boost_1_85_0.tar.gz > /dev/null 2>&1
             cd ${BASE_DIR}/snort_src
             git clone "https://github.com/VectorCamp/vectorscan"
-            cd vectorscan
-            cd ..
             mkdir hyperscan-build
             cd hyperscan-build
             cmake -DCMAKE_INSTALL_PREFIX=/usr/local \
                   -DBOOST_ROOT=${BASE_DIR}/snort_src/boost_1_85_0/ \
-                  -DCMAKE_PREFIX_PATH=${INSTALL_PREFIX}/usr/local \
-                  -DCMAKE_INCLUDE_PATH=${INSTALL_PREFIX}/usr/local/include \
-                  -DCMAKE_LIBRARY_PATH=${INSTALL_PREFIX}/usr/local/lib \
-                  -DPCRE_INCLUDE_DIR=${INSTALL_PREFIX}/usr/local/include \
-                  -DPCRE_LIBRARY=${INSTALL_PREFIX}/usr/local/lib/libpcre.so \
                   -DBUILD_COLLIDER=OFF \
                   -DBUILD_BENCHMARKS=OFF \
                   -DBUILD_TESTS=OFF \
@@ -113,7 +103,8 @@ jobs:
                   -DBUILD_SHARED_LIBS=ON \
                   ${BASE_DIR}/snort_src/vectorscan
             sudo make -j$(nproc)
-            sudo make DESTDIR=${INSTALL_PREFIX} install
+            sudo make install
+            sudo ldconfig
             cd ${BASE_DIR}/snort_src
             wget "https://github.com/google/flatbuffers/archive/refs/tags/v22.12.6.tar.gz" -O flatbuffers-v22.12.6.tar.gz
             tar -xzvf flatbuffers-v22.12.6.tar.gz > /dev/null 2>&1
@@ -121,7 +112,8 @@ jobs:
             cd flatbuffers-build
             cmake -DCMAKE_INSTALL_PREFIX=/usr/local ../flatbuffers-22.12.6
             sudo make -j$(nproc)
-            sudo make DESTDIR=${INSTALL_PREFIX} install
+            sudo make install
+            sudo ldconfig
             cd ${BASE_DIR}/snort_src
             wget "https://github.com/snort3/libdaq/archive/refs/tags/v3.0.15.tar.gz" -O libdaq-3.0.15.tar.gz
             tar -xzvf libdaq-3.0.15.tar.gz > /dev/null 2>&1
@@ -131,8 +123,14 @@ jobs:
             sudo make -j$(nproc)
             sudo make install
             sudo ldconfig
+
             mkdir -p ${BASE_DIR}/snort_src/install/usr/local/lib/
-            sudo cp -a /usr/local/lib/libdaq.so* ${BASE_DIR}/snort_src/install/usr/local/lib/
+            # copy libdaq.so, libpcre.so, libtcmalloc.so, etc..
+            sudo cp -a /usr/local/lib/libdaq.so* ${BASE_DIR}/snort_src/install/usr/local/lib/ || true
+            sudo cp -a /usr/local/lib/libpcre.so* ${BASE_DIR}/snort_src/install/usr/local/lib/ || true
+            sudo cp -a /usr/local/lib/libhs.so* ${BASE_DIR}/snort_src/install/usr/local/lib/ || true
+            sudo cp -a /usr/local/lib/libtcmalloc.so* ${BASE_DIR}/snort_src/install/usr/local/lib/ || true
+
             cd ${BASE_DIR}/snort_src
             wget "https://github.com/snort3/snort3/archive/refs/tags/3.2.2.0.tar.gz" -O snort3-3.2.2.0.tar.gz
             tar -xzvf snort3-3.2.2.0.tar.gz > /dev/null 2>&1
@@ -141,13 +139,7 @@ jobs:
             cd build
             sudo make -j$(nproc)
             sudo make install
-            sudo cp -dR ${INSTALL_PREFIX}/usr/local/lib/* ${BASE_DIR}/snort_src/install/usr/local/lib/ || true
 
-            #remove extra files (static libs, includes, share, docs, etc.)
-            sudo find ${INSTALL_PREFIX}/usr/local/lib -name "*.la" -delete
-            sudo find ${INSTALL_PREFIX}/usr/local/lib -name "*.a" -delete
-            sudo rm -rf ${INSTALL_PREFIX}/usr/local/share  || true
-            sudo rm -rf ${INSTALL_PREFIX}/usr/local/include || true
             sudo find ${BASE_DIR}/snort_src/install/usr/local/ -name "*.la" -delete
             sudo find ${BASE_DIR}/snort_src/install/usr/local/ -name "*.a" -delete
             sudo rm -rf ${BASE_DIR}/snort_src/install/usr/local/include || true
