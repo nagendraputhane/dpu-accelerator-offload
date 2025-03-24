@@ -127,7 +127,7 @@ jobs:
             tar -xzvf libdaq-3.0.15.tar.gz > /dev/null 2>&1
             cd libdaq-3.0.15
             ./bootstrap
-            ./configure --prefix=/usr/local
+            ./configure
             sudo make -j$(nproc)
             sudo make DESTDIR=${INSTALL_PREFIX} install
             sudo ldconfig
