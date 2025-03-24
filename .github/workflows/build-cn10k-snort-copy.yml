@@ -133,10 +133,10 @@ jobs:
             sudo ldconfig
             mkdir ${BASE_DIR}/snort_src/install
             cd ${BASE_DIR}/snort_src
-            find ${INSTALL_PREFIX}/usr/local/lib -name "*.la" -delete
-            find ${INSTALL_PREFIX}/usr/local/lib -name "*.a" -delete
-            rm -rf ${INSTALL_PREFIX}/usr/local/share  || true
-            rm -rf ${INSTALL_PREFIX}/usr/local/include || true
+            sudo find ${INSTALL_PREFIX}/usr/local/lib -name "*.la" -delete
+            sudo find ${INSTALL_PREFIX}/usr/local/lib -name "*.a" -delete
+            sudo rm -rf ${INSTALL_PREFIX}/usr/local/share  || true
+            sudo rm -rf ${INSTALL_PREFIX}/usr/local/include || true
             wget "https://github.com/snort3/snort3/archive/refs/tags/3.2.2.0.tar.gz" -O snort3-3.2.2.0.tar.gz
             tar -xzvf snort3-3.2.2.0.tar.gz > /dev/null 2>&1
             cd snort3-3.2.2.0
@@ -150,10 +150,10 @@ jobs:
 
             # Optionally remove more dev files from the snort install area
             # (static libs, includes, share, docs, etc.)
-            find ${BASE_DIR}/snort_src/install/usr/local/ -name "*.la" -delete
-            find ${BASE_DIR}/snort_src/install/usr/local/ -name "*.a" -delete
-            rm -rf ${BASE_DIR}/snort_src/install/usr/local/include || true
-            rm -rf ${BASE_DIR}/snort_src/install/usr/local/share   || true
+            sudo find ${BASE_DIR}/snort_src/install/usr/local/ -name "*.la" -delete
+            sudo find ${BASE_DIR}/snort_src/install/usr/local/ -name "*.a" -delete
+            sudo rm -rf ${BASE_DIR}/snort_src/install/usr/local/include || true
+            sudo rm -rf ${BASE_DIR}/snort_src/install/usr/local/share   || true
 
             cd ${BASE_DIR}/snort_src
             mkdir -p install/DEBIAN
