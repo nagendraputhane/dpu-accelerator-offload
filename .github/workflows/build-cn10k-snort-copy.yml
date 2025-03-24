@@ -104,6 +104,12 @@ jobs:
                   -DPCRE_INCLUDE_DIR=${INSTALL_PREFIX}/usr/local/include \
                   -DPCRE_LIBRARY=${INSTALL_PREFIX}/usr/local/lib/libpcre.so \
                   -DBUILD_COLLIDER=OFF \
+                  -DBUILD_TESTS=OFF \
+                  -DBUILD_UNIT_TESTS=OFF \
+                  -DBUILD_EXAMPLES=OFF \
+                  -DBUILD_TOOLS=OFF \
+                  -DBUILD_STATIC_AND_SHARED=OFF \
+                  -DBUILD_SHARED_LIBS=ON \
                   ${BASE_DIR}/snort_src/vectorscan
             sudo make -j$(nproc)
             sudo make DESTDIR=${INSTALL_PREFIX} install
