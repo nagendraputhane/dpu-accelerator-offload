@@ -104,6 +104,7 @@ jobs:
                   -DPCRE_INCLUDE_DIR=${INSTALL_PREFIX}/usr/local/include \
                   -DPCRE_LIBRARY=${INSTALL_PREFIX}/usr/local/lib/libpcre.so \
                   -DBUILD_COLLIDER=OFF \
+                  -DBUILD_BENCHMARKS=OFF \
                   -DBUILD_TESTS=OFF \
                   -DBUILD_UNIT_TESTS=OFF \
                   -DBUILD_EXAMPLES=OFF \
