@@ -102,8 +102,8 @@ Running NGINX DAO application
 |  | NGINX Proxy/TLS Proxy | ![](https://img.shields.io/static/v1?label=&message=Ready&color=green) | [Link 1](https://docs.nginx.com/nginx/admin-guide/web-server/reverse-proxy/) <br> [Link 2](https://marvellembeddedprocessors.github.io/dao/guides/applications/tls-proxy-nginx.html) |
 |  | NGINX Load Balancer | ![](https://img.shields.io/static/v1?label=&message=Ready&color=green) | [Link](http://nginx.org/en/docs/http/load_balancing.html) |
 | **AI/ML** | AI/ML Toolkit | ![](https://img.shields.io/static/v1?label=&message=Planned&color=orange) | |
-|  | Inferencing application - Resnet50 Image classification | ![](https://img.shields.io/static/v1?label=&message=Planned&color=orange) | |
-|  | Inferencing application - DDoS detection | ![](https://img.shields.io/static/v1?label=&message=Planned&color=orange) | |
+|  | Inferencing application - Resnet50 Image classification | ![](https://img.shields.io/static/v1?label=&message=Ready&color=green) | |
+|  | Inferencing application - DDoS detection | ![](https://img.shields.io/static/v1?label=&message=Ready&color=green) | |
 | **IPsec** | Strongswan integrated IPsec offload | ![](https://img.shields.io/static/v1?label=&message=Experimental&color=blue) | [Link](https://marvellembeddedprocessors.github.io/dao/guides/applications/secgw-graph.html#running-as-ipsec-gateway) |
 | **Cloud Solutions** | Cilium CNI | ![](https://img.shields.io/static/v1?label=&message=WIP&color=red) | |
 |  | Calico | ![](https://img.shields.io/static/v1?label=&message=WIP&color=red) | |
