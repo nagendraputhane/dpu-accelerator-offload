@@ -2,8 +2,9 @@ name: build-cn10k
 
 on:
   push:
-    tags:
-      - "[0-9]+.[0-9]+.[0-9]+"
+  schedule:
+    - cron: "0 0 * * 1"
+  pull_request:
 
 permissions:
   contents: write
@@ -70,7 +71,7 @@ jobs:
             echo "cache_dir = ~/.ccache" > ~/.ccache/ccache.conf
             ccache -p
             pkg-config --list-all
-            meson build -Dplatform=cn10k --prefix="${PWD}/install" -Denable_kmods=false
+            meson build -Dplatform=cn10k --prefix="${PWD}/install" -Denable_kmods=false -Dc_args=-fPIC -Dcpp_args=-fPIC
             ninja install -C build
             mkdir -p "${PWD}/install/DEBIAN"
             cd "${PWD}/install"
