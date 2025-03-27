@@ -26,6 +26,10 @@ New Features
     - ML Models
     - Snort
 
+  * Linking Mode Updated
+
+    Starting in this release, DAO builds have been switched from static to dynamic linking.
+
 Debian Packages List
 --------------------
 
@@ -76,6 +80,15 @@ Debian Packages List
 - **Snort**
   - **snort-3-cn10k**
   - **Version:** 25.01.0
+
+Removed Items
+-------------
+
+API Changes
+-----------
+
+ABI Changes
+-----------
 
 Preloading DPDK Libraries
 -------------------------
@@ -165,12 +178,3 @@ Make sure the libraries are installed at ``/lib/aarch64-linux-gnu/``, or update 
 **Option 2: Using the -d Flag**
 
 Alternatively, if you do not wish to preload every library, you can specify the needed DPDK libraries explicitly with ``-d``.
-
-Removed Items
--------------
-
-API Changes
------------
-
-ABI Changes
------------
