@@ -1,5 +1,5 @@
 ..  SPDX-License-Identifier: Marvell-MIT
-    Copyright (c) 2024 Marvell.
+    Copyright (c) 2025 Marvell.
 
 DAO Release 25.01.0
 ===================
@@ -26,8 +26,8 @@ New Features
     - ML Models
     - Snort
 
-Debian Pakages List
--------------------
+Debian Packages List
+--------------------
 
 - **DAO**
   - **dao-cn10k**
@@ -79,7 +79,10 @@ Debian Pakages List
 
 Preloading DPDK Libraries
 -------------------------
-Some DAO applications rely on DPDK libraries compiled as shared objects. To ensure these applications run correctly, you can either preload all required DPDK libraries or specify them at runtime:
+
+Some DAO applications rely on DPDK libraries compiled as shared objects.
+
+To ensure these applications run correctly, you can either preload all required DPDK libraries or specify them at runtime:
 
 **Option 1: Using LD_PRELOAD**
 
@@ -155,15 +158,13 @@ Some DAO applications rely on DPDK libraries compiled as shared objects. To ensu
    /lib/aarch64-linux-gnu/librte_timer.so \
    /lib/aarch64-linux-gnu/librte_vhost.so"
 
-This ensures all required DPDK dependencies are available in your environment. Make sure the libraries are installed at ``/lib/aarch64-linux-gnu/``, or update the paths accordingly.
+This ensures all required DPDK dependencies are available in your environment.
+
+Make sure the libraries are installed at ``/lib/aarch64-linux-gnu/``, or update the paths accordingly.
 
 **Option 2: Using the -d Flag**
 
-Alternatively, if you do not wish to preload every library, you can specify the needed Poll Mode Drivers (PMDs) or other DPDK libraries explicitly with ``-d``:
-
-.. code-block:: bash
-
-   dpdk-app -d /lib/aarch64-linux-gnu/librte_net_ring.so
+Alternatively, if you do not wish to preload every library, you can specify the needed DPDK libraries explicitly with ``-d``.
 
 Removed Items
 -------------
