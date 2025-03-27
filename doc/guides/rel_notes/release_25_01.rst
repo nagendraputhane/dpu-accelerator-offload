@@ -7,36 +7,75 @@ DAO Release 25.01.0
 New Features
 ------------
 
-Pakages
--------
+* **Applications**
+
+  * *DPDK based OpenSSL Engine*
+
+    Added support for OpenSSL 3.x version.
+    Bug fixes in ECDSA verify operations.
+
+  * *OVS*
+
+    Solution migrated to OVS-3.4.1.
+    Integration with Flow library - enhancing scope to manage large no of flows.
+
+* **Infrastructure**
+
+  * New debian packages for DAO solutions
+
+    - ML Models
+    - Snort
+
+Debian Pakages List
+-------------------
+
+- **DAO**
+  - **dao-cn10k**
+  - **Version:** 25.01.0
 
 - **DPDK**
-  - **Package:** 
-  - **Version:** dpdk-23.11_24.07.0-ubuntu-22.04-24.07.0
+  - **dpdk-24.11-cn10k**
+  - **Version:** 25.01.0
 
 - **OVS**
-  - **Package:** 
-  - **Version:** ovs-3.3.0-24.07.0-ubuntu-22.04
+  - **ovs-3.4.1-cn10k**
+  - **Version:** 25.01.0
 
-- **NGINX/OpenSSL**
-  - **Package:** 
-  - **Version:** nginx-1.22.0-24.09.0-ubuntu-22.04-devel/openssl-1.1.1q-24.09.0-ubuntu-22.04-devel
+- **NGINX**
+  - **nginx-1.22.0-cn10k**
+  - **Version:** 25.01.0
+
+- **OpenSSL**
+  - **openssl-1.1.1q-cn10k**
+  - **Version:** 25.01.0
+
+- **DPDK based OpenSSL Engine**
+  - **openssl-engine-1.0.0-cn10k**
+  - **Version:** 25.01.0
 
 - **VPP**
-  - **Package:** 
-  - **Version:** devel
+  - **vpp-24.02.0-cn10k**
+  - **Version:** 25.01.0
 
 - **octep-target**
-  - **Package:** 
-  - **Version:** oct-ep-target-cn10k-24.07.0-ubuntu-22.04-24.07.0
+  - **oct-ep-target-cn10k**
+  - **Version:** 25.01.0
 
 - **firmware-cpt**
-  - **Package:** 
-  - **Version:** cpt-firmware-24.07.0-ubuntu-22.04-24.07.0
+  - **cpt-firmware-cn10k**
+  - **Version:** 24.09.0
 
 - **firmware-ml**
-  - **Package:** 
-  - **Version:** ml-firmware-24.07.0-ubuntu-22.04-24.07.0
+  - **ml-firmware-cn10k**
+  - **Version:** 24.09.0
+
+- **ML models**
+  - **ml-models-cn10k**
+  - **Version:** 25.01.0
+
+- **Snort**
+  - **snort-3-cn10k**
+  - **Version:** 25.01.0
 
 Removed Items
 -------------
