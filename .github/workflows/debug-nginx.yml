@@ -1,8 +1,8 @@
 name: build-cn10k-nginx
 on:
   push:
-    tags:
-      - "[0-9]+.[0-9]+.[0-9]+"
+  schedule:
+    - cron: "0 0 * * 1"
   pull_request:
 permissions:
   contents: write
@@ -38,6 +38,7 @@ jobs:
       - name: Build NGINX and generate package
         id: build
         run: |
+          set -x
           mkdir -p ~/.ccache
           sudo apt-get update -q -y
           sudo apt-get install -y apt-utils python3-sphinx-rtd-theme python3-pip
