@@ -28,7 +28,7 @@ Components
 This section details the individual components (packages, libraries, and applications) of the DAO project.
 
 +--------------------------+-----------------------------------------------+------------------------------------------------------------+-------------------------------------------------------------+
-| **Component**            | **Overview**                                  | **Guide**                                                | **Additional Details**                                      |
+| **Component**            | **Overview**                                  | **Guide**                                                  | **Additional Details**                                      |
 +==========================+===============================================+============================================================+=============================================================+
 | Packages / Libraries /   |                                               |                                                            | Packages/Libraries, ABI API change                          |
 | Applications             |                                               |                                                            |                                                             |
