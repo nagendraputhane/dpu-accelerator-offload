@@ -2,8 +2,9 @@ name: build-cn10k-ovs
 
 on:
   push:
-    tags:
-      - "[0-9]+.[0-9]+.[0-9]+"
+  schedule:
+    - cron: "0 0 * * 1"
+  pull_request:
 
 permissions:
   contents: write
@@ -79,8 +80,13 @@ jobs:
                 patch -p1 < "$patch"
             done
             ./boot.sh
-            sudo ./configure --prefix="${PWD}/install/usr/local" --localstatedir=/usr/local/var --sysconfdir=/usr/local/etc --with-dpdk=static CFLAGS="-DALLOW_EXPERIMENTAL_API  -mcpu=neoverse-n2+crypto+sve2"
+            sudo ./configure --prefix="${PWD}/install/usr/local" --localstatedir=/usr/local/var --sysconfdir=/usr/local/etc --with-dpdk=static CFLAGS="-g -DALLOW_EXPERIMENTAL_API  -mcpu=neoverse-n2+crypto+sve2"
             sudo make -j4 install
+            # debug symbols
+            DEBUG_BIN="${PWD}/install/usr/local/sbin/ovs-vswitchd"
+            mkdir -p "${PWD}/debug-symbols/usr/local/sbin"
+            objcopy --only-keep-debug "${DEBUG_BIN}" "${PWD}/debug-symbols/usr/local/sbin/ovs-vswitchd.dbg"
+            strip --strip-debug "${DEBUG_BIN}"
             sudo mkdir -p "${PWD}/install/debian"
             sudo mkdir -p "${PWD}/install/DEBIAN"
             cd "${PWD}/install"
@@ -97,6 +103,20 @@ jobs:
             sudo mv "${PWD}/install" "${PWD}/ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64"
             sudo dpkg --build "${PWD}/ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64"
             sudo cp "${PWD}/ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64.deb" ${BASE_DIR}/artifacts/.
+            # debug package
+            PACKAGE_DIR="ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64-dbg"
+            sudo mkdir -p ${PACKAGE_DIR}/usr/lib/debug/usr/local/sbin
+            sudo cp ${PWD}/debug-symbols/usr/local/sbin/ovs-vswitchd.dbg ${PACKAGE_DIR}/usr/lib/debug/usr/local/sbin/
+            sudo mkdir -p ${PACKAGE_DIR}/DEBIAN
+            echo 'Package: ovs-'$OVS_VERSION'-cn10k'$PKG_POSTFIX'-dbg' >> ${PACKAGE_DIR}/DEBIAN/control
+            echo 'Version: '$PKG_VERSION_NAME >> ${PACKAGE_DIR}/DEBIAN/control
+            echo "Depends: ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX} (= ${PKG_VERSION_NAME})" >> ${PACKAGE_DIR}/DEBIAN/control
+            echo "Maintainer: Jerin Jacob (jerinj@marvell.com)" >> ${PACKAGE_DIR}/DEBIAN/control
+            echo "Architecture: arm64" >> ${PACKAGE_DIR}/DEBIAN/control
+            echo "Homepage: https://www.openvswitch.org/" >> ${PACKAGE_DIR}/DEBIAN/control
+            echo "Description: Open vSwitch (OVS) for Marvell Octeon 10" >> ${PACKAGE_DIR}/DEBIAN/control
+            sudo dpkg --build ${PACKAGE_DIR}
+            sudo cp ${PACKAGE_DIR}.deb artifacts/.
       - name: Export version name
         id: artifacts
         run: |
@@ -132,6 +152,7 @@ jobs:
           tag_name: ovs-${{ steps.artifacts.outputs.OVS_VERSION }}-cn10k-${{ steps.artifacts.outputs.PKG_VERSION_NAME }}-${{ steps.artifacts.outputs.DISTRO }}-${{ steps.artifacts.outputs.TAG }}
           files: |
             ${{ github.workspace }}/artifacts/ovs-${{ steps.artifacts.outputs.OVS_VERSION }}-cn10k${{ steps.artifacts.outputs.PKG_POSTFIX }}_${{ steps.artifacts.outputs.PKG_VERSION_NAME }}_arm64.deb
+            ${{ github.workspace }}/artifacts/ovs-${{ steps.artifacts.outputs.OVS_VERSION }}-cn10k${{ steps.artifacts.outputs.PKG_POSTFIX }}_${{ steps.artifacts.outputs.PKG_VERSION_NAME }}_arm64-dbg.deb
       - name: Dispatch package update event
         if: ${{ github.event_name == 'push' }}
         run: |
