@@ -85,8 +85,8 @@ jobs:
             # debug symbols
             DEBUG_BIN="${PWD}/install/usr/local/sbin/ovs-vswitchd"
             mkdir -p "${PWD}/debug-symbols/usr/local/sbin"
-            objcopy --only-keep-debug "${DEBUG_BIN}" "${PWD}/debug-symbols/usr/local/sbin/ovs-vswitchd.dbg"
-            strip --strip-debug "${DEBUG_BIN}"
+            sudo objcopy --only-keep-debug "${DEBUG_BIN}" "${PWD}/debug-symbols/usr/local/sbin/ovs-vswitchd.dbg"
+            sudo strip --strip-debug "${DEBUG_BIN}"
             sudo mkdir -p "${PWD}/install/debian"
             sudo mkdir -p "${PWD}/install/DEBIAN"
             cd "${PWD}/install"
@@ -143,6 +143,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release delete ovs-${{ steps.artifacts.outputs.OVS_VERSION }}-cn10k-${{ steps.artifacts.outputs.PKG_VERSION_NAME }}-${{ steps.artifacts.outputs.DISTRO }}-${{ steps.artifacts.outputs.TAG }} --cleanup-tag -y
+          gh release delete ovs-dbg-${{ steps.artifacts.outputs.OVS_VERSION }}-cn10k-${{ steps.artifacts.outputs.PKG_VERSION_NAME }}-${{ steps.artifacts.outputs.DISTRO }}-${{ steps.artifacts.outputs.TAG }} --cleanup-tag -y
         continue-on-error: true
       - name: Release OVS cn10k package
         uses: softprops/action-gh-release@v2.0.4
@@ -152,6 +153,13 @@ jobs:
           tag_name: ovs-${{ steps.artifacts.outputs.OVS_VERSION }}-cn10k-${{ steps.artifacts.outputs.PKG_VERSION_NAME }}-${{ steps.artifacts.outputs.DISTRO }}-${{ steps.artifacts.outputs.TAG }}
           files: |
             ${{ github.workspace }}/artifacts/ovs-${{ steps.artifacts.outputs.OVS_VERSION }}-cn10k${{ steps.artifacts.outputs.PKG_POSTFIX }}_${{ steps.artifacts.outputs.PKG_VERSION_NAME }}_arm64.deb
+      - name: Release OVS cn10k Debug package
+        uses: softprops/action-gh-release@v2.0.4
+        if: ${{ github.event_name == 'push' }}
+        with:
+          draft: false
+          tag_name: ovs-dbg-${{ steps.artifacts.outputs.OVS_VERSION }}-cn10k-${{ steps.artifacts.outputs.PKG_VERSION_NAME }}-${{ steps.artifacts.outputs.DISTRO }}-${{ steps.artifacts.outputs.TAG }}
+          files: |
             ${{ github.workspace }}/artifacts/ovs-${{ steps.artifacts.outputs.OVS_VERSION }}-cn10k${{ steps.artifacts.outputs.PKG_POSTFIX }}_${{ steps.artifacts.outputs.PKG_VERSION_NAME }}_arm64-dbg.deb
       - name: Dispatch package update event
         if: ${{ github.event_name == 'push' }}
@@ -164,6 +172,18 @@ jobs:
             https://api.github.com/repos/marvellembeddedprocessors/packages/dispatches \
             -d '{"event_type":"dispatch-event", "client_payload": {"package" : "ovs",
             "tag": "ovs-${{ steps.artifacts.outputs.OVS_VERSION }}-cn10k-${{ steps.artifacts.outputs.PKG_VERSION_NAME }}-${{ steps.artifacts.outputs.DISTRO }}-${{ steps.artifacts.outputs.TAG }}",
+            "dpdk_tag" : "dpdk-cn10k-${{ steps.artifacts.outputs.DPDK_BASE_PKG_VERSION }}_${{ steps.artifacts.outputs.DPDK_PKG_VERSION }}-${{ steps.artifacts.outputs.DISTRO }}-${{ steps.artifacts.outputs.DPDK_PKG_VERSION }}",
+            "has_dpdk" : "true", "distro" : "${{ steps.artifacts.outputs.DISTRO }}",
+            "platform" : "cn10k", "devel": "${{ steps.artifacts.outputs.IS_DEVEL }}"}}'
+          sleep 120
+          curl -L \
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.PPA_REPO_SECRET }}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/marvellembeddedprocessors/packages/dispatches \
+            -d '{"event_type":"dispatch-event", "client_payload": {"package" : "ovs-debug",
+            "tag": "ovs-dbg-${{ steps.artifacts.outputs.OVS_VERSION }}-cn10k-${{ steps.artifacts.outputs.PKG_VERSION_NAME }}-${{ steps.artifacts.outputs.DISTRO }}-${{ steps.artifacts.outputs.TAG }}",
             "dpdk_tag" : "dpdk-cn10k-${{ steps.artifacts.outputs.DPDK_BASE_PKG_VERSION }}_${{ steps.artifacts.outputs.DPDK_PKG_VERSION }}-${{ steps.artifacts.outputs.DISTRO }}-${{ steps.artifacts.outputs.DPDK_PKG_VERSION }}",
             "has_dpdk" : "true", "distro" : "${{ steps.artifacts.outputs.DISTRO }}",
             "platform" : "cn10k", "devel": "${{ steps.artifacts.outputs.IS_DEVEL }}"}}'
