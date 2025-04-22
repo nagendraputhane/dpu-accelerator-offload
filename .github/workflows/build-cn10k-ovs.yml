@@ -109,13 +109,13 @@ jobs:
             sudo mkdir -p ${PACKAGE_DIR}/usr/lib/debug/usr/local/sbin
             sudo cp ${PWD}/debug-symbols/usr/local/sbin/ovs-vswitchd.dbg ${PACKAGE_DIR}/usr/lib/debug/usr/local/sbin/
             sudo mkdir -p ${PACKAGE_DIR}/DEBIAN
-            echo 'Package: ovs-'$OVS_VERSION'-cn10k'$PKG_POSTFIX'-dbg' | sudo tee -a DEBIAN/control
-            echo 'Version: '$PKG_VERSION_NAME | sudo tee -a DEBIAN/control
-            echo "Depends: ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX} (= ${PKG_VERSION_NAME})" | sudo tee -a DEBIAN/control
-            echo "Maintainer: Jerin Jacob (jerinj@marvell.com)" | sudo tee -a DEBIAN/control
-            echo "Architecture: arm64" | sudo tee -a DEBIAN/control
-            echo "Homepage: https://www.openvswitch.org/" | sudo tee -a DEBIAN/control
-            echo "Description: Debug symbols for Open vSwitch (OVS) for Marvell Octeon 10" | sudo tee -a DEBIAN/control
+            echo 'Package: ovs-'$OVS_VERSION'-cn10k'$PKG_POSTFIX'-dbg' | sudo tee -a ${PACKAGE_DIR}/DEBIAN/control
+            echo 'Version: '$PKG_VERSION_NAME | sudo tee -a ${PACKAGE_DIR}/DEBIAN/control
+            echo "Depends: ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX} (= ${PKG_VERSION_NAME})" | sudo tee -a ${PACKAGE_DIR}/DEBIAN/control
+            echo "Maintainer: Jerin Jacob (jerinj@marvell.com)" | sudo tee -a ${PACKAGE_DIR}/DEBIAN/control
+            echo "Architecture: arm64" | sudo tee -a ${PACKAGE_DIR}/DEBIAN/control
+            echo "Homepage: https://www.openvswitch.org/" | sudo tee -a ${PACKAGE_DIR}/DEBIAN/control
+            echo "Description: Debug symbols for Open vSwitch (OVS) for Marvell Octeon 10" | sudo tee -a ${PACKAGE_DIR}/DEBIAN/control
             sudo dpkg --build ${PACKAGE_DIR}
             sudo cp ${PACKAGE_DIR}.deb artifacts/.
       - name: Export version name
