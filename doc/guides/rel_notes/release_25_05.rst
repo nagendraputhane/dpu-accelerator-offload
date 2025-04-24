@@ -1,71 +1,89 @@
-..  SPDX-License-Identifier: Marvell-MIT
-    Copyright (c) 2025 Marvell.
+.. SPDX-License-Identifier: Marvell-MIT
+   Copyright (c) 2025 Marvell.
 
 DAO 25.05.0 Release Notes
 =========================
 
-The release notes provides a summary of notable changes since the previous DAO release.
+The following document serves as the **authoritative template** for DAO 25.05.0 release notes.
+Fill in the placeholders as you prepare content for publication.
 
-DAO Overview
+.. note::
+   DAO (Data Accelerator Offload) provides libraries and reference
+   applications that enable developers to build high-performance
+   networking, security, and storage solutions on Marvell OCTEON-based
+   DPUs and Arm® server SoCs.
+
+Release Overview
+----------------
+
+*Describe in one or two sentences what the new release delivers at a high level.*
+
+Highlights
+----------
+
+*Summarise the most significant changes that affect users and integrators.*
+
+- **Component additions/removals** – *e.g. new crypto-offload service, deprecated «foo» library removed.*
+- **Version bumps**             – *e.g. DPDK 24.11 ➜ 25.03, GCC 13 ➜ 14.*
+- **Breaking changes**          – *APIs removed, configuration defaults changed, tooling switched, etc.*
+- **Platform support**          – *new SoCs, board revisions, firmware updates.*
+
+New Packages / Features
+-----------------------
+
+*List any brand-new libraries, tools, or reference applications.*
+
+Documentation Updates
+---------------------
+
+*Call out new or substantially updated guides, white-papers, or tutorials.*
+
+Operating-System & Tool-chain Support
+-------------------------------------
+
+*Document minimum/validated distributions, compilers, linkers, and firmware versions.*
+
+Removed Functionality
+---------------------
+
+*Enumerate anything dropped from the distribution.*
+
+Component Changes
+-----------------
+
+*For each DAO package, library, or application add a subsection using the
+form shown below. Remove sections that do not apply.*
+
+Example section
+^^^^^^^^^^^^^^^
+
+.. code-block:: rst
+
+   Component ABC
+   ~~~~~~~~~~~~~
+
+   - **Version:** 3.2.1
+   - **Dependencies:** libc >=2.38, DPDK >=25.03
+   - **Source repo / patches:** `git@example.com:mvl/abc.git`, commits 12a3b4..9f0e1
+   - **Changes:** Improved Rx burst routine; replaced deprecated ioctl path.
+   - **Notes:** Behaviour change in *_abc_init()*—now returns errno on failure.
+   - **Notices:** *None.*
+
+.. tip::
+   Copy the block above for every component that changed and edit the
+   fields. Use present-tense, concise bullet points.
+
+Known Issues
 ------------
 
-DAO 25.05.0 introduces enhancements to networking, security and storage - for Marvell’s OCTEON and Arm Server SoCs.
+*Optional – list outstanding problems and work-arounds.*
 
-- **Programming Guides:**
+Upgrade Notes
+-------------
 
-DAO programming guides offer comprehensive insights into DAO Packages, Libraries, and Applications.
- Each guide features an introduction, architectural details, and code snippets to help you accomplish DAO-based tasks.
- For a more in-depth reference on DAO, please refer the `Programmers Guide <https://marvellembeddedprocessors.github.io/dao/guides/>`_.
+*Optional – guidance, migration scripts, configuration changes.*
 
-Release highlights
-------------------
+.. rubric:: Additional Information
 
-  // In this highlights section add an of the following
-  // - Addition or deleetion of Components
-  // - VErsion change of components
-  // - Major changes in components or libraries that would affect other components or deprecated-declarations
-  // - Any changes to filesystem, toolchain, firmware that have global implications
-  // - New platform (SoC) support
-
-
-New Packages
-^^^^^^^^^^^^
-
-DAO Documentation updates
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
-  //New DOCs and whitepapers
-
-Operating System and Hardware support changes
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-  //Ubuntu Versions/compiler support/toolchain
-
-Removals
-^^^^^^^^
-
-DAO Components
---------------
-
-The following table details the individual components of the DAO 25.05.0.
-
-+--------------------------+--------------------------------------+--------------------------------------------------+-------------------------------------------------------------------------------------------+
-| **Category**             | **Overview**                         | **Guide**                                        | **Additional Details**                                                                    |
-+==========================+======================================+==================================================+===========================================================================================+
-| Packages / Libraries /   | versions, etc                        | Source Repo for the one with Repo,               | Packages/Libraries - ABI API change                                                       |
-| Applications             |                                      | Compilation Guide for the one's based on patches | Applications - New/deprecated arguments etc, new accelerations added, new inputs/examples |
-|                          |                                      |                                                  |                                                                                           |
-|                          |                                      |                                                  |                                                                                           |
-|                          |                                      |                                                  |                                                                                           |
-+--------------------------+--------------------------------------+--------------------------------------------------+-------------------------------------------------------------------------------------------+
-
-Instead of a table use a simple component wise structure.
-Component
-Version
-Dependencies and versions
-Source Repo / Patch list
-Changes
-Notes
-Notices on deprecation, version, ABI changes
-
-No need to add accelerations used
+- `DAO Programmer’s Guide <https://marvellembeddedprocessors.github.io/dao/guides/>`_
+- Support: *dao-support@marvell.com*
