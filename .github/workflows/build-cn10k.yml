@@ -61,7 +61,7 @@ jobs:
             sudo apt-get install -y gcc-14 bzip2-doc icu-devtools libacl1-dev libattr1-dev
             sudo apt-get install -y libbz2-dev libgmp-dev libgmpxx4ldbl libicu-dev liblz4-dev
             sudo apt-get install -y liblzma-dev libxml2-dev libzstd-dev nettle-dev wget lsb-release
-            sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+            sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu protobuf-compiler libprotobuf-dev libgrpc++-dev grpc-proto
             DISTRO=ubuntu-`lsb_release -rs`
             source "${PWD}/artifacts/env"
             echo "DISTRO=${DISTRO}" >> ${PWD}/artifacts/env
@@ -73,11 +73,6 @@ jobs:
             echo "cache_dir = ~/.ccache" > ~/.ccache/ccache.conf
             ccache -p
             pkg-config --list-all
-            export GRPC_BUILD_DIR=/tmp/dao-deps-build
-            ./ci/build/build-deps.sh $GRPC_BUILD_DIR dummyuser cn10k grpc
-            export PATH=$GRPC_BUILD_DIR/deps/deps-prefix/host/bin:$PATH
-            export LD_LIBRARY_PATH=$GRPC_BUILD_DIR/deps/deps-prefix/host/lib:$LD_LIBRARY_PATH
-            export PKG_CONFIG_PATH=$GRPC_BUILD_DIR/deps/deps-prefix/ep/lib/pkgconfig:$PKG_CONFIG_PATH
             meson build -Dplatform=cn10k --prefix="${PWD}/install" -Denable_kmods=false
             ninja install -C build
             mkdir -p "${PWD}/install/DEBIAN"
