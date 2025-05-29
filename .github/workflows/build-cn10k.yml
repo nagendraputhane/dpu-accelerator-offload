@@ -76,8 +76,7 @@ jobs:
             ./ci/build/build-deps.sh $GRPC_BUILD_DIR dummyuser cn10k grpc
             export PATH=$GRPC_BUILD_DIR/deps/deps-prefix/host/bin:$PATH
             export LD_LIBRARY_PATH=$GRPC_BUILD_DIR/deps/deps-prefix/host/lib:$LD_LIBRARY_PATH
-            PKG_CONFIG_PATH=${PKG_CONFIG_PATH:-}
-            export PKG_CONFIG_PATH="$GRPC_BUILD_DIR/deps/deps-prefix/ep/lib/pkgconfig:$GRPC_BUILD_DIR/deps/host/grpc/third_party/re2:$PKG_CONFIG_PATH"
+            export PKG_CONFIG_PATH="$GRPC_BUILD_DIR/deps/deps-prefix/ep/lib/pkgconfig:$GRPC_BUILD_DIR/deps/host/grpc/third_party/re2:${PKG_CONFIG_PATH:-}"
             meson build -Dplatform=cn10k --prefix="${PWD}/install" -Denable_kmods=false
             ninja install -C build
             mkdir -p "${PWD}/install/DEBIAN"
