@@ -1,9 +1,10 @@
 name: package-cn10k-ml
 
 on:
-  push:
-    tags:
-      - "[0-9]+.[0-9]+.[0-9]+"
+    push:
+    schedule:
+      - cron: "0 0 * * 1"
+    pull_request:
 
 permissions:
   contents: write
