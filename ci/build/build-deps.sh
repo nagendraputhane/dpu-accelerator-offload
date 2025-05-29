@@ -230,7 +230,7 @@ function build_grpc() {
 
 	build_grpc_host || return
 
-	if [ "GRPC_CXX_CROSS_COMPILER" = "" ]; then
+	if [ "$GRPC_CXX_CROSS_COMPILER" = "" ]; then
 		if command -v aarch64-marvell-linux-gnu-g++ >/dev/null 2>&1; then
 			GRPC_CXX_CROSS_COMPILER=aarch64-marvell-linux-gnu-g++
 		elif command -v aarch64-linux-gnu-g++ >/dev/null 2>&1; then
@@ -240,7 +240,7 @@ function build_grpc() {
 			return 1
 		fi
 	fi
-	if [ "GRPC_C_CROSS_COMPILER" = "" ]; then
+	if [ "$GRPC_C_CROSS_COMPILER" = "" ]; then
 		if command -v aarch64-marvell-linux-gnu-gcc >/dev/null 2>&1; then
 			GRPC_C_CROSS_COMPILER=aarch64-marvell-linux-gnu-gcc
 		elif command -v aarch64-linux-gnu-gcc >/dev/null 2>&1; then
