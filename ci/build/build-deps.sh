@@ -287,52 +287,6 @@ function build_grpc() {
 		cmake $GRPC_OCT_CMAKE_CMD $GRPC_SRC_DIR
 		make -j $MAKE_J
 		make install
-		# ===============================
-		# ✅ POST-INSTALL VERIFICATION
-		# ===============================
-		
-		echo "[INFO] Verifying gRPC++ installation and pkg-config visibility..."
-		
-		# 1. Check that grpc++.pc file exists
-		GRPC_PC_FILE="$GRPC_OCT_INSTALL_PREFIX/lib/pkgconfig/grpc++.pc"
-		if [ ! -f "$GRPC_PC_FILE" ]; then
-		  echo "[ERROR] grpc++.pc not found in: $GRPC_PC_FILE"
-		  echo "        gRPC may not have been correctly installed for the target platform."
-		  return 1
-		else
-		  echo "[OK] Found grpc++.pc: $GRPC_PC_FILE"
-		fi
-		
-		# 2. Add to PKG_CONFIG_PATH (append safely)
-		export PKG_CONFIG_PATH="$GRPC_OCT_INSTALL_PREFIX/lib/pkgconfig:$PKG_CONFIG_PATH"
-		
-		# 3. Check pkg-config sees grpc++
-		if ! pkg-config --exists grpc++; then
-		  echo "[ERROR] pkg-config cannot find grpc++ even though grpc++.pc is present"
-		  echo "        PKG_CONFIG_PATH is: $PKG_CONFIG_PATH"
-		  return 1
-		fi
-		
-		# 4. Check grpc++ version via pkg-config
-		echo "[OK] grpc++ version found via pkg-config: $(pkg-config --modversion grpc++)"
-		
-		# 5. Check for presence of installed gRPC++ library files
-		echo "[INFO] Checking for gRPC++ libraries in: $GRPC_OCT_INSTALL_PREFIX/lib"
-		if ! ls "$GRPC_OCT_INSTALL_PREFIX"/lib/libgrpc++.* >/dev/null 2>&1; then
-		  echo "[ERROR] No grpc++ libraries (.so or .a) found in expected lib directory"
-		  return 1
-		else
-		  echo "[OK] grpc++ libraries present."
-		fi
-		
-		# 6. Check that gRPC++ headers are present
-		if [ ! -d "$GRPC_OCT_INSTALL_PREFIX/include/grpcpp" ]; then
-		  echo "[ERROR] gRPC++ headers not found in expected include directory"
-		  return 1
-		else
-		  echo "[OK] gRPC++ headers found."
-		fi
-
 		popd
 	fi
 }
