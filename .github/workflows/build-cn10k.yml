@@ -61,7 +61,12 @@ jobs:
             sudo apt-get install -y gcc-14 bzip2-doc icu-devtools libacl1-dev libattr1-dev
             sudo apt-get install -y libbz2-dev libgmp-dev libgmpxx4ldbl libicu-dev liblz4-dev
             sudo apt-get install -y liblzma-dev libxml2-dev libzstd-dev nettle-dev wget lsb-release
-            sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu protobuf-compiler libprotobuf-dev libgrpc++-dev grpc-proto
+            sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+            sudo apt-get install -y protobuf-compiler protobuf-compiler-grpc libprotobuf-dev libprotoc-dev libgrpc++-dev libgrpc-dev
+            which protoc
+            which grpc_cpp_plugin
+            pkg-config --modversion grpc++
+            pkg-config --modversion protobuf
             DISTRO=ubuntu-`lsb_release -rs`
             source "${PWD}/artifacts/env"
             echo "DISTRO=${DISTRO}" >> ${PWD}/artifacts/env
