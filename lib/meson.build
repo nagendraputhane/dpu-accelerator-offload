@@ -122,18 +122,22 @@ foreach l:libraries
             include_directories: includes,
             dependencies: static_deps)
 
-    shared_lib = shared_library(libname,
-            sources,
-            c_args: cflags,
-            cpp_args: cxxflags,
-            dependencies: shared_deps,
-            include_directories: includes,
-            version: DAO_BUILD_CONF.get('DAO_LIB_VERSION'),
-            soversion: DAO_BUILD_CONF.get('DAO_VERSION_MAJOR'),
-            install: true)
-    shared_dep = declare_dependency(link_with: shared_lib,
-            include_directories: includes,
-            dependencies: shared_deps)
+    if not prefer_static
+        shared_lib = shared_library(libname,
+                sources,
+                c_args: cflags,
+                cpp_args: cxxflags,
+                dependencies: shared_deps,
+                include_directories: includes,
+                version: DAO_BUILD_CONF.get('DAO_LIB_VERSION'),
+                soversion: DAO_BUILD_CONF.get('DAO_VERSION_MAJOR'),
+                install: true)
+        shared_dep = declare_dependency(link_with: shared_lib,
+                include_directories: includes,
+                dependencies: shared_deps)
+    else
+        shared_dep = static_dep
+    endif
 
     set_variable('shared_dao_' + name, shared_dep)
     set_variable('static_dao_' + name, static_dep)
