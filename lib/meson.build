@@ -28,6 +28,8 @@ always_enable = [
 disable_libs = run_command(list_dir_globs, get_option('disable_libs'), check: true).stdout().split()
 enable_libs = run_command(list_dir_globs, get_option('enable_libs'), check: true).stdout().split()
 
+prefer_static = get_option('prefer_static_build')
+
 require_libs = true
 if enable_libs.length() == 0
     require_libs = false
