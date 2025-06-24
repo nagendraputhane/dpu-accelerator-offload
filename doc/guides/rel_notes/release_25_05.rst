@@ -20,7 +20,7 @@ and improved modularization of Marvell OpenSSL Engine.
 Release Overview
 ----------------
 
-DAO 25.05.0 delivers a range of new libraries and applications to extend support for containerized networking, secure traffic handling, and host-device virtualization. This release introduces the Kubernetes CNI Offload application, Conntrack and Flow libraries, enhanced WireGuard acceleration in VPP, and new APIs in the PEM library. Build system enhancements include static DPDK linking support for EP and the new `static_only` Meson option.
+DAO 25.05.0 brings a mix of new features and key enhancements across networking, crypto, and system libraries. This release introduces a Kubernetes CNI offload application and a user-space Conntrack library, adds advanced flow table handling, and improves vDPA device management through new PEM APIs. Updates to VPP add support for inline IPsec reassembly and WireGuard async crypto, while the OpenSSL engine sees internal restructuring. Build support has also been expanded with new static linking options for EP targets.
 
 Release Highlights
 ------------------
