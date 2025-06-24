@@ -16,37 +16,50 @@ Release Overview
 DAO 25.05.0 introduces Kubernetes CNI offload capabilities, enhances inline IPsec support in VPP, 
 and improved modularization of Marvell OpenSSL Engine.
 
+
+Release Overview
+----------------
+
+DAO 25.05.0 delivers a range of new libraries and applications to extend support for containerized networking, secure traffic handling, and host-device virtualization. This release introduces the Kubernetes CNI Offload application, Conntrack and Flow libraries, enhanced WireGuard acceleration in VPP, and new APIs in the PEM library. Build system enhancements include static DPDK linking support for EP and the new `static_only` Meson option.
+
 Release Highlights
 ------------------
 
-- **Component's additions/removals**  –
-  - Added 'k8s-cni-offload', a new application to ofload CNI workloads to the DPU.
-  - Reorganized OpenSSL Engine internals for maintainability (no user-facing changes).
-- **Version bumps**  –
-  - DPDK 25.05 -> DPDK 25.07
-- **Breaking changes**  –
-- **Platform support**  –
-- **New Packages / Libraries / Applications**  –
-  - 'k8s-cni-offload' (new component for CNI offload)
-- **Documentation / Guides**  –
-  - New guide for setting up 'k8s-cni-offload' with Cilium.
+- **Component additions/removals** –
+  - New: `k8s-cni-offload`, `Conntrack`, `Flow Library`, and `PEM Library`.
+  - Updated: `VPP` and `Marvell OpenSSL Engine` with feature additions and restructuring.
+  - No removals in this release.
 
-Operating-System & Toolchain Support
-------------------------------------
+- **Version bumps** –
+  - DPDK 25.01 ➜ 25.03
+  - CPT 24.03 ➜ 24.09
+  - Linux kernel ≥ 6.1.67 validated
+  - Cilium support ≥ 1.17.0-dev
 
-- **Linux Distributions:**
-  - Ubuntu 24.04 LTS 
-- **Toolchains:**
-  - GCC 14
+- **Breaking changes** –
+  - None reported.
 
-Deprecated Features
--------------------
+- **Platform support** –
+  - Enhanced inline IPsec and fragment reassembly support for OCTEON-10.
+  - Added async crypto mode for WireGuard in VPP (experimental).
+  - PEM enhancements to manage host-facing vDPA devices.
 
-Component Changes
------------------
+- **Build system / toolchain updates** –
+  - Support for static linking of DPDK libraries on EP (aarch64) builds.
+  - Introduced `static_only` Meson option to toggle static vs. shared builds.
 
-Example Component
-^^^^^^^^^^^^^^^^^
+- **New Packages / Libraries / Applications** –
+  - **Conntrack Library**: User-space DPDK-based connection tracking.
+  - **Flow Library**: Multiple flow table support with exact match capabilities.
+  - **Kubernetes CNI Offload**: Cilium-based PoC for DPU traffic offload.
+  - **PEM Library**: Host-device vDPA management APIs.
+  - **Updated VPP**: New inline IPsec and WireGuard async crypto features.
+  - **Updated OpenSSL Engine**: Codebase reorganization for maintainability.
+
+- **Documentation / Guides** –
+  - New usage guides for Conntrack, Flow, and PEM libraries.
+  - Integration guide for `k8s-cni-offload` with Cilium.
+  - VPP plugin and async crypto configuration notes.
 
 Conntrack - Connection Tracking Library
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
