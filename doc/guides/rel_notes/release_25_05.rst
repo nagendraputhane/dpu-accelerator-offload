@@ -125,3 +125,64 @@ Known Issues
 .. rubric:: Additional Information
 
 - `DAO Programmer’s Guide <https://marvellembeddedprocessors.github.io/dao/guides/>`_
+
+DAO 25.05.0 Release Notes
+
+The following document serves as the template for DAO release notes. Please fill in the placeholders.
+
+Note
+
+DAO (Data Accelerator Offload) provides libraries and reference applications that enable developers to build high-performance networking, security, and storage solutions on Marvell OCTEON-based DPUs and Arm® server SoCs.
+
+
+1 . Release Overview
+
+Describe in one or two sentences what the new release delivers at a high level.
+
+
+2. Release Highlights
+
+Summarise the most significant changes.
+
+    Component's additions/removals – e.g. new service, deprecated  library removed, etc..
+    Version bumps – e.g. DPDK 25.01 ➜ 25.03, GCC 13 ➜ 14.
+    Breaking changes – APIs removed, configuration defaults changed, etc.
+    Platform support – new SoCs,, firmware updates.
+
+
+3. What's New
+
+    New Packages / Features
+
+        List of new debian packages, new libraries, applications, etc..
+
+        New updated guides, white-papers, or tutorials.
+
+    Operating-System & Tool-chain Support - Linux distributions, compilers, versions, etc..
+
+
+4. Deprecated Features
+
+
+5. Component Changes
+
+For each DAO package, library, or application add a subsection using the form shown below. Copy the block below for every component. Remove sections that do not apply.
+
+
+Example section
+
+    Component 1 (Packages / Libraries / Applications)
+    ~~~~~~~~~
+
+- **Version:**     25.05.0
+- **Dependencies:**     DPDK >=25.03.0
+- **Source repo / patches:**     (Source Repo for the one with Repo, Compilation Guide for the one's based on patches)
+- **Changes:**     ABI changes, API changes, Improved ---; replaced ---.
+- **Notes:**     ---.
+- **Notices:**     (Notices on deprecation)
+
+
+6. Known Issues
+
+
+7. Additional Information
