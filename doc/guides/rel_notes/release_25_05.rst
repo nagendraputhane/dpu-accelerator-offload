@@ -48,8 +48,54 @@ Component Changes
 Example Component
 ^^^^^^^^^^^^^^^^^
 
-K8s CNI Offload
+Conntrack - Connection Tracking Library
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- **Version:** 25.05.0
+
+- **Dependencies:**
+
+- **Source repo / patches:**
+
+  - GitHub: https://github.com/MarvellEmbeddedProcessors/dao
+
+- **Changes:**
+
+  - Initial release of the 'Conntrack' .
+
+- **Notes:**
+
+ - DAO-Conntrack is a DPDK-based connection tracking
+   library. It is a user-space library built on top of DPDK (Data Plane Development Kit)
+   that replicates and extends the functionality of the Linux kernel's
+   Conntrack (Connection Tracking) subsystem. It monitors the state of network connections
+   (e.g., TCP, ICMP) by maintaining a connection table in memory.
+
+ - Tracks network connections (TCP, ICMP, etc.) in both directions.
+ - Maintains a hash-based connection table with fast lookups.
+ - Uses RCU (Read-Copy-Update) for safe, lock-free memory reclamation.
+ - Periodically cleans up expired connections in a background thread.
+ - Provides real-time statistics and connection dumps for observability.
+
+- **Notices:**
+
+  - To build and run the project, follow the instructions in the repository's README file.
+
+Flow Library
 ~~~~~~~~~~~~~~~~
+- **Version:** 25.05.0
+- **Dependencies:** DPDK ≥ 25.03.0, CPT ≥ 24.09.0
+- **Source repo / patches:**
+  - GitHub: https://github.com/MarvellEmbeddedProcessors/dao
+- **Changes:**
+  - Support for multiple flow tables
+  - Support multiple flow key extraction profiles
+  - Support for flow key exact match algorithm
+- **Notes:**
+- **Notices:**
+
+Kubernetes CNI Offload
+~~~~~~~~~~~~~~~~~~~~~~
 
 - **Version:** 25.05.0
 
@@ -65,7 +111,8 @@ K8s CNI Offload
 
 - **Notes:**
 
-  - This project introduces a solution to offload Kubernetes networking tasks to Marvell DPUs, leveraging the standardized Container Network Interface (CNI) framework.
+ - This project introduces a solution to offload Kubernetes networking tasks to Marvell DPUs, leveraging the standardized Container Network Interface (CNI) framework.
+
   - The initial implementation focuses on offloading Cilium, the most widely adopted CNI, including by hyper-scalers.
   - The architecture is designed to be flexible, enabling future support for offloading other CNIs without requiring changes to Kubernetes itself.
   - A working proof-of-concept (PoC) has been successfully developed with Cilium as the offloaded CNI.
@@ -74,29 +121,6 @@ K8s CNI Offload
 - **Notices:**
 
   - To build and run the project, follow the instructions in the repository's README file.
-
-VPP
-~~~
-- **Version:** 25.05.0
-
-- **Dependencies:** DPDK ≥ 25.03.0, CPT ≥ 24.09.0
-
-- **Source repo / patches:**
-
-  - GitHub: https://github.com/MarvellEmbeddedProcessors/vpp
-
-- **Changes:**
-
-  - Inline IPsec offload support for OCTEON-10.
-  - Inline IPsec inner packet reassembly support for OCTEON-10.
-
-- **Notes:**
-
-  - Disable DPDK plugin in startup.conf while running OCTEON device plugin.
-  - Inline IPsec reassembly supports only single-segment fragments.
-
-- **Notices:**
-
 
 Marvell OpenSSL Engine
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -117,6 +141,48 @@ Marvell OpenSSL Engine
 - **Notes:**
 
 - **Notices:**
+
+PEM Library
+~~~~~~~~~~~
+
+- **Version:** 25.05.0
+
+- **Source repo / patches:**
+
+  - GitHub: https://github.com/MarvellEmbeddedProcessors/lib/pem
+
+- **Changes:**
+
+  - Introduced new DAO PEM APIs to manage host-facing vDPA devices.
+  - Added dao_pem_host_dev_add() API to register a vDPA device.
+  - Added dao_pem_host_dev_del() API to remove a vDPA device.
+
+VPP
+~~~
+
+- **Version:** 25.05.0
+
+- **Dependencies:** DPDK ≥ 25.03.0, CPT ≥ 24.09.0
+
+- **Source repo / patches:**
+
+  - GitHub: https://github.com/MarvellEmbeddedProcessors/vpp
+
+- **Changes:**
+
+  - Inline IPsec offload support for OCTEON-10.
+  - Inline IPsec inner packet reassembly support for OCTEON-10.
+  - Implemented async mode in the WireGuard encryption/decryption path.
+
+- **Notes:**
+
+  - Async mode is disabled by default; enable with ``--enable-async-crypto``.
+
+- **Notices:**
+
+  - Disable DPDK plugin in startup.conf while running OCTEON device plugin.
+  - Inline IPsec reassembly supports only single-segment fragments.
+  - Async crypto feature is experimental; API may change.
 
 
 Known Issues
