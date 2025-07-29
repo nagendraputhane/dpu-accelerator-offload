@@ -24,7 +24,7 @@ jobs:
         run: |
           echo 'ccache=ccache-'$(date -u +%Y-m%M) >> $GITHUB_OUTPUT
       - name: Retrieve ccache cache
-        uses: actions/cache@v4
+        uses: actions/cache@v4.2.3
         with:
           path: ~/.ccache
           key: ${{ steps.get_ref_keys.outputs.ccache }}-${{ github.ref }}
@@ -139,13 +139,26 @@ jobs:
             cp "${PWD}/certs/server.crt.pem" "${PWD}/install/etc/nginx/certs/"
             cp "${PWD}/certs/server.key.pem" "${PWD}/install/etc/nginx/certs/"
             cp "${PWD}/certs/rootca.crt.pem" "${PWD}/install/etc/nginx/certs/"
+            version_range() {
+              local var="$1"
+              local full="${!var}"
+              local year=$(echo "$full" | cut -d. -f1)
+              local month=$(echo "$full" | cut -d. -f2)
+              local base="${year}.${month}.0"
+              local upper="${year}.$((10#$month + 1)).0"
+              export "${var}_BASE"="${base}"
+              export "${var}_UPPER"="${upper}"
+            }
+            version_range PKG_VERSION_NAME
             mkdir -p "${PWD}/install/DEBIAN"
             mkdir -p "${PWD}/install/debian"
             cd "${PWD}/install"
             echo 'Source: NGINX' > debian/control
             echo 'Package: nginx-'${NGINX_VERSION}'-cn10k'${PKG_POSTFIX} >> DEBIAN/control
             echo 'Version: '${PKG_VERSION_NAME} >> DEBIAN/control
-            echo "Depends: `dpkg-shlibdeps --ignore-missing-info -O usr/local/nginx/sbin/nginx | awk -F'Depends=' '{print $2}'`, openssl-${OPENSSL_VERSION}-cn10k${PKG_POSTFIX} (= ${PKG_VERSION_NAME})" >> DEBIAN/control
+            echo "Depends: \
+              `dpkg-shlibdeps --ignore-missing-info -O usr/local/nginx/sbin/nginx | awk -F'Depends=' '{print $2}'`, \
+              openssl-'$OPENSSL_VERSION'-cn10k'$PKG_POSTFIX' (>= '$PKG_VERSION_NAME_BASE')', openssl-'$OPENSSL_VERSION'-cn10k'$PKG_POSTFIX' (<< '$PKG_VERSION_NAME_UPPER')' >> DEBIAN/control
             echo "Maintainer: Jerin Jacob (jerinj@marvell.com)" >> DEBIAN/control
             echo "Architecture: arm64" >> DEBIAN/control
             echo "Homepage: https://nginx.org/" >> DEBIAN/control
