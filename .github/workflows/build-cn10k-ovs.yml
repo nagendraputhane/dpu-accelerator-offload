@@ -24,7 +24,7 @@ jobs:
         run: |
           echo 'ccache=ccache-'$(date -u +%Y-m%M) >> $GITHUB_OUTPUT
       - name: Retrieve ccache cache
-        uses: actions/cache@v4
+        uses: actions/cache@v4.2.3
         with:
           path: ~/.ccache
           key: ${{ steps.get_ref_keys.outputs.ccache }}-${{ github.ref }}
@@ -88,7 +88,8 @@ jobs:
             echo 'Source: Open vSwitch' | sudo tee debian/control
             echo 'Package: ovs-'$OVS_VERSION'-cn10k'$PKG_POSTFIX | sudo tee -a DEBIAN/control
             echo 'Version: '$PKG_VERSION_NAME | sudo tee -a DEBIAN/control
-            echo "Depends: `dpkg-shlibdeps -O usr/local/sbin/ovs-vswitchd | awk -F'Depends=' '{print $2}'`, dpdk-"$DPDK_BASE_PKG_VERSION"-cn10k (= "$DPDK_PKG_VERSION")" | sudo tee -a DEBIAN/control
+            echo "Depends: `dpkg-shlibdeps -O usr/local/sbin/ovs-vswitchd | awk -F'Depends=' '{print $2}'`, \
+                  dpdk-"$DPDK_BASE_PKG_VERSION"-cn10k (= "$DPDK_PKG_VERSION")" | sudo tee -a DEBIAN/control
             echo "Maintainer: Jerin Jacob (jerinj@marvell.com)" | sudo tee -a DEBIAN/control
             echo "Architecture: arm64" | sudo tee -a DEBIAN/control
             echo "Homepage: https://www.openvswitch.org/" | sudo tee -a DEBIAN/control
