@@ -119,10 +119,7 @@ jobs:
             echo 'Package: openssl-engine-'${ENGINE_VERSION}'-cn10k'${PKG_POSTFIX} >> DEBIAN/control
             echo 'Version: '${PKG_VERSION_NAME} >> DEBIAN/control
             echo "Maintainer: Jerin Jacob (jerinj@marvell.com)" >> DEBIAN/control
-            echo 'Depends: \
-              cpt-firmware-cn10k'${FW_PKG_POSTFIX}' (= '$CPT_PKG_VERSION'), \
-              dpdk-'$DPDK_BASE_PKG_VERSION'-cn10k (= '$DPDK_PKG_VERSION'), \
-              openssl-'$OPENSSL_VERSION'-cn10k'$PKG_POSTFIX' (>= '$PKG_VERSION_NAME_BASE'), openssl-'$OPENSSL_VERSION'-cn10k'$PKG_POSTFIX' (<< '$PKG_VERSION_NAME_UPPER')' >> DEBIAN/control
+            echo 'Depends: cpt-firmware-cn10k'${FW_PKG_POSTFIX}' (= '$CPT_PKG_VERSION'), dpdk-'$DPDK_BASE_PKG_VERSION'-cn10k (= '$DPDK_PKG_VERSION'), openssl-'$OPENSSL_VERSION'-cn10k'$PKG_POSTFIX' (>= '$PKG_VERSION_NAME_BASE'), openssl-'$OPENSSL_VERSION'-cn10k'$PKG_POSTFIX' (<< '$PKG_VERSION_NAME_UPPER')' >> DEBIAN/control
             echo "Architecture: arm64" >> DEBIAN/control
             echo "Description: DPDK based OpenSSL Engine for Marvell Octeon 10" >> DEBIAN/control
             cd ..
