@@ -87,7 +87,6 @@ jobs:
               cp -r build/html/guides/dao-devel/* build/html/guides/
             fi
             mkdir -p build/html/api
-            cp -r build/doc/api/html/* build/html/api/
             # Required for GitHub Pages to serve files under underscores
             touch build/html/.nojekyll
       - name: Export version name
