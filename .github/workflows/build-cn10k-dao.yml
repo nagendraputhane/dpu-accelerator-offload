@@ -65,8 +65,17 @@ jobs:
             source "${PWD}/artifacts/env"
             echo "DISTRO=${DISTRO}" >> ${PWD}/artifacts/env
             BASE_DIR=${PWD}
-            wget "https://github.com/MarvellEmbeddedProcessors/marvell-dpdk/releases/download/dpdk-cn10k-${DPDK_BASE_PKG_VERSION}_${DPDK_PKG_VERSION}-${DISTRO}-${DPDK_PKG_VERSION}/dpdk-${DPDK_BASE_PKG_VERSION}-cn10k_${DPDK_PKG_VERSION}_arm64.deb"
-            sudo apt-get install -y ./"dpdk-${DPDK_BASE_PKG_VERSION}-cn10k_${DPDK_PKG_VERSION}_arm64.deb"
+            # wget "https://github.com/MarvellEmbeddedProcessors/marvell-dpdk/releases/download/dpdk-cn10k-${DPDK_BASE_PKG_VERSION}_${DPDK_PKG_VERSION}-${DISTRO}-${DPDK_PKG_VERSION}/dpdk-${DPDK_BASE_PKG_VERSION}-cn10k_${DPDK_PKG_VERSION}_arm64.deb"
+            # sudo apt-get install -y ./"dpdk-${DPDK_BASE_PKG_VERSION}-cn10k_${DPDK_PKG_VERSION}_arm64.deb"
+            git clone https://github.com/MarvellEmbeddedProcessors/marvell-dpdk.git
+            cd marvell-dpdk
+            git checkout dpdk-24.11-sdk-release
+            meson build \
+              -Dexamples=all \
+              -Denable_drivers="*/cnxk,net/ring,net/tap" \
+              -Dplatform=cn10k \
+              --prefix=/usr
+            ninja -C build install
             ccache -p
             pkg-config --list-all
             unset CC
