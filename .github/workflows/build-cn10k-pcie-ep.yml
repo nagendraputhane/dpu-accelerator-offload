@@ -44,6 +44,7 @@ jobs:
       - name: Build OCTEON-EP and generate package
         id: build
         run: |
+            set -x
             BASE_DIR=${PWD}
             sudo apt-get update -q -y
             sudo apt-get install -y build-essential gcc meson ccache git doxygen apt-utils dialog
@@ -100,6 +101,8 @@ jobs:
           [[ "$PKG_POSTFIX" == "-devel" ]] && IS_DEVEL="true" || IS_DEVEL="false"
           echo "TAG=${TAG}" >> "$GITHUB_OUTPUT"
           echo "IS_DEVEL=${IS_DEVEL}" >> "$GITHUB_OUTPUT"
+          echo $TAG
+          echo $IS_DEVEL
       - name: Delete existing release
         if: ${{ github.event_name == 'push' }}
         env:
