@@ -124,7 +124,6 @@ jobs:
             PKG_VERSION_NAME=`./src/scripts/version | awk -F '-' '{print $1}'`
             echo "PKG_VERSION_NAME=${PKG_VERSION_NAME}" >> "${BASE_DIR}/artifacts/env"
             CPT_PKG_VERSION=`cat DEP_PKG_VERSION | grep CPT_PKG_VERSION | awk -F'=' '{print $2}'`
-            echo "CPT_PKG_VERSION" >> "${BASE_DIR}/artifacts/env"
 
             sudo APT_ARGS='-y -q' make install-deps
             [[ "$PKG_POSTFIX" == "-devel" ]] && TAG=devel || TAG=${MRVL_PKG_VERSION}
@@ -189,3 +188,4 @@ jobs:
           tag_name: vpp-${{ steps.artifacts.outputs.PKG_VERSION_NAME }}-cn10k-${{ steps.artifacts.outputs.MRVL_PKG_VERSION }}-${{ steps.artifacts.outputs.DISTRO }}-${{ steps.artifacts.outputs.TAG }}
           files: |
             ${{ github.workspace }}/artifacts/vpp-${{ steps.artifacts.outputs.PKG_VERSION_NAME }}-cn10k${{ steps.artifacts.outputs.PKG_POSTFIX }}_${{ steps.artifacts.outputs.MRVL_PKG_VERSION }}_arm64.deb
+      
