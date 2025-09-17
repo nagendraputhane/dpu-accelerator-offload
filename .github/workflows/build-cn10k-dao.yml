@@ -1,113 +1,123 @@
 name: build-cn10k-dao
 
 on:
-  push:
-  schedule:
-    - cron: "0 0 * * *"
+  workflow_dispatch: #manual run after a bug-fix
+  inputs:
+    component:
+      description: dao
+      required: true
+      default: dao
+    
   pull_request:
+
+  schedule:
+    - cron: "0 0 * * *" # every day at midnight
+
+  push:
+    tags:
+      - '[0-9][0-9].[0-9][0-9].0'
 
 permissions:
   contents: write
+  packages: write
   pages: write
   id-token: write
-  packages: write
 
 jobs:
   ubuntu-cn10k-build:
     name: ubuntu-cn10k-arm64
     runs-on: ubuntu-24.04-arm
+
     steps:
       - name: Checkout sources
         uses: actions/checkout@v4.2.2
         with:
-          fetch-depth: 0  # fetch all history/tags for SMV and version logic
-      - name: Generate cache keys
-        id: get_ref_keys
-        run: |
-          echo 'ccache=ccache-'$(date -u +%Y-%m) >> $GITHUB_OUTPUT
-      - name: Retrieve ccache cache
-        uses: actions/cache@v4.2.3
-        with:
-          path: ~/.ccache
-          key: ${{ steps.get_ref_keys.outputs.ccache }}-${{ github.ref }}
-          restore-keys: |
-            ${{ steps.get_ref_keys.outputs.ccache }}-refs/heads/main
+          fetch-depth: 0
+
       - name: Extract version details
         id: version
+        env:
+          COMPONENT: ${{ github.event.inputs.component || 'dao' }}
         run: |
-          mkdir -p "${PWD}/artifacts"
-          git tag --points-at HEAD > /tmp/tags
-          [ -s /tmp/tags ] && PKG_POSTFIX= || PKG_POSTFIX=-devel
-          [ -s /tmp/tags ] && NIGHTLY=false || NIGHTLY=true
-          echo "PKG_VERSION_NAME=`cat VERSION`" >> "${PWD}/artifacts/env"
-          echo "DPDK_PKG_VERSION=`cat DPDK_VERSION | grep RELEASE_VERSION | awk -F'=' '{print $2}'`" >> "${PWD}/artifacts/env"
-          echo "DPDK_BASE_PKG_VERSION=`cat DPDK_VERSION | grep BASE_VERSION | awk -F'=' '{print $2}' | awk -F'.' '{print $1"."$2}'`" >> "${PWD}/artifacts/env"
-          source "${PWD}/artifacts/env"
-          echo "PKG_POSTFIX=${PKG_POSTFIX}" >> "${PWD}/artifacts/env"
-          echo "NIGHTLY=${NIGHTLY}" >> $GITHUB_OUTPUT
-          echo "DPDK_PKG_VERSION=${DPDK_PKG_VERSION}" >> $GITHUB_OUTPUT
-          echo "DPDK_BASE_PKG_VERSION=${DPDK_BASE_PKG_VERSION}" >> $GITHUB_OUTPUT
-      - name: Build DAO and generate package
+          set -e
+          mkdir -p artifacts
+          git fetch --tags --quiet
+
+          EVENT="${{ github.event_name }}"
+
+          BASE=$(cut -d. -f1,2 < VERSION)
+
+          if ["$EVENT" = "push"]; then
+            MINOR=0
+            PKG_POSTFIX=""
+            IS_DEVEL=false
+          else
+            LAST=(git tag -l "${COMPONENT}-${BASE}.*" | sort -V | tail -n1)
+            if [ -z "$LAST" ]; then MINOR=0 ; else
+              MINOR=$(echo "$LAST" | awk -F. '{print $3}')
+              MINOR=$((MINOR+1))
+            fi
+            PKG_POSTFIX="-devel"
+            IS_DEVEL=true
+          fi
+
+          PKG_VERSION_NAME="${BASE}.${MINOR}"
+
+          {
+            echo "PKG_VERSION_NAME=${PKG_VERSION_NAME}"
+            echo "PKG_POSTFIX=${PKG_POSTFIX}"
+            echo "IS_DEVEL=${IS_DEVEL}"
+          } >> artifacts/env
+
+      - name: push component patch tag
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          COMPONENT: ${{ github.event.inputs.component }}
+        run: |
+          source artifacts/env
+          NEWTAG="${COMPONENT}-${PKG_VERSION_NAME}"
+          git config user.name "github-bot-accelerator"
+          git config user.email "github-bot-accelerator@marvell.com"
+          git tag -l "$NEWTAG" | grep -q . || git tag -1 "$NEWTAG" -m "devel bump $NEWTAG"
+          git push origin "$NEWTAG"
+
+      - name: Build packages
         id: build
         run: |
-            set -x
-            sudo apt-get update -q -y
-            sudo apt-get install -y build-essential gcc meson ccache git doxygen apt-utils
-            sudo apt-get install -y sphinx-common python3-sphinx-rtd-theme pkg-config software-properties-common
-            sudo apt-get install -y libssl-dev ninja-build python3-pip
-            sudo apt-get install -y python3-pyelftools python3-setuptools python3-wheel zlib1g-dev
-            sudo apt-get install -y gcc-14 bzip2-doc icu-devtools libacl1-dev libattr1-dev
-            python3 -m pip install --upgrade pip
-            python3 -m pip install "sphinx>=7.0.0" \
-                                  "pydata-sphinx-theme>=0.16" \
-                                  "sphinx-multiversion>=0.2.4" \
-                                  "sphinx-copybutton" \
-                                  "sphinx-design"
-            DISTRO=ubuntu-`lsb_release -rs`
-            source "${PWD}/artifacts/env"
-            git fetch --all --tags --prune
-            echo "DISTRO=${DISTRO}" >> ${PWD}/artifacts/env
-            BASE_DIR=${PWD}
-            ccache -p
-            pkg-config --list-all
-            unset CC
-            unset CXX
-            # ---- Build multi-version docs with SMV ----
-            sphinx-multiversion doc/guides build/smv_html
-            # Final site layout will be:
-            #   build/html/guides/          -> default docs (dao-devel content)
-            #   build/html/guides/<version> -> all versions
-            #   build/html/api/             -> API docs
-            mkdir -p build/html/guides
-            cp -r build/smv_html/* build/html/guides/
-            # Version switcher manifest
-            cp doc/guides/_static/versions.json build/html/guides/versions.json
-            # Make /guides/ render the dev version by default
-            if [ -d build/html/guides/dao-devel ]; then
-              cp -r build/html/guides/dao-devel/* build/html/guides/
-            fi
-            mkdir -p build/html/api
-            # Required for GitHub Pages to serve files under underscores
-            touch build/html/.nojekyll
+          source artifacts/env
+          apt-get update
+          apt-get install apt-utils gpg gnupg dpkg-dev curl lsb-release -y
+          mkdir -p install
+          cd install
+          mkdir -p usr/local/tmp/
+          touch usr/local/tmp/empty
+          mkdir DEBIAN
+          echo 'Package: dao'${PKG_POSTFIX} >> DEBIAN/control
+          echo 'Version: '${PKG_VERSION_NAME} >> DEBIAN/control
+          echo "Maintainer: Jerin Jacob (jerinj@marvell.com)" >> DEBIAN/control
+          echo "Architecture: arm64" >> DEBIAN/control     -> matches the build
+          echo "Description: Machine learning inference engine for Marvell Octeon 10" >> DEBIAN/control
+          cd ..
+          mv "${PWD}/install" "${PWD}/dao${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64"
+          dpkg --build "${PWD}/dao${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64"
+          cp -r "${PWD}/dao${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64.deb" ${BASE_DIR}/artifacts/.
+
       - name: Export version name
         id: artifacts
         run: |
           source "${PWD}/artifacts/env"
-          echo $PKG_VERSION_NAME
+          DISTRO=ubuntu-`lsb_release -rs`
           echo "PKG_VERSION_NAME=${PKG_VERSION_NAME}" >> "$GITHUB_OUTPUT"
-          echo $PKG_POSTFIX
-          echo "PKG_POSTFIX=${PKG_POSTFIX}" >> "$GITHUB_OUTPUT"
-          echo $DISTRO
           echo "DISTRO=${DISTRO}" >> "$GITHUB_OUTPUT"
-          [[ "$PKG_POSTFIX" == "-devel" ]] && TAG=devel || TAG=${PKG_VERSION_NAME}
-          [[ "$PKG_POSTFIX" == "-devel" ]] && IS_DEVEL="true" || IS_DEVEL="false"
+          echo "PKG_POSTFIX=${PKG_POSTFIX}" >> "$GITHUB_OUTPUT"
+          [[ "$IS_DEVEL" == true ]] && TAG=devel || TAG=${PKG_VERSION_NAME}
           echo "TAG=${TAG}" >> "$GITHUB_OUTPUT"
-          echo "IS_DEVEL=${IS_DEVEL}" >> "$GITHUB_OUTPUT"
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        if: ${{ github.event_name == 'push' }}
+
+      - name: Release DAO cn10k package
+        uses: softprops/action-gh-release@v2.2.2
+        if: ${{ github.event_name == 'push' }} || ${{ github.event_name == 'workflow_dispatch' }}
         with:
-          path: build/html
-      - name: Deploy Github Pages
-        if: ${{ github.event_name == 'push' }}
-        uses: actions/deploy-pages@v4.0.5
+          draft: false
+          tag_name: dao-cn10k-${{ steps.artifacts.outputs.PKG_VERSION_NAME }}-${{ steps.artifacts.outputs.DISTRO }}-${{ steps.artifacts.outputs.TAG }}
+          files: |
+            artifacts/dao${{ steps.artifacts.outputs.PKG_POSTFIX }}_${{ steps.artifacts.outputs.PKG_VERSION_NAME }}_arm64.deb
