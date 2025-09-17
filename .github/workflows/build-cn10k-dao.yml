@@ -2,11 +2,6 @@ name: build-cn10k-dao
 
 on:
   workflow_dispatch: #manual run after a bug-fix
-  inputs:
-    component:
-      description: dao
-      required: true
-      default: dao
     
   pull_request:
 
@@ -36,13 +31,12 @@ jobs:
 
       - name: Extract version details
         id: version
-        env:
-          COMPONENT: ${{ github.event.inputs.component || 'dao' }}
         run: |
           set -e
           mkdir -p artifacts
           git fetch --tags --quiet
 
+          COMPONENT="dao"
           EVENT="${{ github.event_name }}"
 
           BASE=$(cut -d. -f1,2 < VERSION)
@@ -67,12 +61,11 @@ jobs:
             echo "PKG_VERSION_NAME=${PKG_VERSION_NAME}"
             echo "PKG_POSTFIX=${PKG_POSTFIX}"
             echo "IS_DEVEL=${IS_DEVEL}"
+            echo "COMPONENT=${COMPONENT}"
           } >> artifacts/env
 
       - name: push component patch tag
         if: github.event_name == 'workflow_dispatch'
-        env:
-          COMPONENT: ${{ github.event.inputs.component }}
         run: |
           source artifacts/env
           NEWTAG="${COMPONENT}-${PKG_VERSION_NAME}"
@@ -121,3 +114,5 @@ jobs:
           tag_name: dao-cn10k-${{ steps.artifacts.outputs.PKG_VERSION_NAME }}-${{ steps.artifacts.outputs.DISTRO }}-${{ steps.artifacts.outputs.TAG }}
           files: |
             artifacts/dao${{ steps.artifacts.outputs.PKG_POSTFIX }}_${{ steps.artifacts.outputs.PKG_VERSION_NAME }}_arm64.deb
+          
+      
