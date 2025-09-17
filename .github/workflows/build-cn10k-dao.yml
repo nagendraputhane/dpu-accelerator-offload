@@ -120,15 +120,15 @@ jobs:
           sudo mkdir -p usr/local/tmp/
           sudo touch usr/local/tmp/empty
           sudo mkdir DEBIAN
-          echo "Package: dao${PKG_POSTFIX}" >> DEBIAN/control
-          echo 'Version: '${PKG_VERSION_NAME} >> DEBIAN/control
-          echo "Maintainer: Jerin Jacob (jerinj@marvell.com)" >> DEBIAN/control
-          echo "Architecture: ${ARCH}" >> DEBIAN/control     # matches the build
-          echo "Description: Machine learning inference engine for Marvell Octeon 10" >> DEBIAN/control
+          sudo echo "Package: dao${PKG_POSTFIX}" >> DEBIAN/control
+          sudo echo 'Version: '${PKG_VERSION_NAME} >> DEBIAN/control
+          sudo echo "Maintainer: Jerin Jacob (jerinj@marvell.com)" >> DEBIAN/control
+          sudo echo "Architecture: ${ARCH}" >> DEBIAN/control     # matches the build
+          sudo echo "Description: Machine learning inference engine for Marvell Octeon 10" >> DEBIAN/control
           cd ..
-          mv "${PWD}/install" "${PWD}/dao${PKG_POSTFIX}_${PKG_VERSION_NAME}_${ARCH}"
-          dpkg --build "dao${PKG_POSTFIX}_${PKG_VERSION_NAME}_${ARCH}"
-          cp -r "${PWD}/dao${PKG_POSTFIX}_${PKG_VERSION_NAME}_${ARCH}.deb" ${BASE_DIR}/artifacts/.
+          sudo mv "${PWD}/install" "${PWD}/dao${PKG_POSTFIX}_${PKG_VERSION_NAME}_${ARCH}"
+          sudo dpkg --build "dao${PKG_POSTFIX}_${PKG_VERSION_NAME}_${ARCH}"
+          sudo cp -r "${PWD}/dao${PKG_POSTFIX}_${PKG_VERSION_NAME}_${ARCH}.deb" ${BASE_DIR}/artifacts/.
 
       - name: Export version name
         id: artifacts
