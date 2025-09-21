@@ -150,6 +150,7 @@ jobs:
                                 "sphinx-copybutton" \
                                 "sphinx-design"
           DISTRO=ubuntu-`lsb_release -rs`
+          echo "DISTRO=${DISTRO}" >> artifacts/env
           source artifacts/env
           ARCH="$(dpkg --print-architecture)"
           BASE_DIR="${PWD}"
