@@ -1,0 +1,184 @@
+name: build-cn10k-pcie-ep
+on:
+  # 1) Manual trigger from the GitHub UI "Run workflow"
+  workflow_dispatch:
+  # 2) Trigger on pull request events
+  pull_request:
+  # 3) Scheduled trigger via cron
+  schedule:
+    - cron: "0 0 * * *" #minute, hour, date of month, month, day of week
+  # 4) Trigger on pushes that create/update tags matching
+  # Release tags like YY.MM.Minor
+  push:
+    tags:
+      - '[0-9][0-9].[0-9][0-9].0'
+
+# Permission to pushing commits, creating releases, or uploading artifacts
+# to publish or install packages, deploy to GitHub Pages
+# to authenticate with the GitHub API
+permissions:
+  contents: write
+  packages: write
+  pages: write
+  id-token: write
+env:
+  # Set the default component to 'pcie-ep'
+  COMPONENT: pcie-ep
+
+# run on Ubuntu 24.04 ARM
+jobs:
+  ubuntu-cn10k-build:
+    name: ubuntu-cn10k-arm64
+    runs-on: ubuntu-24.04-arm
+
+    steps:
+      # 1) Checkout the source code from the repository
+      - name: Checkout sources
+        uses: actions/checkout@v4.2.2
+        with:
+          # Fetch all history for all branches and tags
+          # if you only need the latest commit, set `fetch-depth: 1`.
+          fetch-depth: 0
+
+      - name: Generate cache keys
+        id: get_ref_keys
+        run: |
+          echo 'ccache=ccache-'$(date -u +%Y-%m) >> $GITHUB_OUTPUT
+      - name: Retrieve ccache cache
+        uses: actions/cache@v4.2.3
+        with:
+          path: ~/.ccache
+          key: ${{ steps.get_ref_keys.outputs.ccache }}-${{ github.ref }}
+          restore-keys: |
+            ${{ steps.get_ref_keys.outputs.ccache }}-refs/heads/main
+
+      - name: Extract version details
+        id: version
+        run: |
+          set -x
+          mkdir -p artifacts
+          git fetch --tags --quiet
+          # Capture the current event name ("tag push", "pull_request", "workflow_dispatch", "schedule").
+          EVENT="${{ github.event_name }}"
+          # Extract first two fields = YY.MM from the VERSION file.
+          BASE=$(cut -d. -f1,2 < VERSION)
+          # If event is a Tag Push
+          if [ "$EVENT" = "push" ]; then
+            # Start release cycle of minor=0
+            # PKG_POSTFIX is empty to signify non-devel
+            MINOR=0
+            PKG_POSTFIX=""
+            IS_DEVEL=false
+          else
+            # Find the latest Tag for this component and base (dao-1.2.*), version-sort, and select the newest.
+            LAST=$(git tag -l "${COMPONENT}-${BASE}.*" | sort -V | tail -n1)
+            # If no previous tag exists for this base, start at .0; else increment the existing minor.
+            if [ -z "$LAST" ]; then MINOR=0 ; else
+              MINOR=$(echo "$LAST" | awk -F. '{print $3}')
+              MINOR=$((MINOR+1))
+            fi
+            # -devel specified by the PKG_POSTFIX
+            PKG_POSTFIX="-devel"
+            IS_DEVEL=true
+          fi
+          # Assemble the full version name as YY.MM.Minor
+          PKG_VERSION_NAME="${BASE}.${MINOR}"
+          {
+            echo "PKG_VERSION_NAME=${PKG_VERSION_NAME}"
+            echo "PKG_POSTFIX=${PKG_POSTFIX}"
+            echo "IS_DEVEL=${IS_DEVEL}"
+            echo "COMPONENT=${COMPONENT}"
+          } >> artifacts/env
+
+      - name: push component patch tag
+        # Limit this step strictly to manual runs. This prevents tag creation during PRs/schedules/releases.
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          set -x
+          source artifacts/env
+          # Build the Tag to be pushed
+          NEWTAG="${COMPONENT}-${PKG_VERSION_NAME}"
+          # git identity for the tag push
+          git config user.name "github-bot-accelerator"
+          git config user.email "github-bot-accelerator@marvell.com"
+          # If the tag doesn't already exist locally, create it as an annotated tag with a message.
+          git tag -l "$NEWTAG" | grep -q . || git tag -a "$NEWTAG" -m "devel bump $NEWTAG"
+          # push tag to 'origin'
+          git push origin "$NEWTAG"
+
+      - name: Build packages
+        id: build
+        run: |
+          set -x
+            BASE_DIR=${PWD}
+            sudo apt-get update -q -y
+            sudo apt-get install -y build-essential gcc meson ccache git doxygen apt-utils dialog
+            sudo apt-get install -y ccache git gh software-properties-common wget libconfig-dev
+            source ${BASE_DIR}/artifacts/env
+            git config --global --add safe.directory "${PWD}"
+            DISTRO=ubuntu-`lsb_release -rs`
+            echo "DISTRO=${DISTRO}" >> ${BASE_DIR}/artifacts/env
+            git clone "https://github.com/MarvellEmbeddedProcessors/pcie_ep_octeon_target.git"
+            cd "${PWD}/pcie_ep_octeon_target"
+            export CC='ccache gcc'
+            export AR='ar'
+            export LD='ld'
+            export CFLAGS="-DUSE_PEM_AND_DPI_PF=1"
+            export INSTALL_BASE="${PWD}/install/usr"
+            export INSTALL_PATH="${INSTALL_BASE}"
+            cd target/libs/octep_cp_lib
+            ccache -p
+            make install
+            cd -
+            export INSTALL_PATH="${INSTALL_BASE}/bin"
+            cd target/apps/octep_cp_agent/
+            CFLAGS="-I${INSTALL_BASE}/include" LDFLAGS="-L${INSTALL_BASE}/lib" make install
+            cp cn103-102.cfg $INSTALL_PATH/.
+            cp cn106xx.cfg $INSTALL_PATH/.
+            cd -
+            mkdir -p "${PWD}/install/debian"
+            mkdir -p "${PWD}/install/DEBIAN"
+            cd "${PWD}/install"
+            echo 'Source: OCTEON-EP' > debian/control
+            echo 'Package: oct-ep-target-cn10k'$PKG_POSTFIX >> DEBIAN/control
+            echo 'Version: '$PKG_VERSION_NAME >> DEBIAN/control
+            echo "Depends: `dpkg-shlibdeps -O usr/bin/octep_cp_agent | awk -F'Depends=' '{print $2}'`" >> DEBIAN/control
+            echo "Maintainer: Jerin Jacob (jerinj@marvell.com)" >> DEBIAN/control
+            echo "Architecture: arm64" >> DEBIAN/control
+            echo "Description: Octeon-ep agent for Marvell Octeon 10" >> DEBIAN/control
+            rm -rf debian
+            cd -
+            rm -rf "${PWD}/install/~" "${PWD}/install/home"
+            mv "${PWD}/install" "${PWD}/oct-ep-target-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64"
+            dpkg --build "${PWD}/oct-ep-target-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64"
+            cp "${PWD}/oct-ep-target-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64.deb" ${BASE_DIR}/artifacts/.
+
+      - name: Export version name
+        id: artifacts
+        run: |
+          source "${PWD}/artifacts/env"
+          echo $PKG_VERSION_NAME
+          echo "PKG_VERSION_NAME=${PKG_VERSION_NAME}" >> "$GITHUB_OUTPUT"
+          echo $PKG_POSTFIX
+          echo "PKG_POSTFIX=${PKG_POSTFIX}" >> "$GITHUB_OUTPUT"
+          echo $DISTRO
+          echo "DISTRO=${DISTRO}" >> "$GITHUB_OUTPUT"
+          [[ "$PKG_POSTFIX" == "-devel" ]] && TAG=devel || TAG=${PKG_VERSION_NAME}
+          echo "TAG=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "IS_DEVEL=${IS_DEVEL}" >> "$GITHUB_OUTPUT"
+          echo $TAG
+          echo $IS_DEVEL
+      - name: Delete existing release
+        if: ${{ github.event_name == 'push' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete oct-ep-target-cn10k-${{ steps.artifacts.outputs.PKG_VERSION_NAME }}-${{ steps.artifacts.outputs.DISTRO }}-${{ steps.artifacts.outputs.TAG }} --cleanup-tag -y
+        continue-on-error: true
+      - name: Release octeon ep cn10k package
+        uses: softprops/action-gh-release@v2.0.4
+        if: ${{ github.event_name == 'push' }}
+        with:
+          tag_name: oct-ep-target-cn10k-${{ steps.artifacts.outputs.PKG_VERSION_NAME }}-${{ steps.artifacts.outputs.DISTRO }}-${{ steps.artifacts.outputs.TAG }}
+          files: |
+            ${{ github.workspace }}/artifacts/oct-ep-target-cn10k${{ steps.artifacts.outputs.PKG_POSTFIX }}_${{ steps.artifacts.outputs.PKG_VERSION_NAME }}_arm64.deb
