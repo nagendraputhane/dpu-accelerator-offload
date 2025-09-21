@@ -1,0 +1,200 @@
+name: build-cn10k-ovs
+on:
+  # 1) Manual trigger from the GitHub UI "Run workflow"
+  workflow_dispatch:
+  # 2) Trigger on pull request events
+  pull_request:
+  # 3) Scheduled trigger via cron
+  schedule:
+    - cron: "0 0 * * *" #minute, hour, date of month, month, day of week
+  # 4) Trigger on pushes that create/update tags matching
+  # Release tags like YY.MM.Minor
+  push:
+    tags:
+      - '[0-9][0-9].[0-9][0-9].0'
+
+# Permission to pushing commits, creating releases, or uploading artifacts
+# to publish or install packages, deploy to GitHub Pages
+# to authenticate with the GitHub API
+permissions:
+  contents: write
+  packages: write
+  pages: write
+  id-token: write
+env:
+  # Set the default component to 'ovs'
+  COMPONENT: ovs
+
+# run on Ubuntu 24.04 ARM
+jobs:
+  ubuntu-cn10k-build:
+    name: ubuntu-cn10k-arm64
+    runs-on: ubuntu-24.04-arm
+
+    steps:
+      # 1) Checkout the source code from the repository
+      - name: Checkout sources
+        uses: actions/checkout@v4.2.2
+        with:
+          # Fetch all history for all branches and tags
+          # if you only need the latest commit, set `fetch-depth: 1`.
+          fetch-depth: 0
+
+      - name: Generate cache keys
+        id: get_ref_keys
+        run: |
+          echo 'ccache=ccache-'$(date -u +%Y-%m) >> $GITHUB_OUTPUT
+      - name: Retrieve ccache cache
+        uses: actions/cache@v4.2.3
+        with:
+          path: ~/.ccache
+          key: ${{ steps.get_ref_keys.outputs.ccache }}-${{ github.ref }}
+          restore-keys: |
+            ${{ steps.get_ref_keys.outputs.ccache }}-refs/heads/main
+
+      - name: Extract version details
+        id: version
+        run: |
+          set -x
+          mkdir -p artifacts
+          git fetch --tags --quiet
+          # Capture the current event name ("tag push", "pull_request", "workflow_dispatch", "schedule").
+          EVENT="${{ github.event_name }}"
+          # Extract first two fields = YY.MM from the VERSION file.
+          BASE=$(cut -d. -f1,2 < VERSION)
+          # If event is a Tag Push
+          if [ "$EVENT" = "push" ]; then
+            # Start release cycle of minor=0
+            # PKG_POSTFIX is empty to signify non-devel
+            MINOR=0
+            PKG_POSTFIX=""
+            IS_DEVEL=false
+          else
+            # Find the latest Tag for this component and base (dao-1.2.*), version-sort, and select the newest.
+            LAST=$(git tag -l "${COMPONENT}-${BASE}.*" | sort -V | tail -n1)
+            # If no previous tag exists for this base, start at .0; else increment the existing minor.
+            if [ -z "$LAST" ]; then MINOR=0 ; else
+              MINOR=$(echo "$LAST" | awk -F. '{print $3}')
+              MINOR=$((MINOR+1))
+            fi
+            # -devel specified by the PKG_POSTFIX
+            PKG_POSTFIX="-devel"
+            IS_DEVEL=true
+          fi
+          # Assemble the full version name as YY.MM.Minor
+          PKG_VERSION_NAME="${BASE}.${MINOR}"
+          {
+            echo "PKG_VERSION_NAME=${PKG_VERSION_NAME}"
+            echo "PKG_POSTFIX=${PKG_POSTFIX}"
+            echo "IS_DEVEL=${IS_DEVEL}"
+            echo "COMPONENT=${COMPONENT}"
+          } >> artifacts/env
+
+          echo "DPDK_PKG_VERSION=`cat DPDK_VERSION | grep RELEASE_VERSION | awk -F'=' '{print $2}'`" >> "${PWD}/artifacts/env"
+          echo "DPDK_BASE_PKG_VERSION=`cat DPDK_VERSION | grep BASE_VERSION | awk -F'=' '{print $2}' | awk -F'.' '{print $1"."$2}'`" >> "${PWD}/artifacts/env"
+
+      - name: push component patch tag
+        # Limit this step strictly to manual runs. This prevents tag creation during PRs/schedules/releases.
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          set -x
+          source artifacts/env
+          # Build the Tag to be pushed
+          NEWTAG="${COMPONENT}-${PKG_VERSION_NAME}"
+          # git identity for the tag push
+          git config user.name "github-bot-accelerator"
+          git config user.email "github-bot-accelerator@marvell.com"
+          # If the tag doesn't already exist locally, create it as an annotated tag with a message.
+          git tag -l "$NEWTAG" | grep -q . || git tag -a "$NEWTAG" -m "devel bump $NEWTAG"
+          # push tag to 'origin'
+          git push origin "$NEWTAG"
+
+      - name: Build packages
+        id: build
+        run: |
+          set -x
+            sudo apt-get update -q -y
+            sudo apt-get install -y apt-utils python3-sphinx-rtd-theme python3-pip
+            sudo apt-get install -y python3-pyelftools python3-setuptools python3-wheel
+            sudo apt-get install -y build-essential meson ccache git gh doxygen
+            sudo apt-get install -y software-properties-common sphinx-common pkg-config
+            sudo apt-get install -y libnl-3-dev libnl-route-3-dev libnl-xfrm-3-dev
+            sudo apt-get install -y libarchive-dev libbsd-dev libbpf-dev
+            sudo apt-get install -y libfdt-dev libjansson-dev autoconf dh-autoreconf
+            sudo apt-get install -y libssl-dev ninja-build zlib1g-dev bash-completion
+            sudo apt-get install -y gcc-14 bzip2-doc icu-devtools libacl1-dev libattr1-dev
+            sudo apt-get install -y libbz2-dev libgmp-dev libgmpxx4ldbl libicu-dev liblz4-dev
+            sudo apt-get install -y liblzma-dev libxml2-dev libzstd-dev nettle-dev wget lsb-release
+            git config --global --add safe.directory "${PWD}"
+            DISTRO=ubuntu-`lsb_release -rs`
+            source "${PWD}/artifacts/env"
+            echo "DISTRO=${DISTRO}" >> ${PWD}/artifacts/env
+            wget "https://github.com/MarvellEmbeddedProcessors/marvell-dpdk/releases/download/dpdk-cn10k-${DPDK_BASE_PKG_VERSION}_${DPDK_PKG_VERSION}-${DISTRO}-${DPDK_PKG_VERSION}/dpdk-${DPDK_BASE_PKG_VERSION}-cn10k_${DPDK_PKG_VERSION}_arm64.deb"
+            sudo apt-get install -y ./"dpdk-${DPDK_BASE_PKG_VERSION}-cn10k_${DPDK_PKG_VERSION}_arm64.deb"
+            export CC='ccache gcc-14'
+            ccache -p
+            pkg-config --list-all
+            OVS_PATCH_VERSION=$(ls patches/ovs | head -n 1)
+            OVS_VERSION=${OVS_PATCH_VERSION#v}
+            echo "OVS_VERSION=$OVS_VERSION" >> ${PWD}/artifacts/env
+            wget "https://www.openvswitch.org/releases/openvswitch-${OVS_VERSION}.tar.gz"
+            tar xzf openvswitch-${OVS_VERSION}.tar.gz
+            BASE_DIR=${PWD}
+            cd "${PWD}/openvswitch-${OVS_VERSION}"
+            for patch in ${BASE_DIR}/patches/ovs/${OVS_PATCH_VERSION}/*.patch; do
+                patch -p1 < "$patch"
+            done
+            ./boot.sh
+            sudo ./configure --prefix="${PWD}/install/usr/local" --localstatedir=/usr/local/var --sysconfdir=/usr/local/etc --with-dpdk=static CFLAGS="-DALLOW_EXPERIMENTAL_API  -mcpu=neoverse-n2+crypto+sve2"
+            sudo make -j4 install
+            sudo mkdir -p "${PWD}/install/debian"
+            sudo mkdir -p "${PWD}/install/DEBIAN"
+            cd "${PWD}/install"
+            echo 'Source: Open vSwitch' | sudo tee debian/control
+            echo 'Package: ovs-'$OVS_VERSION'-cn10k'$PKG_POSTFIX | sudo tee -a DEBIAN/control
+            echo 'Version: '$PKG_VERSION_NAME | sudo tee -a DEBIAN/control
+            echo "Depends: `dpkg-shlibdeps -O usr/local/sbin/ovs-vswitchd | awk -F'Depends=' '{print $2}'`, dpdk-"$DPDK_BASE_PKG_VERSION"-cn10k (= "$DPDK_PKG_VERSION")" | sudo tee -a DEBIAN/control
+            echo "Maintainer: Jerin Jacob (jerinj@marvell.com)" | sudo tee -a DEBIAN/control
+            echo "Architecture: arm64" | sudo tee -a DEBIAN/control
+            echo "Homepage: https://www.openvswitch.org/" | sudo tee -a DEBIAN/control
+            echo "Description: Open vSwitch (OVS) for Marvell Octeon 10" | sudo tee -a DEBIAN/control
+            sudo rm -rf debian
+            cd -
+            rm -rf "${PWD}/install/~" "${PWD}/install/home"
+            sudo mv "${PWD}/install" "${PWD}/ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64"
+            sudo dpkg --build "${PWD}/ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64"
+            sudo cp "${PWD}/ovs-${OVS_VERSION}-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64.deb" ${BASE_DIR}/artifacts/.
+      - name: Export version name
+        id: artifacts
+        run: |
+          source "${PWD}/artifacts/env"
+          echo $PKG_VERSION_NAME
+          echo "PKG_VERSION_NAME=${PKG_VERSION_NAME}" >> "$GITHUB_OUTPUT"
+          echo $OVS_VERSION
+          echo "OVS_VERSION=${OVS_VERSION}" >> "$GITHUB_OUTPUT"
+          echo $DISTRO
+          echo "DISTRO=${DISTRO}" >> "$GITHUB_OUTPUT"
+          echo $DPDK_PKG_VERSION
+          echo "DPDK_PKG_VERSION=${DPDK_PKG_VERSION}" >> $GITHUB_OUTPUT
+          echo $DPDK_BASE_PKG_VERSION
+          echo "DPDK_BASE_PKG_VERSION=${DPDK_BASE_PKG_VERSION}" >> $GITHUB_OUTPUT
+          echo $PKG_POSTFIX
+          echo "PKG_POSTFIX=${PKG_POSTFIX}" >> "$GITHUB_OUTPUT"
+          [[ "$PKG_POSTFIX" == "-devel" ]] && TAG=devel || TAG=${PKG_VERSION_NAME}
+          echo "TAG=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "IS_DEVEL=${IS_DEVEL}" >> "$GITHUB_OUTPUT"
+      - name: Delete existing release
+        if: ${{ github.event_name == 'push' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete ovs-${{ steps.artifacts.outputs.OVS_VERSION }}-cn10k-${{ steps.artifacts.outputs.PKG_VERSION_NAME }}-${{ steps.artifacts.outputs.DISTRO }}-${{ steps.artifacts.outputs.TAG }} --cleanup-tag -y
+        continue-on-error: true
+      - name: Release OVS cn10k package
+        uses: softprops/action-gh-release@v2.2.2
+        if: ${{ github.event_name == 'push' }}
+        with:
+          draft: false
+          tag_name: ovs-${{ steps.artifacts.outputs.OVS_VERSION }}-cn10k-${{ steps.artifacts.outputs.PKG_VERSION_NAME }}-${{ steps.artifacts.outputs.DISTRO }}-${{ steps.artifacts.outputs.TAG }}
+          files: |
+            ${{ github.workspace }}/artifacts/ovs-${{ steps.artifacts.outputs.OVS_VERSION }}-cn10k${{ steps.artifacts.outputs.PKG_POSTFIX }}_${{ steps.artifacts.outputs.PKG_VERSION_NAME }}_arm64.deb
