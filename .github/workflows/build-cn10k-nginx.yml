@@ -25,13 +25,13 @@ env:
   # Set the 2 components
   COMPONENT_1: nginx
   COMPONENT_2: openssl
-	
+
 # run on Ubuntu 24.04 ARM
 jobs:
   ubuntu-cn10k-build:
     name: ubuntu-cn10k-arm64
     runs-on: ubuntu-24.04-arm
-	
+
     steps:
       # 1) Checkout the source code from the repository
       - name: Checkout sources
@@ -89,7 +89,7 @@ jobs:
             echo "PKG_POSTFIX=${PKG_POSTFIX}"
             echo "IS_DEVEL=${IS_DEVEL}"
           } >> artifacts/env
-	
+
       - name: push component patch tag # Limit this step strictly to manual runs. This prevents tag creation during PRs/schedules/releases.
         if: github.event_name == 'workflow_dispatch'
         run: |
