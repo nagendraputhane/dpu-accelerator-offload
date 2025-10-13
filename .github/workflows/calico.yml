@@ -1,0 +1,51 @@
+name: build-cn10k-calico
+on:
+  push:
+  schedule:
+    - cron: "0 0 * * 1"
+  pull_request:
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+  packages: write
+jobs:
+  ubuntu-cn10k-build:
+    name: ubuntu-cn10k-arm64
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4.2.2
+      - name: Generate cache keys
+        id: get_ref_keys
+        run: |
+          echo 'ccache=ccache-'$(date -u +%Y-%m) >> $GITHUB_OUTPUT
+      - name: Retrieve ccache cache
+        uses: actions/cache@v4.2.3
+        with:
+          path: ~/.ccache
+          key: ${{ steps.get_ref_keys.outputs.ccache }}-${{ github.ref }}
+          restore-keys: |
+            ${{ steps.get_ref_keys.outputs.ccache }}-refs/heads/main
+      - name: Extract version details
+        id: version
+        run: |
+          mkdir -p "${PWD}/artifacts"
+          git tag --points-at HEAD > /tmp/tags
+          [ -s /tmp/tags ] && PKG_POSTFIX= || PKG_POSTFIX=-devel
+          echo "PKG_VERSION_NAME=`cat VERSION`" >> "${PWD}/artifacts/env"
+          echo "PKG_POSTFIX=${PKG_POSTFIX}" >> "${PWD}/artifacts/env"
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y make git docker.io
+      - name: Install Go 1.24.2 (linux/arm64)
+        run: |
+          wget https://go.dev/dl/go1.24.2.linux-arm64.tar.gz
+          sudo rm -rf /usr/local/go
+          sudo tar -C /usr/local -xzf go1.24.2.linux-arm64.tar.gz
+          echo "Go installed: $(/usr/local/go/bin/go version)"
+      - name: Clone Calico vpp-dataplane
+        run: |
+          git clone --branch v3.29.0 --depth 1 https://github.com/projectcalico/vpp-dataplane.git
+          cd vpp-dataplane
