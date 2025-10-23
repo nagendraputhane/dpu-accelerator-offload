@@ -14,7 +14,7 @@ Data Accelerator Offload (DAO) Documentation
    Introduction <intro>
    Guides <guides>
    Resources <resources>
-   Solutions Showcase <solutions_showcase>
+   Showcase <solutions_showcase>
    Community <community_lab/index>
 
 .. grid:: 1 1 2 2
