@@ -154,36 +154,12 @@ jobs:
           source artifacts/env
           ARCH="$(dpkg --print-architecture)"
           BASE_DIR="${PWD}"
-          wget "https://github.com/MarvellEmbeddedProcessors/marvell-dpdk/releases/download/dpdk-cn10k-${DPDK_BASE_PKG_VERSION}_${DPDK_PKG_VERSION}-${DISTRO}-${DPDK_PKG_VERSION}/dpdk-${DPDK_BASE_PKG_VERSION}-cn10k_${DPDK_PKG_VERSION}_arm64.deb"
-          sudo apt-get install -y ./"dpdk-${DPDK_BASE_PKG_VERSION}-cn10k_${DPDK_PKG_VERSION}_arm64.deb"
           ccache -p
           pkg-config --list-all
           unset CC
           unset CXX
-          export GRPC_BUILD_DIR=/tmp/dao-deps-build
-          ./ci/build/build-deps.sh $GRPC_BUILD_DIR dummyuser cn10k grpc > /dev/null 2>&1
-          export PATH=$GRPC_BUILD_DIR/deps/deps-prefix/host/bin:$PATH
-          export LD_LIBRARY_PATH=$GRPC_BUILD_DIR/deps/deps-prefix/host/lib:$LD_LIBRARY_PATH
-          export PKG_CONFIG_PATH="$GRPC_BUILD_DIR/deps/deps-prefix/ep/lib/pkgconfig:$GRPC_BUILD_DIR/deps/host/grpc/third_party/re2:${PKG_CONFIG_PATH:-}"
           meson build -Dplatform=cn10k --prefix="${PWD}/install" -Denable_kmods=false -Dprefer_static_build=true --prefer-static -Ddisable_apps=crypto-agent
           ninja install -C build
-          mkdir -p "${PWD}/install/DEBIAN"
-          mkdir -p "${PWD}/install/debian"
-          cd "${PWD}/install"
-          echo 'Source: DAO' > debian/control
-          echo 'Package: dao-cn10k'$PKG_POSTFIX >> DEBIAN/control
-          echo 'Version: '$PKG_VERSION_NAME >> DEBIAN/control
-          echo "Depends: `dpkg-shlibdeps --ignore-missing-info -O bin/dao-ovs-offload bin/dao-secgw-graph bin/dao-smart-nic bin/dao-virtio-l2fwd | awk -F'Depends=' '{print $2}'` , dpdk-${DPDK_BASE_PKG_VERSION}-cn10k (= ${DPDK_PKG_VERSION})" >> DEBIAN/control
-          echo "Maintainer: Jerin Jacob (jerinj@marvell.com)" >> DEBIAN/control
-          echo "Architecture: arm64" >> DEBIAN/control
-          echo "Homepage: https://www.dpdk.org/" >> DEBIAN/control
-          echo "Description: Data Accelerator offload for Marvell Octeon 10" >> DEBIAN/control
-          rm -rf debian
-          cd -
-          rm -rf "${PWD}/install/~" "${PWD}/install/home"
-          mv "${PWD}/install" "${PWD}/dao-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64"
-          dpkg --build "dao-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64"
-          cp "dao-cn10k${PKG_POSTFIX}_${PKG_VERSION_NAME}_arm64.deb" ${BASE_DIR}/artifacts/.
           # ---- Build multi-version docs with SMV ----
           sphinx-multiversion doc/guides build/smv_html
           # Final site layout will be:
@@ -202,36 +178,6 @@ jobs:
           cp -r build/doc/api/html/* build/html/api/
           # Required for GitHub Pages to serve files under underscores
           touch build/html/.nojekyll
-
-      - name: Export version name
-        id: artifacts
-        run: |
-          set -e
-          source "${PWD}/artifacts/env"
-          echo "PKG_VERSION_NAME=${PKG_VERSION_NAME}" >> "$GITHUB_OUTPUT"
-          echo "DISTRO=${DISTRO}" >> "$GITHUB_OUTPUT"
-          echo "PKG_POSTFIX=${PKG_POSTFIX}" >> "$GITHUB_OUTPUT"
-          [[ "$PKG_POSTFIX" == "-devel" ]] && TAG=devel || TAG=${PKG_VERSION_NAME}
-          echo "TAG=${TAG}" >> "$GITHUB_OUTPUT"
-          echo "IS_DEVEL=${IS_DEVEL}" >> "$GITHUB_OUTPUT"
-
-      - name: Delete existing release
-        # Run this step only for : tag-push events (releases) and manual runs (devel).
-        if: ${{ github.event_name == 'push' }} || ${{ github.event_name == 'workflow_dispatch' }}
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release delete dao-cn10k-${{ steps.artifacts.outputs.PKG_VERSION_NAME }}-${{ steps.artifacts.outputs.DISTRO }}-${{ steps.artifacts.outputs.TAG }} --cleanup-tag -y
-        continue-on-error: true
-
-      - name: Release DAO cn10k package
-        uses: softprops/action-gh-release@v2.2.2
-        if: ${{ github.event_name == 'push' }} || ${{ github.event_name == 'workflow_dispatch' }}
-        with:
-          draft: false
-          tag_name: dao-cn10k-${{ steps.artifacts.outputs.PKG_VERSION_NAME }}-${{ steps.artifacts.outputs.DISTRO }}-${{ steps.artifacts.outputs.TAG }}
-          files: |
-            ${{ github.workspace }}/artifacts/dao-cn10k${{ steps.artifacts.outputs.PKG_POSTFIX }}_${{ steps.artifacts.outputs.PKG_VERSION_NAME }}_arm64.deb
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
