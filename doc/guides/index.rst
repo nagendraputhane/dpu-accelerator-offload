@@ -77,7 +77,7 @@ Data Accelerator Offload (DAO) Documentation
       **Solutions Showcase**
       ^^^
 
-      See what's possible with DAO - Use-case briefs, White papers and more.
+      Showcases and White-papers featuring Solution architectures and Performance highlights on Marvell platforms.
 
       +++
 
