@@ -40,19 +40,21 @@ Data Accelerator Offload (DAO) Documentation
    .. grid-item-card::
       :text-align: center
 
+   .. grid-item-card::
+      :text-align: left
+
       **Developer Guides**
       ^^^
 
-      Includes Getting Started Guide, Platform Guide, Programmer’s Guide, Application User Guide, How-To Guides, and Tools User Guides.
-
-      +++
+      * :doc:`Getting Started <gsg/index>`
+      * :doc:`Platform Guide <platform/index>`
+      * :doc:`Programming Guide <prog_guide/index>`
+      * :doc:`Applications <applications/index>`
+      * :doc:`How-To Guides <howtoguides/index>`
+      * :doc:`Tools <tools/index>`
 
       .. button-ref:: guides
          :color: secondary
-         :expand:
-         :click-parent:
-
-         Browse the guides
 
    .. grid-item-card::
       :text-align: center
