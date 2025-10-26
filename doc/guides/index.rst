@@ -16,8 +16,8 @@ Data Accelerator Offload (DAO) Documentation
    Resources <resources>
    Community <community_lab/index>
 
-.. grid:: 1 1 2 2
-   :gutter: 2 3 4 4
+.. grid:: 1
+   :gutter: 2
 
    .. grid-item-card::
       :text-align: center
