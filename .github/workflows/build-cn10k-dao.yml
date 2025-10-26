@@ -132,7 +132,7 @@ jobs:
           set -x
           export DEBIAN_FRONTEND=noninteractive
           sudo apt-get update -q -y
-          sudo apt-get install -y build-essential gcc git doxygen
+          sudo apt-get install -y doxygen
           sudo apt-get install -y sphinx-common python3-sphinx-rtd-theme python3-pip
           python3 -m pip install --upgrade pip
           python3 -m pip install "sphinx>=7.0.0" \
