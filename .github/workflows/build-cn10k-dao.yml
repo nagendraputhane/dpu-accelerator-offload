@@ -132,17 +132,8 @@ jobs:
           set -x
           export DEBIAN_FRONTEND=noninteractive
           sudo apt-get update -q -y
-          sudo apt-get install -y build-essential gcc meson ccache git doxygen apt-utils
-          sudo apt-get install -y libnl-3-dev libnl-route-3-dev libnl-xfrm-3-dev
-          sudo apt-get install -y sphinx-common python3-sphinx-rtd-theme pkg-config
-          sudo apt-get install -y libarchive-dev libbsd-dev libbpf-dev
-          sudo apt-get install -y libfdt-dev libjansson-dev software-properties-common
-          sudo apt-get install -y libssl-dev ninja-build python3-pip
-          sudo apt-get install -y python3-pyelftools python3-setuptools python3-wheel zlib1g-dev
-          sudo apt-get install -y gcc-14 bzip2-doc icu-devtools libacl1-dev libattr1-dev
-          sudo apt-get install -y libbz2-dev libgmp-dev libgmpxx4ldbl libicu-dev liblz4-dev
-          sudo apt-get install -y liblzma-dev libxml2-dev libzstd-dev nettle-dev wget lsb-release
-          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu gh
+          sudo apt-get install -y build-essential gcc git doxygen
+          sudo apt-get install -y sphinx-common python3-sphinx-rtd-theme python3-pip
           python3 -m pip install --upgrade pip
           python3 -m pip install "sphinx>=7.0.0" \
                                 "pydata-sphinx-theme>=0.16" \
@@ -155,11 +146,6 @@ jobs:
           ARCH="$(dpkg --print-architecture)"
           BASE_DIR="${PWD}"
           ccache -p
-          pkg-config --list-all
-          unset CC
-          unset CXX
-          meson build -Dplatform=cn10k --prefix="${PWD}/install" -Denable_kmods=false -Dprefer_static_build=true --prefer-static -Ddisable_apps=crypto-agent
-          ninja install -C build
           # ---- Build multi-version docs with SMV ----
           sphinx-multiversion doc/guides build/smv_html
           # Final site layout will be:
