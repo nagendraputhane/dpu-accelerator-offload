@@ -126,6 +126,14 @@ html[data-theme="light"] {
   height: auto !important;
 }
 
+/* Allow cards to use natural height instead of stretching */
+.sd-col.h-100 {
+  height: auto !important;
+}
+.sd-col.d-flex {
+  display: block !important;
+}
+
 /* Brand button. */
 .sd-btn {
   background-color: var(--dao-accent-color) !important;
