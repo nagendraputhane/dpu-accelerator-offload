@@ -17,6 +17,13 @@ Data Accelerator Offload (DAO) Documentation
    Community <community_lab/index>
 
 .. toctree::
+   :maxdepth: 2
+   :hidden:
+
+   prog_guide/index
+   applications/index
+
+.. toctree::
    :caption: Programmer’s Guide
    :maxdepth: 2
    :hidden:
