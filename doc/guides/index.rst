@@ -49,49 +49,42 @@ Data Accelerator Offload (DAO) Documentation
       .. button-ref:: gsg/index
          :color: secondary
          :expand:
-         :click-parent:
 
          Getting Started
 
       .. button-ref:: platform/index
          :color: secondary
          :expand:
-         :click-parent:
 
          Platform Guide
 
       .. button-ref:: prog_guide/index
          :color: secondary
          :expand:
-         :click-parent:
 
          Programmer’s Guide
 
       .. button-ref:: applications/index
          :color: secondary
          :expand:
-         :click-parent:
 
          Application Guides
 
       .. button-ref:: applications/vpp
          :color: secondary
          :expand:
-         :click-parent:
 
          • VPP (direct)
 
       .. button-ref:: howtoguides/index
          :color: secondary
          :expand:
-         :click-parent:
 
          How-to Guides
 
       .. button-ref:: tools/index
          :color: secondary
          :expand:
-         :click-parent:
 
          Tools
 
