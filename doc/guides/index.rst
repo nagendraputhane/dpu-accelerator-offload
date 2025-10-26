@@ -62,28 +62,27 @@ Data Accelerator Offload (DAO) Documentation
          :color: secondary
          :expand:
 
-         Programmer’s Guide
+      .. toctree::
+         :maxdepth: 2
+         :titlesonly:
+
+         prog_guide/index
 
       .. button-ref:: applications/index
          :color: secondary
          :expand:
 
-         Application Guides
+      .. toctree::
+         :maxdepth: 2
+         :titlesonly:
 
-         *Includes: conntrack, ovs-offload, crypto-agent, virtio-crypto, virtio-l2fwd, virtio-blkio, secgw-graph, smart-nic, vpp, tls-proxy-nginx, machine-learning, snort, k8s-cni-offload, envoy.*
+         applications/index
 
       .. button-ref:: howtoguides/index
          :color: secondary
          :expand:
 
          How-to Guides
-
-      .. toctree::
-         :maxdepth: 2
-         :titlesonly:
-
-         prog_guide/index
-         applications/index
 
    .. grid-item-card::
       :text-align: center
