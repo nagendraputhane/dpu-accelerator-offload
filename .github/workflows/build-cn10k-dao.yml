@@ -140,12 +140,8 @@ jobs:
                                 "sphinx-multiversion>=0.2.4" \
                                 "sphinx-copybutton" \
                                 "sphinx-design"
-          DISTRO=ubuntu-`lsb_release -rs`
-          echo "DISTRO=${DISTRO}" >> artifacts/env
           source artifacts/env
-          ARCH="$(dpkg --print-architecture)"
           BASE_DIR="${PWD}"
-          ccache -p
           # ---- Build multi-version docs with SMV ----
           sphinx-multiversion doc/guides build/smv_html
           # Final site layout will be:
