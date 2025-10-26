@@ -16,29 +16,6 @@ Data Accelerator Offload (DAO) Documentation
    Resources <resources>
    Community <community_lab/index>
 
-.. toctree::
-   :maxdepth: 2
-   :hidden:
-
-   prog_guide/index
-   applications/index
-
-.. toctree::
-   :caption: Programmer’s Guide
-   :maxdepth: 2
-   :hidden:
-   :titlesonly:
-
-   prog_guide/index
-
-.. toctree::
-   :caption: Application Guides
-   :maxdepth: 2
-   :hidden:
-   :titlesonly:
-
-   applications/index
-
 .. grid:: 1
    :gutter: 2
 
@@ -100,6 +77,13 @@ Data Accelerator Offload (DAO) Documentation
          :expand:
 
          How-to Guides
+
+      .. toctree::
+         :maxdepth: 2
+         :titlesonly:
+
+         prog_guide/index
+         applications/index
 
    .. grid-item-card::
       :text-align: center
