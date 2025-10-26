@@ -60,22 +60,36 @@ Data Accelerator Offload (DAO) Documentation
          :color: secondary
          :expand:
 
-      Programmer’s Guide
-
       * :doc:`Common <prog_guide/common>`
       * :doc:`Flow library <prog_guide/flow>`
       * :doc:`VFIO helper <prog_guide/vfio_lib>`
       * :doc:`Virtio crypto lib <prog_guide/virtio_crypto_lib>`
+      * :doc:`Virtio l2fwd lib <prog_guide/virtio_l2fwd_lib>`
+      * :doc:`Virtio blkio lib <prog_guide/virtio_blkio_lib>`
+      * :doc:`Secgw graph lib <prog_guide/secgw_graph_lib>`
+      * :doc:`Smart nic lib <prog_guide/smart_nic_lib>`
+      * :doc:`VPP lib <prog_guide/vpp_lib>`
+      * :doc:`TLS proxy nginx lib <prog_guide/tls_proxy_nginx_lib>`
+      * :doc:`Machine learning lib <prog_guide/machine_learning_lib>`
+      * :doc:`Snort lib <prog_guide/snort_lib>`
+      * :doc:`K8s CNI offload lib <prog_guide/k8s_cni_offload_lib>`
+      * :doc:`Envoy lib <prog_guide/envoy_lib>`
 
       .. button-ref:: applications/index
          :color: secondary
          :expand:
 
-      .. toctree::
-         :maxdepth: 2
-         :titlesonly:
-
-         applications/index
+      * :doc:`Common <prog_guide/common>`
+      * :doc:`conntrack <applications/conntrack>`
+      * :doc:`ovs-offload <applications/ovs_offload>`
+      * :doc:`crypto-agent <applications/crypto_agent>`
+      * :doc:`virtio-crypto <applications/virtio_crypto>`
+      * :doc:`virtio-l2fwd <applications/virtio_l2fwd>`
+      * :doc:`virtio-blkio <applications/virtio_blkio>`
+      * :doc:`secgw-graph <applications/secgw_graph>`
+      * :doc:`smart-nic <applications/smart_nic>`
+      * :doc:`vpp <applications/vpp>`
+      * :doc:`tls-proxy-nginx <applications/tls_proxy_nginx>`
 
       .. button-ref:: howtoguides/index
          :color: secondary
