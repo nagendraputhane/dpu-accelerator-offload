@@ -45,6 +45,9 @@ html_theme_options = {
             "type": "fontawesome",
         },
     ],
+    "collapse_navigation": False,
+    "navigation_depth": 4,
+    "show_nav_level": 4,
 }
 
 # Pin to light mode
