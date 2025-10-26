@@ -37,24 +37,22 @@ Data Accelerator Offload (DAO) Documentation
 
          Read the introduction
 
-   .. grid-item-card::
-      :text-align: center
-
-   .. grid-item-card::
-      :text-align: left
-
-      **Developer Guides**
-      ^^^
-
-      * :doc:`Getting Started <gsg/index>`
-      * :doc:`Platform Guide <platform/index>`
-      * :doc:`Programming Guide <prog_guide/index>`
-      * :doc:`Applications <applications/index>`
-      * :doc:`How-To Guides <howtoguides/index>`
-      * :doc:`Tools <tools/index>`
-
-      .. button-ref:: guides
-         :color: secondary
+    .. grid-item-card::
+       :text-align: center
+    
+       **Developer Guides**
+       ^^^
+    
+       .. toctree::
+          :maxdepth: 3          <-- how deep in the tree to list
+          :titlesonly:          <-- suppress long filenames
+          :glob:                <-- lets you use wildcards
+          guides/gsg/index
+          guides/platform/index
+          guides/prog_guide/index
+          guides/applications/index
+          guides/howtoguides/index
+          guides/tools/index
 
    .. grid-item-card::
       :text-align: center
