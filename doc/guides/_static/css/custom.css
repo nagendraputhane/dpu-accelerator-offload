@@ -188,6 +188,13 @@ section.home-landing > h1 {
   display: none !important;
 }
 
+/* --- make each grid item stop at its own content --- */
+.sd-row,                    /* sphinx-design’s row class */
+.sd-row.row,                /* fallback selector */
+.row.sd-row {               /* extra insurance */
+  align-items: flex-start !important;   /* don’t stretch children */
+}
+
 .bd-footer .sphinx-version {
   display: none !important;
 }
