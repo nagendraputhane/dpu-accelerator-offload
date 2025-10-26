@@ -134,6 +134,9 @@ html[data-theme="light"] {
   display: block !important;
 }
 
+/* Hide right "on this page" sidebar on landing */
+.bd-toc { display: none !important; }
+
 /* Brand button. */
 .sd-btn {
   background-color: var(--dao-accent-color) !important;
@@ -186,13 +189,6 @@ section.home-landing > h1 {
 /* Hide theme/version boilerplate. */
 .bd-footer .theme-version {
   display: none !important;
-}
-
-/* --- make each grid item stop at its own content --- */
-.sd-row,                    /* sphinx-design’s row class */
-.sd-row.row,                /* fallback selector */
-.row.sd-row {               /* extra insurance */
-  align-items: flex-start !important;   /* don’t stretch children */
 }
 
 .bd-footer .sphinx-version {
