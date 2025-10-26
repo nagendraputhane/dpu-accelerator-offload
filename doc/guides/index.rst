@@ -145,3 +145,17 @@ Data Accelerator Offload (DAO) Documentation
          TLS Lab
 
          *Hands-on lab for TLS offload on DAO.*
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Programmer’s Guide
+   :titlesonly:
+
+   prog_guide/index
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Application Guides
+   :titlesonly:
+
+   applications/index
