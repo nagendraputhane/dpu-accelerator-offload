@@ -29,7 +29,7 @@ html_theme = "pydata_sphinx_theme"
 
 html_theme_options = {
     "switcher": {
-        "json_url": "https://nagendraputhane.github.io/dao/guides/versions.json",
+        "json_url": "https://marvellembeddedprocessors.github.io/dao/guides/versions.json",
         "version_match": version,
     },
     "navbar_end": [
@@ -58,9 +58,6 @@ html_js_files    = [
 
 html_favicon       = "_static/tab_logo.jpg"
 html_show_sourcelink = False
-
-# Remove sidebars on landing
-html_sidebars = {"index": []}
 
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 templates_path   = ["_templates"]
