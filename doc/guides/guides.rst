@@ -5,7 +5,7 @@ Guides
 ======
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
    gsg/index
    platform/index
