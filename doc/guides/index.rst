@@ -42,8 +42,6 @@ Data Accelerator Offload (DAO) Documentation
       **Developer Guides**
       ^^^
 
-      Includes Getting Started Guide, Platform Guide, Programmer’s Guide, Application User Guide, How-To Guides, and Tools User Guides.
-
       +++
 
       .. button-ref:: gsg/index
@@ -62,11 +60,12 @@ Data Accelerator Offload (DAO) Documentation
          :color: secondary
          :expand:
 
-      .. toctree::
-         :maxdepth: 2
-         :titlesonly:
+      Programmer’s Guide
 
-         prog_guide/index
+      * :doc:`Common <prog_guide/common>`
+      * :doc:`Flow library <prog_guide/flow>`
+      * :doc:`VFIO helper <prog_guide/vfio_lib>`
+      * :doc:`Virtio crypto lib <prog_guide/virtio_crypto_lib>`
 
       .. button-ref:: applications/index
          :color: secondary
@@ -100,23 +99,17 @@ Data Accelerator Offload (DAO) Documentation
 
          Contributing
 
-         *Guidelines for contributing code, docs, and filing issues.*
-
       .. button-ref:: rel_notes/index
          :color: secondary
          :expand:
 
          Release Notes
 
-         *Version history, notable changes, and upgrade notes.*
-
       .. button-ref:: faq/index
          :color: secondary
          :expand:
 
          FAQ
-
-         *Frequently-asked questions and troubleshooting tips.*
 
    .. grid-item-card::
       :text-align: center
@@ -134,20 +127,14 @@ Data Accelerator Offload (DAO) Documentation
 
          VPP L3FWD Lab
 
-         *Walk-through for VPP Layer-3 forwarding offload demo.*
-
       .. button-ref:: community_lab/vpp_lab
          :color: secondary
          :expand:
 
          VPP Lab
 
-         *Explore VPP basics and performance tuning.*
-
       .. button-ref:: community_lab/tls_lab
          :color: secondary
          :expand:
 
          TLS Lab
-
-         *Hands-on lab for TLS offload on DAO.*
