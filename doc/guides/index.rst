@@ -146,16 +146,24 @@ Data Accelerator Offload (DAO) Documentation
 
          *Hands-on lab for TLS offload on DAO.*
 
+Programmer’s Guide
+==================
+DAO libraries, flow APIs, virtio helpers, and other low-level interfaces.
+
 .. toctree::
    :maxdepth: 2
-   :caption: Programmer’s Guide
+   :hidden:
    :titlesonly:
 
    prog_guide/index
 
+Application Guides
+==================
+Demos and how-tos for applications offloaded by DAO (VPP, OVS, TLS proxy, ML, …).
+
 .. toctree::
    :maxdepth: 2
-   :caption: Application Guides
+   :hidden:
    :titlesonly:
 
    applications/index
