@@ -14,7 +14,6 @@ Data Accelerator Offload (DAO) Documentation
    Introduction <intro>
    Guides <guides>
    Resources <resources>
-   Showcase <solutions_showcase>
    Community <community_lab/index>
 
 .. grid:: 1 1 2 2
@@ -37,22 +36,64 @@ Data Accelerator Offload (DAO) Documentation
 
          Read the introduction
 
-    .. grid-item-card::
-       :text-align: center
-    
-       **Developer Guides**
-       ^^^
-    
-       .. toctree::
-          :maxdepth: 3          <-- how deep in the tree to list
-          :titlesonly:          <-- suppress long filenames
-          :glob:                <-- lets you use wildcards
-          guides/gsg/index
-          guides/platform/index
-          guides/prog_guide/index
-          guides/applications/index
-          guides/howtoguides/index
-          guides/tools/index
+   .. grid-item-card::
+      :text-align: center
+
+      **Developer Guides**
+      ^^^
+
+      Includes Getting Started Guide, Platform Guide, Programmer’s Guide, Application User Guide, How-To Guides, and Tools User Guides.
+
+      +++
+
+      .. button-ref:: guides/gsg/index
+         :color: secondary
+         :expand:
+         :click-parent:
+
+         Getting Started
+
+      .. button-ref:: guides/platform/index
+         :color: secondary
+         :expand:
+         :click-parent:
+
+         Platform Guide
+
+      .. button-ref:: guides/prog_guide/index
+         :color: secondary
+         :expand:
+         :click-parent:
+
+         Programmer’s Guide
+
+      .. button-ref:: guides/applications/index
+         :color: secondary
+         :expand:
+         :click-parent:
+
+         Application Guides
+
+      .. button-ref:: guides/applications/vpp
+         :color: secondary
+         :expand:
+         :click-parent:
+
+         • VPP (direct)
+
+      .. button-ref:: guides/howtoguides/index
+         :color: secondary
+         :expand:
+         :click-parent:
+
+         How-to Guides
+
+      .. button-ref:: guides/tools/index
+         :color: secondary
+         :expand:
+         :click-parent:
+
+         Tools
 
    .. grid-item-card::
       :text-align: center
@@ -70,23 +111,6 @@ Data Accelerator Offload (DAO) Documentation
          :click-parent:
 
          Open the resources hub
-
-   .. grid-item-card::
-      :text-align: center
-
-      **Solutions Showcase**
-      ^^^
-
-      Showcases and White-papers featuring Solution architectures and Performance highlights on Marvell platforms.
-
-      +++
-
-      .. button-ref:: solutions_showcase
-         :color: secondary
-         :expand:
-         :click-parent:
-
-         Explore the showcase
 
    .. grid-item-card::
       :text-align: center
