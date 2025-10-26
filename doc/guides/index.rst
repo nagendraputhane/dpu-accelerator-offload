@@ -70,23 +70,13 @@ Data Accelerator Offload (DAO) Documentation
 
          Application Guides
 
-      .. button-ref:: applications/vpp
-         :color: secondary
-         :expand:
-
-         • VPP (direct)
+         *Includes: conntrack, ovs-offload, crypto-agent, virtio-crypto, virtio-l2fwd, virtio-blkio, secgw-graph, smart-nic, vpp, tls-proxy-nginx, machine-learning, snort, k8s-cni-offload, envoy.*
 
       .. button-ref:: howtoguides/index
          :color: secondary
          :expand:
 
          How-to Guides
-
-      .. button-ref:: tools/index
-         :color: secondary
-         :expand:
-
-         Tools
 
    .. grid-item-card::
       :text-align: center
@@ -98,12 +88,29 @@ Data Accelerator Offload (DAO) Documentation
 
       +++
 
-      .. button-ref:: resources
+      .. button-ref:: contributing/index
          :color: secondary
          :expand:
-         :click-parent:
 
-         Open the resources hub
+         Contributing
+
+         *Guidelines for contributing code, docs, and filing issues.*
+
+      .. button-ref:: rel_notes/index
+         :color: secondary
+         :expand:
+
+         Release Notes
+
+         *Version history, notable changes, and upgrade notes.*
+
+      .. button-ref:: faq/index
+         :color: secondary
+         :expand:
+
+         FAQ
+
+         *Frequently-asked questions and troubleshooting tips.*
 
    .. grid-item-card::
       :text-align: center
@@ -115,9 +122,26 @@ Data Accelerator Offload (DAO) Documentation
 
       +++
 
-      .. button-ref:: community_lab/index
+      .. button-ref:: community_lab/vpp_l3fwd_lab
          :color: secondary
          :expand:
-         :click-parent:
 
-         Launch the DAO Community Lab
+         VPP L3FWD Lab
+
+         *Walk-through for VPP Layer-3 forwarding offload demo.*
+
+      .. button-ref:: community_lab/vpp_lab
+         :color: secondary
+         :expand:
+
+         VPP Lab
+
+         *Explore VPP basics and performance tuning.*
+
+      .. button-ref:: community_lab/tls_lab
+         :color: secondary
+         :expand:
+
+         TLS Lab
+
+         *Hands-on lab for TLS offload on DAO.*
