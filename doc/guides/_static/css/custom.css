@@ -122,6 +122,10 @@ html[data-theme="light"] {
   font-weight: 600 !important;
 }
 
+.sd-card.h-100 {
+  height: auto !important;
+}
+
 /* Brand button. */
 .sd-btn {
   background-color: var(--dao-accent-color) !important;
