@@ -42,6 +42,8 @@ Data Accelerator Offload (DAO) Documentation
       **Developer Guides**
       ^^^
 
+      Includes Getting Started Guide, Platform Guide, Programmer's Guide, How-to Guides and Tools User Guides.
+
       +++
 
       .. button-ref:: gsg/index
@@ -60,36 +62,29 @@ Data Accelerator Offload (DAO) Documentation
          :color: secondary
          :expand:
 
-      * :doc:`Common <prog_guide/common>`
-      * :doc:`Flow library <prog_guide/flow>`
-      * :doc:`VFIO helper <prog_guide/vfio_lib>`
-      * :doc:`Virtio crypto lib <prog_guide/virtio_crypto_lib>`
-      * :doc:`Virtio l2fwd lib <prog_guide/virtio_l2fwd_lib>`
-      * :doc:`Virtio blkio lib <prog_guide/virtio_blkio_lib>`
-      * :doc:`Secgw graph lib <prog_guide/secgw_graph_lib>`
-      * :doc:`Smart nic lib <prog_guide/smart_nic_lib>`
-      * :doc:`VPP lib <prog_guide/vpp_lib>`
-      * :doc:`TLS proxy nginx lib <prog_guide/tls_proxy_nginx_lib>`
-      * :doc:`Machine learning lib <prog_guide/machine_learning_lib>`
-      * :doc:`Snort lib <prog_guide/snort_lib>`
-      * :doc:`K8s CNI offload lib <prog_guide/k8s_cni_offload_lib>`
-      * :doc:`Envoy lib <prog_guide/envoy_lib>`
+        :doc:`Common Libraries <prog_guide/common>`
+        :doc:`Conntrack library <prog_guide/conntrack_lib>`
+        :doc:`DMA library <prog_guide/dma_lib>`
+        :doc:`Flow library <prog_guide/flow>`
+        :doc:`Liquid crypto library <prog_guide/liquid_crypto_lib>`
+        :doc:`Netlink library <prog_guide/netlink_lib>`
+        :doc:`VFIO helper <prog_guide/vfio_lib>`
+        :doc:`Virtio crypto lib <prog_guide/virtio_crypto_lib>`
+        :doc:`and many more:- Programmers Guide Table of Contents <prog_guide/index>`
 
       .. button-ref:: applications/index
          :color: secondary
          :expand:
 
-      * :doc:`Common <prog_guide/common>`
-      * :doc:`conntrack <applications/conntrack>`
-      * :doc:`ovs-offload <applications/ovs_offload>`
-      * :doc:`crypto-agent <applications/crypto_agent>`
-      * :doc:`virtio-crypto <applications/virtio_crypto>`
-      * :doc:`virtio-l2fwd <applications/virtio_l2fwd>`
-      * :doc:`virtio-blkio <applications/virtio_blkio>`
-      * :doc:`secgw-graph <applications/secgw_graph>`
-      * :doc:`smart-nic <applications/smart_nic>`
-      * :doc:`vpp <applications/vpp>`
-      * :doc:`tls-proxy-nginx <applications/tls_proxy_nginx>`
+        :doc:`OVS Offload <applications/ovs-offload>`
+        :doc:`DAO Crypto Agent <applications/crypto-agent>`
+        :doc:`VirtIO Crypto <applications/virtio-crypto>`
+        :doc:`TLS Proxy with NGINX <applications/tls-proxy-nginx>`
+        :doc:`VPP <applications/vpp>`
+        :doc:`Machine Learning <applications/machine-learning>`
+        :doc:`SNORT <applications/snort>`
+        :doc:`K8s CNI Offload <applications/k8s-cni-offload>`
+        :doc:`and many more:- Application User Guide Table of Contents <applications/index>`
 
       .. button-ref:: howtoguides/index
          :color: secondary
@@ -111,13 +106,13 @@ Data Accelerator Offload (DAO) Documentation
          :color: secondary
          :expand:
 
-         Contributing
+         Contribute to DAO
 
       .. button-ref:: rel_notes/index
          :color: secondary
          :expand:
 
-         Release Notes
+         DAO Release Notes
 
       .. button-ref:: faq/index
          :color: secondary
@@ -139,16 +134,16 @@ Data Accelerator Offload (DAO) Documentation
          :color: secondary
          :expand:
 
-         VPP L3FWD Lab
+         Running VPP L3 forward application
 
       .. button-ref:: community_lab/vpp_lab
          :color: secondary
          :expand:
 
-         VPP Lab
+         Running VPP applications
 
       .. button-ref:: community_lab/tls_lab
          :color: secondary
          :expand:
 
-         TLS Lab
+         Running TLS applications
