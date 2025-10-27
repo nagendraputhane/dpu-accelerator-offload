@@ -1,149 +1,201 @@
-..  SPDX-License-Identifier: Marvell-MIT
-    Copyright (c) 2024 Marvell.
+:root {
+  /* Overall navbar height */
+  --pst-navbar-height: 64px;
 
-.. rst-class:: home-landing
+  /* Brand palette (black / dark gray accent) */
+  --dao-accent-color: #1A1A1A;
+  --dao-accent-color-hover: #000000;
 
-Data Accelerator Offload (DAO) Documentation
-============================================
+  /* Border for cards and outlines */
+  --dao-border: #E5E5E5;
+}
 
-.. toctree::
-   :maxdepth: 1
-   :hidden:
-   :caption: Sections
+/* In light mode, map the theme's "primary" to our brand accent. */
+html[data-theme="light"] {
+  --pst-color-primary        : var(--dao-accent-color);
+  --pst-color-primary-light  : #2A2A2A;            /* hover/active ramps */
+  --pst-color-primary-dark   : var(--dao-accent-color-hover);
+  --pst-color-primary-invert : #FFFFFF;            /* text on primary bg */
+}
 
-   Introduction <intro>
-   Guides <guides>
-   Resources <resources>
-   Community <community_lab/index>
+/* Make article column fill the viewport so prev/next can pin to the bottom. */
+.bd-article-container {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - var(--pst-navbar-height) - 120px);
+}
 
-.. grid:: 1
-   :gutter: 2
+/* Push the prev/next footer to the bottom when content is short. */
+.prev-next-footer {
+  margin-top: auto;
+}
 
-   .. grid-item-card::
-      :text-align: center
+/* Smaller H1 on inner pages */
+.bd-content .bd-article h1 {
+  font-size: 1.6rem;
+  line-height: 1.2;
+  margin-top: 0.25rem;
+  margin-bottom: 0.75rem;
+}
 
-      **Introduction**
-      ^^^
+/* Responsive adjustments for Mobile viewports */
+@media (max-width: 768px) {
+  .bd-article-container {
+    min-height: calc(100vh - var(--pst-navbar-height) - 160px);
+  }
+}
 
-      What DAO is, architecture, and how these docs are organized.
+/* Brand logo sizing */
+.navbar-brand .logo__image {
+  height: var(--pst-navbar-height);
+  max-height: var(--pst-navbar-height);
+  max-width: 220px;                 /* prevent oversized wide logos */
+  width: auto;
+  object-fit: contain;
+}
 
-      +++
+/* Slightly tighter spacing between top-level navbar links. */
+.bd-navbar .nav-link {
+  padding-left: 0.6rem;
+  padding-right: 0.6rem;
+}
 
-      .. button-ref:: intro
-         :color: secondary
-         :expand:
-         :click-parent:
+/* Hide theme switcher */
+.theme-switch-button {
+  display: none !important;
+}
 
-         Read the introduction
+/* Search button: show only the magnifier icon */
+.search-button__default-text,
+.search-button__kbd-shortcut,
+.navbar-persistent--container .search-button-field {
+  display: none !important;
+}
 
-   .. grid-item-card::
-      :text-align: center
+/* keeps logo from crowding the first nav link */
+.navbar-brand {
+  padding-right: 0.75rem;
+}
 
-      **Developer Guides**
-      ^^^
+/* Display the labels as text beside icons. */
+.navbar-icon-links .nav-link {
+  display: inline-flex;
+  align-items: center;
+}
 
-      Includes Getting Started Guide, Platform Guide, Programmer's Guide, How-to Guides and Tools User Guides.
+.navbar-icon-links .sr-only {
+  position: static !important;  /* un-hide */
+  width: auto;
+  height: auto;
+  clip: auto;
+  clip-path: none;
+  display: inline !important;
+  white-space: nowrap;
+  margin-left: 0.35rem;          /* gap between icon and label */
+}
 
-      +++
+/* Links in content */
+.bd-content a,
+.toctree-wrapper a {
+  color: var(--dao-accent-color);
+  text-decoration: none;
+}
 
-      .. button-ref:: gsg/index
-         :color: secondary
-         :expand:
+.bd-content a:hover,
+.bd-content a:focus,
+.toctree-wrapper a:hover,
+.toctree-wrapper a:focus {
+  color: var(--dao-accent-color-hover);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
 
-         Getting Started
+/* Cards */
+.sd-card {
+  border: 1px solid var(--dao-border) !important;
+  box-shadow: none !important;
+  background: #FFFFFF !important;
+}
 
-      .. button-ref:: platform/index
-         :color: secondary
-         :expand:
+.sd-card .sd-card-title {
+  color: #111111 !important;
+  font-weight: 600 !important;
+}
 
-         Platform Guide
+.sd-card.h-100 {
+  height: auto !important;
+}
 
-      .. button-ref:: prog_guide/index
-         :color: secondary
-         :expand:
+/* Allow cards to use natural height instead of stretching */
+.sd-col.h-100 {
+  height: auto !important;
+}
+.sd-col.d-flex {
+  display: block !important;
+}
 
-      * :doc:`Common Libraries <prog_guide/common>`
-      * :doc:`Conntrack library <prog_guide/conntrack_lib>`
-      * :doc:`DMA library <prog_guide/dma_lib>`
-      * :doc:`Flow library <prog_guide/flow>`
-      * :doc:`Liquid crypto library <prog_guide/liquid_crypto_lib>`
-      * :doc:`Netlink library <prog_guide/netlink_lib>`
-      * :doc:`VFIO helper <prog_guide/vfio_lib>`
-      * :doc:`Virtio crypto lib <prog_guide/virtio_crypto_lib>`
-      * :doc:`and many more:- Programmer’s Guide Table of Contents <prog_guide/index>`
+/* Hide right "on this page" sidebar on landing */
+.bd-toc { display: none !important; }
 
-      .. button-ref:: applications/index
-         :color: secondary
-         :expand:
+/* Brand button. */
+.sd-btn {
+  background-color: var(--dao-accent-color) !important;
+  color: #FFFFFF !important;
+  border: none !important;
+}
 
-      * :doc:`OVS Offload <applications/ovs-offload>`
-      * :doc:`DAO Crypto Agent <applications/crypto-agent>`
-      * :doc:`VirtIO Crypto <applications/virtio-crypto>`
-      * :doc:`TLS Proxy with NGINX <applications/tls-proxy-nginx>`
-      * :doc:`VPP <applications/vpp>`
-      * :doc:`Machine Learning <applications/machine-learning>`
-      * :doc:`SNORT <applications/snort>`
-      * :doc:`K8s CNI Offload <applications/k8s-cni-offload>`
-      * :doc:`and many more:- Application User Guide Table of Contents <applications/index>`
+.sd-btn:hover,
+.sd-btn:focus {
+  background-color: var(--dao-accent-color-hover) !important;
+  color: #FFFFFF !important;
+}
 
-      .. button-ref:: howtoguides/index
-         :color: secondary
-         :expand:
+/* Outline button variant */
+.sd-btn-outline {
+  background: transparent !important;
+  color: var(--dao-accent-color) !important;
+  border: 1px solid var(--dao-accent-color) !important;
+}
 
-         How-to Guides
+.sd-btn-outline:hover,
+.sd-btn-outline:focus {
+  color: #FFFFFF !important;
+  background: var(--dao-accent-color) !important;
+}
 
-   .. grid-item-card::
-      :text-align: center
+/* Center the landing page H1 and give it extra space down. */
+section.home-landing > h1 {
+  text-align: center;
+}
 
-      **Resources**
-      ^^^
+.bd-content .bd-article .home-landing > h1 {
+  text-align: center;
+  margin-bottom: 2.25rem;
+  padding-bottom: 0.25rem;
+}
 
-      Contributing, Release notes, and FAQs.
+.bd-content .bd-article .home-landing > .sd-container,
+.bd-content .bd-article .home-landing > .sd-container-fluid {
+  margin-top: 1rem;
+}
 
-      +++
+/* Small footer text for copyright/credits. */
+.bd-footer .footer-item p {
+  font-size: 0.85rem;
+  line-height: 1.3;
+  margin: 0.1rem 0;
+}
 
-      .. button-ref:: contributing/index
-         :color: secondary
-         :expand:
+/* Hide theme/version boilerplate. */
+.bd-footer .theme-version {
+  display: none !important;
+}
 
-         Contribute to DAO
+.bd-footer .sphinx-version {
+  display: none !important;
+}
 
-      .. button-ref:: rel_notes/index
-         :color: secondary
-         :expand:
-
-         DAO Release Notes
-
-      .. button-ref:: faq/index
-         :color: secondary
-         :expand:
-
-         FAQ
-
-   .. grid-item-card::
-      :text-align: center
-
-      **Community Lab**
-      ^^^
-
-      Hands-on labs to try DAO features.
-
-      +++
-
-      .. button-ref:: community_lab/vpp_l3fwd_lab
-         :color: secondary
-         :expand:
-
-         Running VPP L3 forward application
-
-      .. button-ref:: community_lab/vpp_lab
-         :color: secondary
-         :expand:
-
-         Running VPP applications
-
-      .. button-ref:: community_lab/tls_lab
-         :color: secondary
-         :expand:
-
-         Running TLS applications
+/* Extra space between cards on the landing page */
+.home-landing .sd-col {
+  margin-bottom: 1.25rem;   /* tweak value as desired */
+}
