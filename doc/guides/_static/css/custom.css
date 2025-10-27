@@ -194,3 +194,8 @@ section.home-landing > h1 {
 .bd-footer .sphinx-version {
   display: none !important;
 }
+
+/* Extra space between cards on the landing page */
+.home-landing .sd-col {
+  margin-bottom: 1.25rem;   /* tweak value as desired */
+}
