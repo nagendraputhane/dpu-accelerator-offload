@@ -62,33 +62,29 @@ Data Accelerator Offload (DAO) Documentation
          :color: secondary
          :expand:
 
-         Programmer’s Guide TOC
-
-         - :doc:`Common Libraries <prog_guide/common>`
-         - :doc:`Conntrack library <prog_guide/conntrack_lib>`
-         - :doc:`DMA library <prog_guide/dma_lib>`
-         - :doc:`Flow library <prog_guide/flow>`
-         - :doc:`Liquid crypto library <prog_guide/liquid_crypto_lib>`
-         - :doc:`Netlink library <prog_guide/netlink_lib>`
-         - :doc:`VFIO helper <prog_guide/vfio_lib>`
-         - :doc:`Virtio crypto lib <prog_guide/virtio_crypto_lib>`
-         - *More...* :doc:`Full Programmer’s Guide <prog_guide/index>`
+      * :doc:`Common Libraries <prog_guide/common>`
+      * :doc:`Conntrack library <prog_guide/conntrack_lib>`
+      * :doc:`DMA library <prog_guide/dma_lib>`
+      * :doc:`Flow library <prog_guide/flow>`
+      * :doc:`Liquid crypto library <prog_guide/liquid_crypto_lib>`
+      * :doc:`Netlink library <prog_guide/netlink_lib>`
+      * :doc:`VFIO helper <prog_guide/vfio_lib>`
+      * :doc:`Virtio crypto lib <prog_guide/virtio_crypto_lib>`
+      * :doc:`and many more:- Programmer’s Guide Table of Contents <prog_guide/index>`
 
       .. button-ref:: applications/index
          :color: secondary
          :expand:
 
-         Application Guides TOC
-
-         - :doc:`OVS Offload <applications/ovs-offload>`
-         - :doc:`DAO Crypto Agent <applications/crypto-agent>`
-         - :doc:`VirtIO Crypto <applications/virtio-crypto>`
-         - :doc:`TLS Proxy with NGINX <applications/tls-proxy-nginx>`
-         - :doc:`VPP <applications/vpp>`
-         - :doc:`Machine Learning <applications/machine-learning>`
-         - :doc:`SNORT <applications/snort>`
-         - :doc:`K8s CNI Offload <applications/k8s-cni-offload>`
-         - *More...* :doc:`Full Application Guides <applications/index>`
+      * :doc:`OVS Offload <applications/ovs-offload>`
+      * :doc:`DAO Crypto Agent <applications/crypto-agent>`
+      * :doc:`VirtIO Crypto <applications/virtio-crypto>`
+      * :doc:`TLS Proxy with NGINX <applications/tls-proxy-nginx>`
+      * :doc:`VPP <applications/vpp>`
+      * :doc:`Machine Learning <applications/machine-learning>`
+      * :doc:`SNORT <applications/snort>`
+      * :doc:`K8s CNI Offload <applications/k8s-cni-offload>`
+      * :doc:`and many more:- Application User Guide Table of Contents <applications/index>`
 
       .. button-ref:: howtoguides/index
          :color: secondary
