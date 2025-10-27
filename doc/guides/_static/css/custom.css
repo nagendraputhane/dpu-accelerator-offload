@@ -197,5 +197,5 @@ section.home-landing > h1 {
 
 /* Extra space between cards on the landing page */
 .home-landing .sd-col {
-  margin-bottom: 1.25rem;   /* tweak value as desired */
+  margin-bottom: 1.75rem;   /* tweak value as desired */
 }
