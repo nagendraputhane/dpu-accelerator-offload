@@ -147,3 +147,41 @@ Data Accelerator Offload (DAO) Documentation
          :expand:
 
          Running TLS applications
+
+
+.. |badge-dao| image:: https://img.shields.io/github/v/release/MarvellEmbeddedProcessors/dao?sort=date&filter=dao*
+.. |build-dao| image:: https://github.com/MarvellEmbeddedProcessors/dao/actions/workflows/build-cn10k.yml/badge.svg
+   :target: https://github.com/MarvellEmbeddedProcessors/dao/actions/workflows/build-cn10k.yml
+.. |badge-dpdk| image:: https://img.shields.io/github/v/release/MarvellEmbeddedProcessors/marvell-dpdk?display_name=release
+.. |build-dpdk| image:: https://github.com/MarvellEmbeddedProcessors/marvell-dpdk-test/actions/workflows/build-cn10k.yml/badge.svg
+   :target: https://github.com/MarvellEmbeddedProcessors/marvell-dpdk-test/actions/workflows/build-cn10k.yml
+.. |badge-ovs| image:: https://img.shields.io/github/v/release/MarvellEmbeddedProcessors/dao?sort=date&filter=ovs*
+.. |build-ovs| image:: https://github.com/MarvellEmbeddedProcessors/dao/actions/workflows/build-cn10k-ovs.yml/badge.svg
+   :target: https://github.com/MarvellEmbeddedProcessors/dao/actions/workflows/build-cn10k-ovs.yml
+.. |badge-vpp| image:: https://img.shields.io/github/v/release/MarvellEmbeddedProcessors/dao?sort=date&filter=vpp*
+.. |build-vpp| image:: https://github.com/MarvellEmbeddedProcessors/dao/actions/workflows/build-cn10k-vpp.yml/badge.svg
+   :target: https://github.com/MarvellEmbeddedProcessors/dao/actions/workflows/build-cn10k-vpp.yml
+
+.. list-table:: DAO package repositories (Ubuntu 24.04)
+   :header-rows: 1
+   :widths: 20 40 40
+
+   * - **Repository**
+     - **Package badge**
+     - **CI status**
+
+   * - marvell-dao
+     - |badge-dao|
+     - |build-dao|
+
+   * - marvell-dpdk
+     - |badge-dpdk|
+     - |build-dpdk|
+
+   * - marvell-ovs
+     - |badge-ovs|
+     - |build-ovs|
+
+   * - marvell-vpp
+     - |badge-vpp|
+     - |build-vpp|
